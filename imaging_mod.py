@@ -94,13 +94,18 @@ class camera(object):
     1) obtain image coordinates from given lab coordinates. 
     2) vice versa if used together with other cameras at 
        other locations (img_system.stereo_match).
+      
+    input:
+    name - string name for the camera
+    resolution - tuple (2) two integers for the camera pixels
     '''
     
-    def __init__(self, name):    
+    def __init__(self, name, resolution):    
         self.O = zeros(3)     # camera location
         self.theta = zeros(3) # rotation angles
         self.f = 1.0          # focal depth
         self.calc_R()
+        self.resolution = resolution
         self.give_name(name)
         
         
@@ -141,8 +146,8 @@ class camera(object):
         '''
         v = dot(x - self.O, inv(self.R))
         a = -1.0 * v[2] / self.f
-        eta = -1.0 * v[0] / a
-        zeta = -1.0 * v[1] / a
+        eta = (-1.0 * v[0]) / a  + self.resolution[0]/2
+        zeta = (-1.0 * v[1]) / a  + self.resolution[1]/2
         return array([eta, zeta])
         
     
@@ -206,9 +211,9 @@ class camera(object):
     
 if __name__ == '__main__':
     from numpy import pi 
-    c1 = camera('1')
-    c2 = camera('2')
-    c3 = camera('3')
+    c1 = camera('1', (10,10))
+    c2 = camera('2', (10,10))
+    c3 = camera('3', (10,10))
     
     c1.O = array([10.0 ,0,0])
     c2.O = array([0,10.0 ,0])

@@ -12,8 +12,8 @@ calibration module for the cameras
 
 from imaging_mod import * 
 from utils import *
-from numpy import mean
-
+from numpy import mean, sum
+import matplotlib.pyplot as plt
 
 
 
@@ -40,7 +40,8 @@ class calibrate(object):
         (in the calibration we want to minimize this D)
         '''
         z_lst = [self.camera.projection(x) for x in self.lab_coords]        
-        D = mean((array(z_lst) - array(self.img_coords))**2)**0.5
+        e = array(z_lst) - array(self.img_coords)
+        D = mean( sum(e**2, axis=1)**0.5 )
         return D
         
     
@@ -100,13 +101,13 @@ class calibrate(object):
         return dDdO
     
     
-    def iterate(self):
+    def iterate(self, dO=None, dth=None, df=None):
         '''
         makes a single gradient decent iteration step
         '''
-        dO = 0.2*self.sep
-        dth = 0.001
-        df = 0.002
+        if dO == None: dO = 0.2*self.sep
+        if dth == None: dth = 0.001
+        if df == None: df = 0.002
         
         dDdO = self.gradient()
         self.camera.O[0] -= dDdO[0] * dO
@@ -127,10 +128,16 @@ class calibrate(object):
         if ax == None:
             fig, ax = plt.subplots()
         
-        ax.plot(array(self.img_coords)[:,0], array(self.img_coords)[:,1], 'ob')
+        imc = array(self.img_coords)
+        ax.plot(imc[:,0], imc[:,1], 'ob')
+        for i in range(imc.shape[0]):
+            ax.text(imc[i,0], imc[i,1], '%d'%i, color = 'b')
         
-        z_lst = [self.camera.projection(x) for x in self.lab_coords]        
-        ax.plot( array(z_lst)[:,0], array(z_lst)[:,1], 'xr' )
+        z_lst = array([self.camera.projection(x) for x in self.lab_coords])
+        ax.plot( z_lst[:,0], z_lst[:,1], 'xr' )
+        for i in range(z_lst.shape[0]):
+            ax.text(z_lst[i,0], z_lst[i,1], '%d'%i, color = 'r')
+            
         ax.set_aspect('equal')
         
         
@@ -139,7 +146,6 @@ class calibrate(object):
 
 if __name__ == '__main__':
     from numpy import pi , array
-    import matplotlib.pyplot as plt
     
     # set up a camera:
     c1 = camera('1')
@@ -167,7 +173,7 @@ if __name__ == '__main__':
 
     # move the camera to another position:
     c1.O = array([20.0 , 5.0 , 0.0])
-    c1.theta = np.array( [ 0.5, pi / 2.0 - .1, 0.2] )
+    c1.theta = array( [ 0.5, pi / 2.0 - .1, 0.2] )
     c1.calc_R()
     c1.f = 10.0
     
