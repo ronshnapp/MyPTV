@@ -9,7 +9,7 @@ Created on Fri Dec  7 18:02:07 2018
 Imaging Module:
     
 containts the camera and imaging system classes that handle 
-the transformation for camera space coordinates to lab coordinates.
+the transformation from camera space coordinates to lab coordinates.
 
 """
 
@@ -237,7 +237,7 @@ if __name__ == '__main__':
               1: c2.projection(x)*1.01,
               2: c3.projection(x)*0.99}
         
-    print imgsys.stereo_match(coords, 0.5)
+    print(imgsys.stereo_match(coords, 0.5))
         
         
         

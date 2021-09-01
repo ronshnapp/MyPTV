@@ -24,7 +24,11 @@ from calibrate_mod import *
 import numpy as np
 
 
+
+#=======================
 # load the image points:
+#=======================
+
 img_file = open('img_points', 'r')
 a = img_file.readlines()
 img_file.close()
@@ -39,7 +43,10 @@ for s in a:
         img_coords_dic[int(n)] = [float(x_), float(y_)]
 
 
+#=====================
 # load the lab points:
+#=====================
+
 lab_file = open('lab_coords', 'r')
 a = lab_file.readlines()
 lab_file.close()
@@ -60,10 +67,11 @@ for k in sorted(lab_coords_dic.keys()):
     img_coords.append(img_coords_dic[k])
     
     
+    
+    
 #===================
 # start calibration:
 #===================
-    
     
     
 # initiate a camera with an initial guess:
@@ -76,9 +84,9 @@ c.calc_R()
 cal = calibrate(c, lab_coords, img_coords)
 
 
-print '\n'
-print 'D0 = %.1f'%(cal.mean_squared_err())
-print '\n'
+print('\n')
+print('D0 = %.1f'%(cal.mean_squared_err()))
+print('\n')
 
 
 # plot the initial guess:
@@ -87,32 +95,22 @@ cal.plot_proj(ax)
 
 
 
-# make a few iterations of calibration:
-for i in range(50):
-    cal.iterate(dO=0.1, dth = 0.0, df = 0.0)
 
-for i in range(100):
-    cal.iterate(dO=0.0, dth = 0.000005, df = 0.0)
-    
-for i in range(50):
-    cal.iterate(dO=0.001, dth = 0.0, df = 0.0)
+Min_res = cal.searchCalibration()
 
-for i in range(50):
-    cal.iterate(dO=0.0, dth = 0.000002, df = 0.0)
 
-for i in range(50):
-    cal.iterate(dO=0.0001, dth = 0.0, df = 0.0)
+
 
 
 # show the results:
-print '\n'
-print c.O
-print c.theta
-print c.f
-print '\n'
+print('\n')
+print(c.O)
+print(c.theta)
+print(c.f)
+print('\n')
 
-print 'D = %.1f'%(cal.mean_squared_err())
-print '\n'
+print('D = %.1f'%(cal.mean_squared_err()))
+print('\n')
 
 cal.plot_proj()
 
