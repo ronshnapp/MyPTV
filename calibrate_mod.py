@@ -13,7 +13,7 @@ calibration module for the cameras
 from imaging_mod import * 
 from utils import *
 from numpy import mean, sum, hstack, array
-import matplotlib.pyplot as plt
+
 
 
 
@@ -83,6 +83,7 @@ class calibrate(object):
     
     
     def plot_proj(self, ax = None):
+        import matplotlib.pyplot as plt
         
         if ax == None:
             fig, ax = plt.subplots()
@@ -99,6 +100,57 @@ class calibrate(object):
             
         ax.set_aspect('equal')
         
+        
+        
+    def manual_calibration(self):
+        '''
+        A manual calibration app. 
+        In development. Currently it only supports actively 
+        changing camera center and angle. 
+        To add: live plotting.
+        
+        keys:
+            a - change Ox
+            s - change Oy
+            d - change Oz
+            
+            z - change Theta_x            
+            x - change Theta_y
+            c - change Theta_z
+        '''       
+        print('manual calibration; enter q to quit.')
+        cmd = 'n'
+        known_command = ['a','z','s','x','d','c']
+        
+        while cmd != 'q':
+            cmd = input('enter calibration command:')
+            if cmd in known_command:
+                increment = float(input('choose increments: '))
+                if cmd == 'a':
+                    self.camera.O[0] += increment
+                if cmd == 'z':
+                    self.camera.theta[0] += increment
+                if cmd == 's':
+                    self.camera.O[1] += increment
+                if cmd == 'x':
+                    self.camera.theta[1] += increment
+                if cmd == 'd':
+                    self.camera.O[2] += increment
+                if cmd == 'c':
+                    self.camera.theta[2] += increment
+                
+                D = self.mean_squared_err()
+                self.D_lst.append( D )
+                print('D = %f'%D)
+                
+            elif cmd == 'q':
+                print('quitting')
+                break
+                
+            else:
+                print('unknown command \n')
+                
+        self.plot_proj()
         
     
         

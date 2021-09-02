@@ -22,6 +22,7 @@ from utils import *
 from imaging_mod import *
 from calibrate_mod import *
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 
@@ -96,10 +97,9 @@ cal.plot_proj(ax)
 
 
 
-Min_res = cal.searchCalibration()
 
-
-
+cal.manual_calibration()           # <-- Do some manual gross calibration
+Min_res = cal.searchCalibration()  # <-- automatic solve calibration
 
 
 # show the results:
