@@ -101,13 +101,19 @@ class camera(object):
     '''
     
     def __init__(self, name, resolution):    
-        self.O = zeros(3)     # camera location
-        self.theta = zeros(3) # rotation angles
+        self.O = zeros(3) + 1.     # camera location
+        self.theta = zeros(3) + 1. # rotation angles
         self.f = 1.0          # focal depth
         self.calc_R()
         self.resolution = resolution
         self.give_name(name)
         
+    def __repr__(self):
+        print(self.name)
+        print('o: ', self.o)
+        print('theta: ', self.theta)
+        print('f: ', self.f)
+        return ''
         
     def calc_R(self):
         '''
