@@ -26,12 +26,9 @@ class img_system(object):
     an object that holds a number of cameras.
     '''
     
-    def __init__(self):
-        self.cameras = []
+    def __init__(self, camera_list):
+        self.cameras = camera_list
     
-    def add_cameras(self,n):
-        for i in range(n):
-            self.cameras.append( camera() )
     
     def stereo_match(self, coords, d_max):
         '''
@@ -60,13 +57,14 @@ class img_system(object):
         x = []
         cams = []
         d = []
+        keys = list(coords.keys())
         for i in range(N):
             for j in range(i+1,N):
-                ki = coords.keys()[i]
+                ki = keys[i]
                 O1 = self.cameras[ki].O
                 r1 = self.cameras[ki].get_r(coords[ki][0], coords[ki][1])
                 
-                kj = coords.keys()[j]
+                kj = keys[j]
                 O2 = self.cameras[kj].O
                 r2 = self.cameras[kj].get_r(coords[kj][0], coords[kj][1])
                 
@@ -107,6 +105,7 @@ class camera(object):
         self.calc_R()
         self.resolution = resolution
         self.give_name(name)
+    
         
     def __repr__(self):
         print(self.name)
@@ -114,6 +113,7 @@ class camera(object):
         print('theta: ', self.theta)
         print('f: ', self.f)
         return ''
+    
         
     def calc_R(self):
         '''
@@ -138,7 +138,9 @@ class camera(object):
         output - direction vector in real space
         '''
         self.calc_R()
-        r = dot(array([-eta, -zeta, -self.f]), self.R)
+        eta_ = eta - self.resolution[0]/2.0
+        zeta_ = zeta - self.resolution[1]/2.0
+        r = dot(array([-eta_, -zeta_, -self.f]), self.R)
         return r
     
     
