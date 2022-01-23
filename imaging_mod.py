@@ -216,7 +216,7 @@ class camera(object):
     
     
     
-    
+'''
 if __name__ == '__main__':
     from numpy import pi 
     c1 = camera('1', (10,10))
@@ -246,8 +246,8 @@ if __name__ == '__main__':
               2: c3.projection(x)*0.99}
         
     print(imgsys.stereo_match(coords, 0.5))
-        
-        
+
+'''   
         
         
         
