@@ -17,7 +17,7 @@ import sys, os
 from numpy import zeros, array, cos, sin, dot
 from numpy.linalg import inv
 from utils import *
-
+from cal_image_coords import Cal_image_coord
 
 
 
@@ -96,20 +96,26 @@ class camera(object):
     input:
     name - string name for the camera
     resolution - tuple (2) two integers for the camera pixels
+    cal_points_fname - path to a file with calibration coordinates for the cam
     '''
     
-    def __init__(self, name, resolution):    
+    def __init__(self, name, resolution, cal_points_fname = None):    
         self.O = zeros(3) + 1.     # camera location
         self.theta = zeros(3) + 1. # rotation angles
-        self.f = 1.0          # focal depth
+        self.f = 1.0               # focal depth
         self.calc_R()
         self.resolution = resolution
         self.give_name(name)
+        
+        if cal_points_fname is not None:
+            cic = Cal_image_coord(cal_points_fname)
+            self.image_points = cic.image_coords
+            self.lab_points = cic.lab_coords
     
         
     def __repr__(self):
         print(self.name)
-        print('o: ', self.o)
+        print('o: ', self.O)
         print('theta: ', self.theta)
         print('f: ', self.f)
         return ''
@@ -175,7 +181,7 @@ class camera(object):
         '''
         full_path = os.path.join(dir_path, self.name)
         
-        f = file(full_path, 'w')
+        f = open(full_path, 'w')
         f.write(self.name+'\n')
         
         S = ''

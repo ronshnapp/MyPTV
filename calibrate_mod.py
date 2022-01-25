@@ -34,6 +34,7 @@ class calibrate(object):
         self.D_lst = [self.mean_squared_err()]
         self.sep = sum((array(self.img_coords[1])-array(self.img_coords[0]))**2)**0.5
         
+        
     def mean_squared_err(self):
         '''
         This calculaes the mean squared distance between the 
@@ -46,7 +47,6 @@ class calibrate(object):
         D = mean( sum(e**2, axis=1)**0.5 )
         return D
         
-    
     
     def searchCalibration(self, maxiter=5000, fix_f=True):
         '''

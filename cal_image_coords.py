@@ -21,7 +21,7 @@ from numpy import array
 
 
 
-class cal_image_coord(object):
+class Cal_image_coord(object):
     
     
     def __init__(self, fname):
