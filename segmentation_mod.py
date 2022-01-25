@@ -9,10 +9,9 @@ Created on Fri Dec  7 18:02:07 2018
 contains a class for segmentation of circular particles
 """
 
-from scipy.signal import convolve2d
-from numpy import zeros, arange, exp, gradient, mean
+from numpy import zeros
 from scipy.ndimage import gaussian_filter
-
+from skimage.io import imread
 
 
 
@@ -125,7 +124,7 @@ class particle_segmentation(object):
                 X += x*bxy
                 Y += y*bxy
                 tot += bxy
-            center = [X/tot, Y/tot]
+            center = [round(X/tot, ndigits=2), round(Y/tot, ndigits=2)]
             box_size = [xmax-xmin+1, ymax-ymin+1]
             area = len(self.blob_pixels[i])
             blobs.append( [center, box_size, area])
@@ -171,31 +170,99 @@ class particle_segmentation(object):
                         xerr=blb[1][1]/2, yerr=blb[1][0]/2,
                         fmt='xr', lw=0.7, capsize=2)
         
+        
+        
+        
+
+        
+        
+        
+class loop_segmentation(object):
+    
+    '''A class for looping over images in a library to segment particles
+    and save the results in a file.'''
+    
+    def __init__(self, dir_name, extension='.tif', N_img = None,
+                 sigma=1.0, threshold=10, mask=1.0,
+                 min_xsize=None, max_xsize=None,
+                 min_ysize=None, max_ysize=None,
+                 min_area=None, max_area=None):
+        '''
+        dir_name - string with the name of the directory that holds the 
+                   images. Images should have a sequential numbers in their
+                   file names. 
+        extension - the extension of the images
+        
+        N_img -     if None, then this will loop over all the images in the 
+                    folder. If it is an integer, will loop over the first
+                    N images in the folder.
+                    
+        The rest are parameters for the segmentation class. 
+        '''
+        self.dir_name = dir_name
+        self.extension = extension
+        self.N_img = N_img
+        self.sigma = sigma
+        self.th = threshold
+        self.mask = mask
+        self.bbox_limits = (min_xsize, max_xsize, min_ysize, max_ysize)
+        self.area_limits = (min_area, max_area)
     
     
+    def get_file_names(self):
+        import os
+        allfiles = os.listdir(self.dir_name)
+        n_ext = len(self.extension)
+        fltr = lambda s: s[-n_ext:]==self.extension
+        image_files = sorted(list(filter(fltr, allfiles)))
+        self.image_files = image_files
     
+    
+    def segment_folder_images(self):
+        '''This loops over the image files in a folder'''
+        import os
+        
+        self.get_file_names()
+        
+        if self.N_img is None: 
+            N = len(self.image_files)
+        else:
+            N = self.N_img
+        
+        blob_list = []
+        for i in range(N):
+            im = imread(os.path.join(self.dir_name, self.image_files[i]))
+            ps = particle_segmentation(im, sigma=self.sigma, 
+                                       threshold=self.th,
+                                       mask=self.mask,
+                                       max_xsize=self.bbox_limits[1],
+                                       min_xsize=self.bbox_limits[0],
+                                       max_ysize=self.bbox_limits[3],
+                                       min_ysize=self.bbox_limits[2],
+                                       min_area=self.area_limits[0],
+                                       max_area=self.area_limits[1])
+            ps.get_binary_image()
+            ps.apply_blobs_size_filter()
+            for blb in ps.blobs:
+                blob_list.append([blb[0][0], blb[0][1], blb[1][0], blb[1][1],
+                                  blb[2], i])
+        self.blobs = blob_list
+        
+                                       
+    def save_results(self, fname):
+        '''
+        Will save the extracted blobs. 
+        
+        The format of the results is
+        center_x, center_y, size_x, size_y, area, frame_number
+        '''
+        from numpy import save
+        save(fname, blobs = self.blobs)
+        
+        
         
     
     
-    
-    
-
-
-
-'''
-import os
-import matplotlib.pyplot as plt
-dir_name = '/home/ron/Desktop/Research/plankton_sweeming/experiments/PTV_test3/CoreView_71/Cam1'
-images = sorted(os.listdir(dir_name))
-
-
-av_img = 0
-count = 0
-for i in range(len(images)):
-    av_img += plt.imread(os.path.join(dir_name, images[i]))
-    count += 1
-av_img = av_img/count
-'''
 
 
 
