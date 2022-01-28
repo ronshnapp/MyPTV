@@ -241,7 +241,7 @@ class loop_segmentation(object):
                                        min_ysize=self.bbox_limits[2],
                                        min_area=self.area_limits[0],
                                        max_area=self.area_limits[1])
-            ps.get_binary_image()
+            ps.get_blobs()
             ps.apply_blobs_size_filter()
             for blb in ps.blobs:
                 blob_list.append([blb[0][0], blb[0][1], blb[1][0], blb[1][1],
@@ -256,8 +256,9 @@ class loop_segmentation(object):
         The format of the results is
         center_x, center_y, size_x, size_y, area, frame_number
         '''
-        from numpy import save
-        save(fname, blobs = self.blobs)
+        from numpy import savetxt
+        savetxt(fname, self.blobs, 
+                fmt=['%.02f','%.02f','%d','%d','%d','%d'], delimiter='\t')
         
         
         

@@ -34,7 +34,7 @@ class img_system(object):
         '''
         given n particle images [(eta, zeta) coords in camera space], this will
         determine whereather there is a good candidate point for the intersection
-        of these epipolar lines, and if so returns it. Here it is assumed that
+        of epipolar lines, and if so returns it. Here it is assumed that
         all images correspond to the same "real world" particle.
         This point is estimated as the average of the crossing point of the
         epipolar lines, that cross at distances smaller than a maximum value.
@@ -114,13 +114,25 @@ class camera(object):
     
         
     def __repr__(self):
-        print(self.name)
-        print('o: ', self.O)
-        print('theta: ', self.theta)
-        print('f: ', self.f)
-        return ''
-    
         
+        ret = (self.name +
+               '\n O: ' + str(self.O) +
+               '\n theta:' + str(self.theta) +
+               '\n f:' + str(self.f))
+        return ret
+    
+    
+    
+    def give_name(self, name):
+        '''
+        adds a name for the camera
+        '''
+        if type(name) == str:
+            self.name = name
+        else:
+            raise TypeError('name must be string')    
+    
+    
     def calc_R(self):
         '''
         calculates the rotation matrix for the camera's angles
@@ -163,16 +175,6 @@ class camera(object):
         eta = (-1.0 * v[0]) / a  + self.resolution[0]/2
         zeta = (-1.0 * v[1]) / a  + self.resolution[1]/2
         return array([eta, zeta])
-        
-    
-    def give_name(self, name):
-        '''
-        adds a name for the camera
-        '''
-        if type(name) == str:
-            self.name = name
-        else:
-            raise TypeError('name must be string')
     
     
     def save(self, dir_path = ''):
@@ -199,12 +201,12 @@ class camera(object):
         
     def load(self, dir_path):
         '''
-        will load camera data from the jard disk
+        will load camera data from the hard disk
         '''
         full_path = os.path.join(dir_path, self.name)
         
-        f = file(full_path)
-        self.name = f.readline()[:-2]
+        f = open(full_path, 'r')
+        name = f.readline()
         
         S = f.readline()[:-2]
         self.O = array([float(s) for s in S.split()])
@@ -217,6 +219,38 @@ class camera(object):
         
         self.calc_R()
         
+    
+    def plot_3D_epipolar_line(self, eta, zeta, zlims, ax=None, color=None):
+        '''Will plot a 3D epipolar line for the image point (eta,zeta) in 
+        between two given z values.
+        
+        This requires matplotlib.'''
+        
+        z0, z1 = zlims
+        r = self.get_r(eta, zeta)
+        a0 = (z0 - self.O[2])/r[2]
+        a1 = (z1 - self.O[2])/r[2]
+        x0, x1 = self.O[0]+a0*r[0], self.O[0]+a1*r[0]
+        y0, y1 = self.O[1]+a0*r[1], self.O[1]+a1*r[1]
+        
+        if ax is None:
+            from mpl_toolkits import mplot3d
+            import matplotlib.pyplot as plt
+            fig = plt.figure()
+            ax = plt.axes(projection='3d')
+            if color is None:
+                ax.plot3D([x0,x1], [z0,z1], [y0,y1])
+            else:
+                ax.plot3D([x0,x1], [z0,z1], [y0,y1], c=color)
+        
+            return fig, ax
+       
+        else:
+            if color is None:
+                ax.plot3D([x0,x1], [z0,z1], [y0,y1])
+            else:
+                ax.plot3D([x0,x1], [z0,z1], [y0,y1], c=color)
+            
     
     
     
