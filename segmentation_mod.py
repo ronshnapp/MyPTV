@@ -20,6 +20,7 @@ class particle_segmentation(object):
     
     
     def __init__(self, image, sigma=1.0, threshold=10, mask=1.0,
+                 local_filter = 15,
                  min_xsize=None, max_xsize=None,
                  min_ysize=None, max_ysize=None,
                  min_area=None, max_area=None):
@@ -30,6 +31,21 @@ class particle_segmentation(object):
         self.mask = mask
         self.bbox_limits = (min_xsize, max_xsize, min_ysize, max_ysize)
         self.area_limits = (min_area, max_area)
+        self.loc_filter = local_filter
+        
+    
+    def local_filter(self, image):
+        '''returns a new image where the local mean neighbourhood of
+        each pixel is subtracted.'''
+        from numpy import ones
+        from scipy.signal import convolve2d
+        w = self.loc_filter
+        window = ones((w, w)) / w**2
+        local_mean = convolve2d(image, window, mode='same')
+        new_im = image - local_mean
+        new_im[new_im<0] = 0
+        new_im = new_im.astype('int')
+        return new_im
         
         
     def get_binary_image(self):
@@ -43,7 +59,13 @@ class particle_segmentation(object):
         else:
             blured = self.im
             
-        global_filt = blured>self.th
+        if self.loc_filter is not None:
+            filtered = self.local_filter(blured)
+            
+        else:
+            filtered = blured
+            
+        global_filt = filtered>self.th
             
         bin_image = 1.0 * global_filt * self.mask
         return bin_image 
@@ -159,10 +181,10 @@ class particle_segmentation(object):
             fltr = lambda b: b[2] < self.area_limits[1]
             
             
-    def plot_blobs(self):
+    def plot_blobs(self, vmin=None, vmax=None):
         import matplotlib.pyplot as plt
         fig, ax = plt.subplots()
-        ax.imshow(self.im, vmin=self.th/3, vmax=3*self.th)
+        ax.imshow(self.im, vmin=vmin, vmax=vmax)
         
         for blb in self.blobs:
             

@@ -17,11 +17,130 @@ by Bourgion and Huisman, 2020 (https://arxiv.org/pdf/2003.12135.pdf).
 
 from math import ceil, floor
 from itertools import combinations
+from numpy import loadtxt, savetxt
+
+
+
+
+
+class match_blob_files(object):
+    '''A class for obtaining trangulated particles results from a 
+    list of segmented blobs'''
+    
+    
+    def __init__(self, blob_fnames, img_system, RIO, voxel_size,
+                 reverse_eta_zeta = False):
+        '''
+        blob_fname - a list of the file names containing the segmented blob
+                     data. The list has to be sorted according the order of
+                     cameras in the img_system.
+                     
+        img_system - an instance of the img_system class with the calibrated
+                     cameras.
+                     
+        RIO - A nested list of 3X2 elements. The first holds the minimum and 
+              maximum values of x coordinates, the second is same for y, and 
+              the third for z coordinates. 
+        
+        voxel size - the side length of voxel cubes used in the ray traversal
+                     algorithm. Given in lab coordinate scales (e.g. mm).
+                     
+        reverse_eta_zeta - Should be false is the eta and zeta coordinates 
+                           should be in reverse order so as to match the
+                           calibration. This may be needed if the calibration 
+                           data points were given where the x and y coordinates
+                           are transposed (as happens, e.g., if using 
+                           matplotlib.pyplot.imshow).
+        '''
+        self.blobs = []
+        for fn in blob_fnames:
+            self.blobs.append(loadtxt(fn))
+        self.imsys = img_system
+        self.RIO = RIO
+        self.voxel_size = voxel_size
+        self.reverse_eta_zeta = reverse_eta_zeta
+        
+        
+    def get_particles(self):
+        '''use this to match blobs into particlesin 3D.'''
+        time_lst = []
+        for bl in self.blobs:
+            for b in bl:
+                time_lst.append(b[-1])
+        time_lst = list(set(time_lst))
+        
+        cam_names = [cam.name for cam in self.imsys.cameras]
+        
+        
+        self.particles = []
+        
+        for tm in time_lst:
+            print('\n', 'frame: ', tm)
+            pd = {}
+            for i in range(len(self.blobs)):
+                cn = cam_names[i]
+                if self.reverse_eta_zeta:
+                    pd[cn] = self.blobs[i][self.blobs[i][:,-1] == tm][:,1::-1]
+                
+                else:
+                    pd[cn] = self.blobs[i][self.blobs[i][:,-1] == tm][:,:2]
+            
+            M = matching(self.imsys, pd, self.RIO, self.voxel_size)
+            M.get_voxel_dictionary()
+            M.list_candidates()
+            M.get_particles()
+            for p in M.matched_particles:
+                self.particles.append(p + [tm])
+            
+    
+    def save_results(self, fname):
+        '''will save the list of particles obtained'''
+        prticles_to_save = []
+        Ncams = len(self.imsys.cameras)
+        
+        for p in self.particles:
+            rd = dict(p[3])
+            
+            p_ = [p[0], p[1], p[2]]
+            
+            for i in range(Ncams):
+                if i in list(rd.keys()):
+                    p_.append(rd[i])
+                else:
+                    p_.append(-1)
+            p_.append(p[4])
+            p_.append(p[5])
+            prticles_to_save.append(p_)
+            
+        fmt = ['%.3f', '%.3f', '%.3f']
+        for i in range(Ncams):
+            fmt.append('%d')
+        fmt = fmt + ['%.3f', '%.3f']
+        savetxt(fname, prticles_to_save, fmt=fmt, delimiter='\t')
+        
+            
+                
+
+
+
+
+
+
+
+
 
 
 class matching(object):
     '''A class for matching particles in images taken simultaniously
-    from different cameras.'''
+    from different cameras.
+    
+    The relevant functions for use are: 
+        1) self.get_voxel_dictionary()
+        2) self.list_candidates()
+        3) self.get_particles()
+    After running these three functions the attribute self.matched_particles
+    holds the results of triangulation.
+    '''
     
     
     def __init__(self, img_system, particles_dic, 
@@ -40,6 +159,7 @@ class matching(object):
         
         voxel size - the side length of voxel cubes used in the ray traversal
                      algorithm. Given in lab coordinate scales (e.g. mm).
+        
         '''
         
         self.imsys = img_system
@@ -151,14 +271,7 @@ class matching(object):
                         if len(cam_nums) == len(set(cam_nums)):
                             if comb not in candidate_dic[group_size]: 
                                 candidate_dic[group_size].append(comb)
-                            # dc = {}
-                            # for i in range(len(comb)):
-                            #     eta, zeta = self.rays[self.ray_camera_indexes[cam_nums[i]]:self.ray_camera_indexes[cam_nums[i]+1]][ray_nums[i]][:2]
-                            #     dc[cam_nums[i]] = [eta, zeta]
                             
-                            # coord, dump, dist = self.imsys.stereo_match(dc, self.voxel_size*2000)
-                            # candidate_dic[group_size].append([k, comb, coord, dist])
-        
         self.candidate_dic = candidate_dic
         
         
@@ -172,6 +285,52 @@ class matching(object):
             eta, zeta = self.rays[i:ip1][ray[1]][:2]
             dc[ray[0]] = [eta, zeta]
         return self.imsys.stereo_match(dc, 1e19)
+    
+    
+    
+    def get_particles(self):
+        '''Once all candidates are found, this function chooses the "best"
+        matches and returns them. The reliability of the matches is considered 
+        higher is
+        1) they have higher number of cameras participating in the
+        triangulation
+        2) the RMS of distance between the crossing point and the epipolar 
+        lines is smaller
+        in this order. Thus, we choose the combinations of rays with highest
+        number of camera participating and with the smallest RNS triangulaiton 
+        error.
+        '''
+        
+        matched_particles = []
+        used_rays = []
+        for k in sorted(self.candidate_dic.keys(), reverse=True):
+            cand_k = self.candidate_dic[k]
+            ray_crosses = [self.triangulate_rays(cand) for cand in cand_k]
+            key = lambda x: x[1][2]
+            dist_sorted_cands = sorted(zip(cand_k, ray_crosses), key = key)
+            
+            for i in range(len(dist_sorted_cands)):
+                used_check = False
+                for ray in dist_sorted_cands[i][0]:
+                    if ray in used_rays: used_check=True
+                
+                if used_check==False:
+                    p = dist_sorted_cands[i][1]
+                    new_p = [round(p[0][0], ndigits=3), 
+                             round(p[0][1], ndigits=3),
+                             round(p[0][2], ndigits=3),
+                             dist_sorted_cands[i][0],
+                             round(p[-1], ndigits=3)]
+                    matched_particles.append(new_p)
+                    used_rays += dist_sorted_cands[i][0]
+        
+        
+        d_list = [p[4] for p in matched_particles]
+        
+        print('')
+        print('Found %d particles'%(len(matched_particles)))
+        print('with maximum RMS error of %.2f'%(max(d_list)))
+        self.matched_particles = matched_particles
         
         
         
@@ -187,42 +346,41 @@ class matching(object):
         
         
         
-        
-        
-        
-        
-        
-if __name__ == '__main__':
-    from imaging_mod import camera, img_system
-    import numpy as np
-    import os
+
+
+
     
-    dirname ='/home/ron/Desktop/Research/plankton_sweeming/experiments/PTV_test3'
-    cnames = ['cam1', 'cam3', 'cam4']
-    res = 1280, 1024
-    cameras = []
-    for c in cnames:
-        cameras.append(camera(c, res))
+# if __name__ == '__main__':
+#     from imaging_mod import camera, img_system
+#     import numpy as np
+#     import os
     
-    for cam in cameras:
-        cam.load(dirname)
+#     dirname ='/home/ron/Desktop/Research/plankton_sweeming/experiments/PTV_test3'
+#     cnames = ['cam1', 'cam3', 'cam4']
+#     res = 1280, 1024
+#     cameras = []
+#     for c in cnames:
+#         cameras.append(camera(c, res))
     
-    particles_dic = {}
-    for c in cnames:
-        blobs = np.loadtxt( os.path.join(dirname, 'blobs_'+c) )
-        particles_dic[c] = blobs[:,:2]
+#     for cam in cameras:
+#         cam.load(dirname)
     
-    RIO = ((0.0, 68.0),
-           (0.0, 66.0),
-           (-30.0, 20.0))
+#     particles_dic = {}
+#     for c in cnames:
+#         blobs = np.loadtxt( os.path.join(dirname, 'blobs_'+c) )
+#         particles_dic[c] = blobs[:,:2]
     
-    voxel_size = 2.0
+#     RIO = ((0.0, 68.0),
+#            (0.0, 66.0),
+#            (-30.0, 20.0))
     
-    imsys = img_system(cameras)
+#     voxel_size = 2.0
     
-    m = matching(imsys, particles_dic, RIO, voxel_size)
-    m.get_voxel_dictionary()
-    m.list_candidates()
+#     imsys = img_system(cameras)
+    
+#     m = matching(imsys, particles_dic, RIO, voxel_size)
+#     m.get_voxel_dictionary()
+#     m.list_candidates()
     
 
         
