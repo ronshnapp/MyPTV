@@ -49,18 +49,53 @@ class tracker_four_frames(object):
         self.traj_lengths = {}
     
     
-    def nearest_neighbour(self, frame_num):
-        '''For a given frame number, this will attemp to form nearest 
-        neighbour trajectories for all the unlinked particles.  
+    
+    def track_all_frames(self):
+        '''Will perform tracking over all frames in a loop'''
+        for tm in self.times[:-1]:
+            self.track_single_frame(tm)
+        print('found %d trajectories'%(len(self.traj_ids)))
+        N_links = 0
+        for k in self.traj_lengths.keys(): N_links += self.traj_lengths[k]
+        print('linked %d particles'%(N_links))
+            
+    
+    
+    def track_single_frame(self, frame_num):
+        '''For a given frame number, this will attempt to link particles and 
+        foרm trajectories with particles in the next frame. When possible it 
+        will use the 3 frame tracking, and if not it will attempt a nearest 
+        neighbour tracking.  
         '''
         p1_lst = self.particles[frame_num]
         p2_lst = self.particles[frame_num+1]
         
+        
+        # try 3 frame tracking for particles that are connected at least once 
         for i in range(len(p1_lst)):
             p1 = p1_lst[i]
+            if p1[0] == -1: continue
+            match_val = self.find_velocity_projected_match(p1, frame_num+1)
+            # ========================================================
+            condition = match_val[0]<1.0               # <--add a test here!
+            # ========================================================
+            if condition:
+                p2 = p2_lst[match_val[1]]
+                if p2[0] != -1:
+                    id_ = p1[0]
+                    self.particles[frame_num+1][match_val[0]][0] = id_
+                    self.traj_lengths[id_] += 1
+                    
+        
+        # nearest neighbour tracking on particles that have not yet been
+        # connected with any other particle:
+        for i in range(len(p1_lst)):
+            p1 = p1_lst[i]
+            if p1[0] != -1: continue
             nn_val = self.find_nearest_neighbour(p1, frame_num+1)
             if nn_val[0] < self.d_max:
                 p2 = p2_lst[nn_val[1]]
+                if p2[0] != -1: continue
                 if i == self.find_nearest_neighbour(p2, frame_num)[1]:
                     
                     if len(self.traj_ids)==0:
@@ -87,6 +122,52 @@ class tracker_four_frames(object):
             values.append(( dist_particle(self.particles[frame_num][i]), i))
         min_val = min(values, key=lambda x: x[0])
         return min_val
+    
+    
+    def get_particle_by_id(self, id_, frame_num):
+        '''Returns the particle with the given id=id_ at the given 
+        frame number. If there is no such particle, it returns None.'''
+        for p in self.particles[frame_num]:
+            if p[0] == id_:
+                return p
+        return None
+        
+    
+    
+    def find_velocity_projected_match(self, particle, frame_num):
+        '''
+        This looks for the best match according to the three-frame tracking 
+        heuristic.
+        Namely, given a particle that is linked to at least one more particle, 
+        and a given frame number, this will project the expected position 
+        based on an estimated constant velocity and search for the nearest
+        neighbour to this projection. It returns the index of this nearest 
+        neighbour in frame_num, and the distance between it and the 
+        projection.'''
+        
+        id_ = particle[0]
+        p_im1 = self.get_particle_by_id(id_, particle[-1]-1)
+        
+        dt = frame_num - particle[-1]
+        v = particle[1:4] - p_im1[1:4]
+        x_proj = particle[1:4] + dt * v
+        
+        dist = lambda p: sum((x_proj - p[1:4])**2)**0.5
+        values = []
+        for i in range(len(self.particles[frame_num])):
+            values.append(( dist(self.particles[frame_num][i]), i))
+        min_val = min(values, key=lambda x: x[0])
+        return min_val
+
+
+    def return_connected_particles(self):
+        '''Will return the list of connected particles. To be used after 
+        tracking is complete.'''
+        p_list = []
+        for tm in self.times:
+            for p in self.particles[tm]:
+                p_list.append(p)
+        return p_list
 
 
 
@@ -137,6 +218,9 @@ class tracker_nearest_neighbour(object):
         for tm in self.times[:-1]:
             self.nearest_neighbour_one_frame(tm)
         print('found %d trajectories'%(len(self.traj_ids)))
+        N_links = 0
+        for k in self.traj_lengths.keys(): N_links += self.traj_lengths[k]
+        print('linked %d particles'%(N_links))
             
     
     def return_connected_particles(self):
@@ -161,6 +245,7 @@ class tracker_nearest_neighbour(object):
             nn_val = self.find_nearest_neighbour(p1, frame_num+1)
             if nn_val[0] < self.d_max:
                 p2 = p2_lst[nn_val[1]]
+                if p2[0] != -1: continue
                 if i == self.find_nearest_neighbour(p2, frame_num)[1]:
                     
                     if p1[0]==-1:
