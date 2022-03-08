@@ -11,13 +11,45 @@ Imaging Module:
 containts the camera and imaging system classes that handle 
 the transformation from camera space coordinates to lab coordinates.
 
+
+For the 3D-model we use a pin-hole camera model. Each camera has an
+imaging center (O) and an orientation vector (theta), that describe 
+its location and rotation in 3D space. Each point in image space, whose 
+coordiantes are (eta, zeta), is related to a ray going from the imaging 
+center, and has a direction vector b. The vector b can be calculated as:
+    
+    (1)    b = [eta, zeta, f] * [R]
+
+where [R] is the rotation matrix that corresponds to theta, and f is the
+focal length of the camera optical system.
+
+
+Equation (1) is a linear model. It might fit in ideal cases with no
+image distortion or multimedia problems, however in realistic cases
+it might not be sufficiently accurate. To overcome this difficulty,
+we add a correction term, redifining (1) as:
+    
+    (2)    b = ([eta, zeta, f] + e) * [R]
+    
+The correction term is given as a cubic polynomial in eta and zeta as follows:
+
+    (3)    e = [E] * Z3
+    
+           Z3 = [eta, zeta, eta^2, zeta^2, eta*zeta, eta^3, eta^2*zeta, zeta^2*eta, zeta^3]  
+
+so Z3 are the polymer terms and [E] is a (3X9) matrix with a total 
+of 27 coefficients.  
+
 """
 
 import sys, os
-from numpy import zeros, array, cos, sin, dot
+from numpy import zeros, array, cos, sin, dot, linspace
 from numpy.linalg import inv
 from utils import *
 from cal_image_coords import Cal_image_coord
+
+from scipy.interpolate import Rbf as interp
+
 
 
 
@@ -102,15 +134,25 @@ class camera(object):
     def __init__(self, name, resolution, cal_points_fname = None):    
         self.O = zeros(3) + 1.     # camera location
         self.theta = zeros(3) + 1. # rotation angles
-        self.f = 1.0               # focal depth
+        self.f = 1.0               # focal depth / magnification
+        self.xh = 0.0              # image center correction, x
+        self.yh = 0.0              # image center correction, y
         self.calc_R()
         self.resolution = resolution
+        self.E = zeros((3,9))     # correction coefficients matrix
         self.give_name(name)
+        
+        #self.E = [[0.1, -0.1, 0., 0., 0., 0., 0., 0., 0.],
+        #          [0., 0.05, 0., 0., 0., 0., 0., 0., 0.],
+        #          [0., -0.0005, 0., 0., 0., 0., 0., 0., 0.]]
+        
         
         if cal_points_fname is not None:
             cic = Cal_image_coord(cal_points_fname)
             self.image_points = cic.image_coords
             self.lab_points = cic.lab_coords
+    
+        #self.inverse_correction_term()
     
         
     def __repr__(self):
@@ -152,13 +194,21 @@ class camera(object):
     
     def get_r(self, eta, zeta):
         '''
+        r = ([eta, zeta, f] + e) * [R]
+        
         input - pixel coordinates (eta, zeta) seen by the camera
         output - direction vector in real space
         '''
-        self.calc_R()
-        eta_ = eta - self.resolution[0]/2.0
-        zeta_ = zeta - self.resolution[1]/2.0
-        r = dot(array([-eta_, -zeta_, -self.f]), self.R)
+        # self.calc_R()
+        eta_ = eta - self.resolution[0]/2.0 - self.xh
+        zeta_ = zeta - self.resolution[1]/2.0  - self.yh
+        
+        Z3 = [eta_, zeta_, 
+              eta_**2, eta_ * zeta_, zeta_**2,
+              eta_**3, eta_**2 * zeta_, eta_ * zeta_**2, zeta_**3]
+        e = dot(self.E, Z3) * 0.0 
+        
+        r = dot(array([-eta_, -zeta_, -self.f]) + e, self.R)
         return r
     
     
@@ -170,11 +220,59 @@ class camera(object):
         output - (eta, zeta) (array,2) - camera coordinates of the projection 
                                          of x
         '''
-        v = dot(x - self.O, inv(self.R))
-        a = -1.0 * v[2] / self.f
-        eta = (-1.0 * v[0]) / a  + self.resolution[0]/2
-        zeta = (-1.0 * v[1]) / a  + self.resolution[1]/2
-        return array([eta, zeta])
+        B = x - self.O
+        b = B / (B[0]**2 + B[1]**2 + B[2]**2)**0.5
+        v = dot(b, inv(self.R))
+        a =  v[2] / self.f
+        eta_ = v[0] / a  + self.resolution[0]/2 + self.xh
+        zeta_ = v[1] / a  + self.resolution[1]/2 + self.yh
+        #print(eta_, zeta_)
+        #eta, zeta = self.inverse_correction([eta_, zeta_, self.f])
+        #print(eta, zeta)
+        #print('')
+        return array([eta_, zeta_])
+    
+    
+    def inverse_correction_term(self):
+        '''
+        In the forward direction we get the b vector from known eta, zeta
+        and the correction term is e(eta, zeta):   
+            b = ([eta, zeta, f] + e) * R
+        
+        But, the inverse is a bit trickyer because the e term is a function of
+        eta and zeta and the function is non-linear. So, this function
+        generates an attribute that given
+        b*[R]^{-1} = [eta, zeta, f] + [e(eta, zeta)], 
+        returns e.
+        '''
+        r0, r1 = self.resolution
+        eta_lst = linspace(-int(r0/2), int(r0/2), 10)
+        zeta_lst = linspace(-int(r1/2), int(r1/2), 10)
+        b_Rinv_lst = []
+        for eta in eta_lst:
+            for zeta in zeta_lst:
+                Z3 = [eta, zeta, 
+                      eta**2, eta * zeta, zeta**2,
+                      eta**3, eta**2 * zeta, eta * zeta**2, zeta**3]
+                e = dot(self.E, Z3)
+                b_Rinv = [-e[0]+eta, -e[1]+zeta, -e[2]+self.f, eta, zeta]
+                b_Rinv_lst.append(b_Rinv)
+        
+        b_Rinv_lst = array(b_Rinv_lst)
+        eta_inv = interp(b_Rinv_lst[:,0], b_Rinv_lst[:,1], 
+                         b_Rinv_lst[:,2], b_Rinv_lst[:,3])
+        
+        zeta_inv = interp(b_Rinv_lst[:,0], b_Rinv_lst[:,1], 
+                          b_Rinv_lst[:,2], b_Rinv_lst[:,4])
+        
+        self.b_Rinv_lst = b_Rinv_lst
+        self.inverse_correction = lambda bRinv: [eta_inv(bRinv[0],
+                                                         bRinv[1], 
+                                                         bRinv[2]),
+                                                 zeta_inv(bRinv[0],
+                                                         bRinv[1], 
+                                                         bRinv[2])]
+        #return b_Rinv_lst
     
     
     def save(self, dir_path = ''):
@@ -196,8 +294,15 @@ class camera(object):
             S+= str(s)+' '
         f.write(S+'\n')
         
-        f.write(str(self.f))
+        f.write(str(self.f)+'\n')
+        
+        S = ''
+        for s in [self.xh, self.yh]:
+            S+= str(s)+' '
+        f.write(S+'\n')
+        
         f.close()
+        
         
     def load(self, dir_path):
         '''
@@ -215,6 +320,9 @@ class camera(object):
         self.theta = array([float(s) for s in S.split()])
         
         self.f = float(f.readline()[:-2])
+        
+        S = f.readline()[:-2]
+        self.xh, self.yh = array([float(s) for s in S.split()])
         f.close()
         
         self.calc_R()
@@ -240,16 +348,20 @@ class camera(object):
             ax = plt.axes(projection='3d')
             if color is None:
                 ax.plot3D([x0,x1], [z0,z1], [y0,y1])
+                ax.plot3D([self.O[0]], [self.O[2]], [self.O[1]], 'ko')
             else:
                 ax.plot3D([x0,x1], [z0,z1], [y0,y1], c=color)
+                ax.plot3D([self.O[0]], [self.O[2]], [self.O[1]], 'o', c=color)
         
             return fig, ax
        
         else:
             if color is None:
                 ax.plot3D([x0,x1], [z0,z1], [y0,y1])
+                ax.plot3D([self.O[0]], [self.O[2]], [self.O[1]], 'ko')
             else:
                 ax.plot3D([x0,x1], [z0,z1], [y0,y1], c=color)
+                ax.plot3D([self.O[0]], [self.O[2]], [self.O[1]], 'o', c=color)
             
     
     
@@ -259,39 +371,73 @@ class camera(object):
 '''
 if __name__ == '__main__':
     from numpy import pi 
-    c1 = camera('1', (10,10))
-    c2 = camera('2', (10,10))
-    c3 = camera('3', (10,10))
+    c1 = camera('1', (1000.,1000.))
+    c2 = camera('2', (1000.,1000.))
+    c3 = camera('3', (1000.,1000.))
     
-    c1.O = array([10.0 ,0,0])
-    c2.O = array([0,10.0 ,0])
-    c3.O = array([10.0,10.0 ,0])
+    c1.O = array([400.0 , 0, 1])
+    c2.O = array([0, 400.0, -1])
+    c3.O = array([200.0, 400.0 ,400])
     
-    c2.theta[0] = -pi / 2.0
-    c1.theta[1] = pi / 2.0
+    c1.f = 4000
+    c2.f = 4000
+    c3.f = 4000
+    
+    c1.theta = array([0.0, -1*pi / 2.0, 0.0])
+    c2.theta = array([pi / 2.0, 0., 0.])
+    c3.theta = array([0.8, -0.4, 0.0])
     
     c1.calc_R()
     c2.calc_R()
     c3.calc_R()
     
-    x = array([0.0,0.1,0.1])        
+    c1.inverse_correction_term()
+    c2.inverse_correction_term()
+    c3.inverse_correction_term()
     
-    imgsys = img_system()
-    imgsys.cameras.append(c1)
-    imgsys.cameras.append(c2)
-    imgsys.cameras.append(c3)
+    c1.xh = 1.0
+    c1.yh = -1.0
     
-    coords = {0: c1.projection(x),
-              1: c2.projection(x)*1.01,
-              2: c3.projection(x)*0.99}
+    x = array([0.1,0.1,0.1])        
+    
+    imgsys = img_system([c1,c2,c3])
+    
+    
+    proj1 = c1.projection(x)
+    proj2 = c2.projection(x)
+    proj3 = c3.projection(x)
+    
+    err1 = array([1.0, 1.0])
+    err2 = array([1.0, -2.0])
+    err3 = array([-1.0, 1.0])
+    
+    coords = {0: proj1 + err1,
+              1: proj2 + err2,
+              2: proj3 + err3}
+    
+    print(proj1)
+    print(proj2)
+    print(proj3)
+    
+    res = imgsys.stereo_match(coords, 1e9)
+    print(res)
+'''
+   
+'''
+    e,z = coords[0]
+    fig, ax = c1.plot_3D_epipolar_line(e, z, (-2,4), color='b')
+   
+    e,z = coords[1]
+    c2.plot_3D_epipolar_line(e, z, (-1,1), ax=ax, color='r')
         
-    print(imgsys.stereo_match(coords, 0.5))
+    e,z = coords[2]
+    c3.plot_3D_epipolar_line(e, z, (-50,200), ax=ax, color='g')     
 
-'''   
+    ax.plot3D(x[0], x[1], x[2], 'ko')
+    x_ = res[0]
+    ax.plot3D(x_[0], x_[1], x_[2], 'yo', fillstyle='none')
         
-        
-        
-        
-        
-        
-        
+    ax.set_xlim(-25,25)
+    ax.set_ylim(-25,25)
+    ax.set_zlim(-25,25)
+'''

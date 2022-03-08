@@ -58,6 +58,9 @@ class calibrate(object):
         def func(X):
             self.camera.O = X[:3]
             self.camera.theta = X[3:6]
+            self.camera.xh = X[6]
+            self.camera.yh = X[7]
+            
             if not fix_f:
                 self.camera.f = X[-1]
                 
@@ -70,12 +73,11 @@ class calibrate(object):
         c = self.camera
         
         if fix_f:
-            X0 = hstack([c.O, c.theta])
+            X0 = hstack([c.O, c.theta, c.xh, c.yh])
         
         else:
-            X0 = hstack([c.O, c.theta, c.f])
-            
-            
+            X0 = hstack([c.O, c.theta, c.xh, c.yh, c.f])
+                        
         res = minimize(func, X0, method='nelder-mead', 
                        options={'disp': True, 'maxiter': maxiter})
         return res

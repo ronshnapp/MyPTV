@@ -28,7 +28,7 @@ class match_blob_files(object):
     list of segmented blobs'''
     
     
-    def __init__(self, blob_fnames, img_system, RIO, voxel_size,
+    def __init__(self, blob_fnames, img_system, RIO, voxel_size, max_err=None,
                  reverse_eta_zeta = False):
         '''
         blob_fname - a list of the file names containing the segmented blob
@@ -45,6 +45,9 @@ class match_blob_files(object):
         voxel size - the side length of voxel cubes used in the ray traversal
                      algorithm. Given in lab coordinate scales (e.g. mm).
                      
+        max_err - maximum acceptable uncertainty in particle position. If None,
+                  (defult), than no bound is used.
+                     
         reverse_eta_zeta - Should be false is the eta and zeta coordinates 
                            should be in reverse order so as to match the
                            calibration. This may be needed if the calibration 
@@ -59,6 +62,7 @@ class match_blob_files(object):
         self.RIO = RIO
         self.voxel_size = voxel_size
         self.reverse_eta_zeta = reverse_eta_zeta
+        self.max_err = max_err
         
         
     def get_particles(self):
@@ -89,9 +93,24 @@ class match_blob_files(object):
             M.get_voxel_dictionary()
             M.list_candidates()
             M.get_particles()
-            for p in M.matched_particles:
-                self.particles.append(p + [tm])
             
+            if self.max_err is None:
+                for p in M.matched_particles:
+                    self.particles.append(p + [tm])
+            
+            else: 
+                for p in M.matched_particles:
+                    if p[4] <= self.max_err:
+                        self.particles.append(p + [tm])
+        
+        print('done!')                        
+        errors = [p[4] for p in self.particles]
+        print('mean error: %.3f'%(sum(errors)/len(errors)))
+        Np = len(self.particles)
+        times = [p[-1] for p in self.particles]
+        Nframes = len(set(times))
+        print('avg. particles in frame: %.2f'%(Np/Nframes))
+    
     
     def save_results(self, fname):
         '''will save the list of particles obtained'''
@@ -325,11 +344,10 @@ class matching(object):
                     used_rays += dist_sorted_cands[i][0]
         
         
-        d_list = [p[4] for p in matched_particles]
-        
-        print('')
-        print('Found %d particles'%(len(matched_particles)))
-        print('with maximum RMS error of %.2f'%(max(d_list)))
+        #d_list = [p[4] for p in matched_particles]
+        #print('')
+        #print('Found %d particles'%(len(matched_particles)))
+        #print('with maximum RMS error of %.2f'%(max(d_list)))
         self.matched_particles = matched_particles
         
         
