@@ -106,10 +106,14 @@ class calibrate(object):
         
     def manual_calibration(self):
         '''
-        A manual calibration app. 
-        In development. Currently it only supports actively 
+        A manual calibration app - manually change calibration
+        parameters and see the error changing live.
+        
+        ===================================================
+        IN DEVELOPMENT: Currently it only supports actively 
         changing camera center and angle. 
         To add: live plotting.
+        ===================================================
         
         keys:
             a - change Ox

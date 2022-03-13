@@ -48,7 +48,7 @@ from numpy.linalg import inv
 from utils import *
 from cal_image_coords import Cal_image_coord
 
-from scipy.interpolate import Rbf as interp
+from scipy.optimize import least_squares
 
 
 
@@ -152,7 +152,7 @@ class camera(object):
             self.image_points = cic.image_coords
             self.lab_points = cic.lab_coords
     
-        #self.inverse_correction_term()
+
     
         
     def __repr__(self):
@@ -206,7 +206,7 @@ class camera(object):
         Z3 = [eta_, zeta_, 
               eta_**2, eta_ * zeta_, zeta_**2,
               eta_**3, eta_**2 * zeta_, eta_ * zeta_**2, zeta_**3]
-        e = dot(self.E, Z3) * 0.0 
+        e = dot(self.E, Z3)
         
         r = dot(array([-eta_, -zeta_, -self.f]) + e, self.R)
         return r
@@ -230,49 +230,74 @@ class camera(object):
         #eta, zeta = self.inverse_correction([eta_, zeta_, self.f])
         #print(eta, zeta)
         #print('')
-        return array([eta_, zeta_])
+        eta, zeta = self.eta_zeta_from_bRinv(eta_, zeta_)
+        return array([eta, zeta])
     
     
-    def inverse_correction_term(self):
+    def eta_zeta_from_bRinv(self, eta_, zeta_):
         '''
-        In the forward direction we get the b vector from known eta, zeta
-        and the correction term is e(eta, zeta):   
-            b = ([eta, zeta, f] + e) * R
-        
-        But, the inverse is a bit trickyer because the e term is a function of
-        eta and zeta and the function is non-linear. So, this function
-        generates an attribute that given
-        b*[R]^{-1} = [eta, zeta, f] + [e(eta, zeta)], 
-        returns e.
+        the projection equation is 
+        [eta, zeta, f] = b * [R]^-1 + e(eta, zeta)
+        This function returns (eta, zeta) for an input of b*[R]^-1
+        by solving a least squares equation
         '''
-        r0, r1 = self.resolution
-        eta_lst = linspace(-int(r0/2), int(r0/2), 10)
-        zeta_lst = linspace(-int(r1/2), int(r1/2), 10)
-        b_Rinv_lst = []
-        for eta in eta_lst:
-            for zeta in zeta_lst:
-                Z3 = [eta, zeta, 
-                      eta**2, eta * zeta, zeta**2,
-                      eta**3, eta**2 * zeta, eta * zeta**2, zeta**3]
-                e = dot(self.E, Z3)
-                b_Rinv = [-e[0]+eta, -e[1]+zeta, -e[2]+self.f, eta, zeta]
-                b_Rinv_lst.append(b_Rinv)
+        def func(X):
+            eta, zeta = X
+            Z3 = [eta, zeta, 
+              eta**2, eta * zeta, zeta**2,
+              eta**3, eta**2 * zeta, eta * zeta**2, zeta**3]
+            e = dot(self.E, Z3)
+            
+            err0 = eta + e[0] - eta_
+            err1 = zeta + e[1] - zeta_
+            return (err0**2 + err1**2)**0.5
         
-        b_Rinv_lst = array(b_Rinv_lst)
-        eta_inv = interp(b_Rinv_lst[:,0], b_Rinv_lst[:,1], 
-                         b_Rinv_lst[:,2], b_Rinv_lst[:,3])
+        X0 = eta_, zeta_
+        sol = least_squares(func, X0)
+        eta, zeta = sol.x
+        return eta, zeta
+    
+    
+    # def inverse_correction_term(self):
+    #     '''
+    #     In the forward direction we get the b vector from known eta, zeta
+    #     and the correction term is e(eta, zeta):   
+    #         b = ([eta, zeta, f] + e) * R
         
-        zeta_inv = interp(b_Rinv_lst[:,0], b_Rinv_lst[:,1], 
-                          b_Rinv_lst[:,2], b_Rinv_lst[:,4])
+    #     But, the inverse is a bit trickyer because the e term is a function of
+    #     eta and zeta and the function is non-linear. So, this function
+    #     generates an attribute that given
+    #     b*[R]^{-1} = [eta, zeta, f] + [e(eta, zeta)], 
+    #     returns e.
+    #     '''
+    #     r0, r1 = self.resolution
+    #     eta_lst = linspace(-int(r0/2), int(r0/2), 10)
+    #     zeta_lst = linspace(-int(r1/2), int(r1/2), 10)
+    #     b_Rinv_lst = []
+    #     for eta in eta_lst:
+    #         for zeta in zeta_lst:
+    #             Z3 = [eta, zeta, 
+    #                   eta**2, eta * zeta, zeta**2,
+    #                   eta**3, eta**2 * zeta, eta * zeta**2, zeta**3]
+    #             e = dot(self.E, Z3)
+    #             b_Rinv = [-e[0]+eta, -e[1]+zeta, -e[2]+self.f, eta, zeta]
+    #             b_Rinv_lst.append(b_Rinv)
         
-        self.b_Rinv_lst = b_Rinv_lst
-        self.inverse_correction = lambda bRinv: [eta_inv(bRinv[0],
-                                                         bRinv[1], 
-                                                         bRinv[2]),
-                                                 zeta_inv(bRinv[0],
-                                                         bRinv[1], 
-                                                         bRinv[2])]
-        #return b_Rinv_lst
+    #     b_Rinv_lst = array(b_Rinv_lst)
+    #     eta_inv = interp(b_Rinv_lst[:,0], b_Rinv_lst[:,1], 
+    #                      b_Rinv_lst[:,2], b_Rinv_lst[:,3])
+        
+    #     zeta_inv = interp(b_Rinv_lst[:,0], b_Rinv_lst[:,1], 
+    #                       b_Rinv_lst[:,2], b_Rinv_lst[:,4])
+        
+    #     self.b_Rinv_lst = b_Rinv_lst
+    #     self.inverse_correction = lambda bRinv: [eta_inv(bRinv[0],
+    #                                                      bRinv[1], 
+    #                                                      bRinv[2]),
+    #                                              zeta_inv(bRinv[0],
+    #                                                      bRinv[1], 
+    #                                                      bRinv[2])]
+    #     #return b_Rinv_lst
     
     
     def save(self, dir_path = ''):
@@ -367,8 +392,7 @@ class camera(object):
     
     
     
-    
-'''
+
 if __name__ == '__main__':
     from numpy import pi 
     c1 = camera('1', (1000.,1000.))
@@ -391,9 +415,9 @@ if __name__ == '__main__':
     c2.calc_R()
     c3.calc_R()
     
-    c1.inverse_correction_term()
-    c2.inverse_correction_term()
-    c3.inverse_correction_term()
+    #c1.inverse_correction_term()
+    #c2.inverse_correction_term()
+    #c3.inverse_correction_term()
     
     c1.xh = 1.0
     c1.yh = -1.0
@@ -407,21 +431,21 @@ if __name__ == '__main__':
     proj2 = c2.projection(x)
     proj3 = c3.projection(x)
     
-    err1 = array([1.0, 1.0])
-    err2 = array([1.0, -2.0])
-    err3 = array([-1.0, 1.0])
+    err1 = array([1.0, 1.0]) * 0
+    err2 = array([1.0, -2.0]) * 0
+    err3 = array([-1.0, 1.0]) * 0
     
     coords = {0: proj1 + err1,
               1: proj2 + err2,
               2: proj3 + err3}
     
-    print(proj1)
-    print(proj2)
-    print(proj3)
+    print('\n', proj1)
+    print('',proj2)
+    print('',proj3)
     
     res = imgsys.stereo_match(coords, 1e9)
-    print(res)
-'''
+    print('\n', res)
+
    
 '''
     e,z = coords[0]
