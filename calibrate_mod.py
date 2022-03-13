@@ -35,14 +35,16 @@ class calibrate(object):
         self.sep = sum((array(self.img_coords[1])-array(self.img_coords[0]))**2)**0.5
         
         
-    def mean_squared_err(self):
+    def mean_squared_err(self, correction=True):
         '''
         This calculaes the mean squared distance between the 
         projection and the given coordinates  (in units of pixel).
         
         (in the calibration we want to minimize this D)
         '''
-        z_lst = [self.camera.projection(x) for x in self.lab_coords]        
+        z_lst = []        
+        for x in self.lab_coords:
+            z_lst.append(self.camera.projection(x, correction=correction))
         e = array(z_lst) - array(self.img_coords)
         D = mean( sum(e**2, axis=1)**0.5 )
         return D
@@ -66,7 +68,7 @@ class calibrate(object):
                 
             self.camera.calc_R()
             
-            meanSquaredErr = self.mean_squared_err()
+            meanSquaredErr = self.mean_squared_err(correction=False)
             self.D_lst.append( meanSquaredErr )
             return meanSquaredErr
         
@@ -78,6 +80,29 @@ class calibrate(object):
         else:
             X0 = hstack([c.O, c.theta, c.xh, c.yh, c.f])
                         
+        res = minimize(func, X0, method='nelder-mead', 
+                       options={'disp': True, 'maxiter': maxiter})
+        return res
+    
+    
+    
+    def fineCalibration(self, maxiter=500):
+        '''
+        Calibration for the nonlinear error term. 
+        This function attempts to find the 27 parameters that minimize the
+        calibration error using scipy.minimize.
+        '''
+        from scipy.optimize import minimize
+        
+        def func(X):
+            
+            self.camera.E = X.reshape(self.camera.E.shape)
+            meanSquaredErr = self.mean_squared_err(correction=True)
+            self.D_lst.append( meanSquaredErr )
+            return meanSquaredErr
+        
+        c = self.camera
+        X0 = c.E
         res = minimize(func, X0, method='nelder-mead', 
                        options={'disp': True, 'maxiter': maxiter})
         return res

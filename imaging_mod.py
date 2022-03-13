@@ -139,13 +139,10 @@ class camera(object):
         self.yh = 0.0              # image center correction, y
         self.calc_R()
         self.resolution = resolution
-        self.E = zeros((3,9))     # correction coefficients matrix
+        #self.E = zeros((3,9))     # correction coefficients matrix
         self.give_name(name)
         
-        #self.E = [[0.1, -0.1, 0., 0., 0., 0., 0., 0., 0.],
-        #          [0., 0.05, 0., 0., 0., 0., 0., 0., 0.],
-        #          [0., -0.0005, 0., 0., 0., 0., 0., 0., 0.]]
-        
+        self.E = zeros((3,5))     # correction coefficients matrix
         
         if cal_points_fname is not None:
             cic = Cal_image_coord(cal_points_fname)
@@ -204,19 +201,22 @@ class camera(object):
         zeta_ = zeta - self.resolution[1]/2.0  - self.yh
         
         Z3 = [eta_, zeta_, 
-              eta_**2, eta_ * zeta_, zeta_**2,
-              eta_**3, eta_**2 * zeta_, eta_ * zeta_**2, zeta_**3]
+              eta_**2, zeta_**2, eta_ * zeta_]#,
+              #eta_**3, eta_**2 * zeta_, eta_ * zeta_**2, zeta_**3]
         e = dot(self.E, Z3)
         
         r = dot(array([-eta_, -zeta_, -self.f]) + e, self.R)
         return r
     
     
-    def projection(self,x):
+    def projection(self, x, correction=True):
         '''
         will return the image coordinate (eta, zeta) of a real point x.
         
         input - x (array,3) - real world coordinates
+                correction - if True, will return the coordinates after
+                the non-linear error correction. If False, we not do the
+                correction.
         output - (eta, zeta) (array,2) - camera coordinates of the projection 
                                          of x
         '''
@@ -226,12 +226,16 @@ class camera(object):
         a =  v[2] / self.f
         eta_ = v[0] / a  + self.resolution[0]/2 + self.xh
         zeta_ = v[1] / a  + self.resolution[1]/2 + self.yh
-        #print(eta_, zeta_)
-        #eta, zeta = self.inverse_correction([eta_, zeta_, self.f])
-        #print(eta, zeta)
-        #print('')
-        eta, zeta = self.eta_zeta_from_bRinv(eta_, zeta_)
-        return array([eta, zeta])
+        
+        
+        # add the error correction term.
+        if correction:
+            eta, zeta = self.eta_zeta_from_bRinv(eta_, zeta_)
+            return array([eta, zeta])
+        
+        # do not use the error correction term.
+        else:
+            return array([eta_, zeta_])
     
     
     def eta_zeta_from_bRinv(self, eta_, zeta_):
@@ -241,63 +245,59 @@ class camera(object):
         This function returns (eta, zeta) for an input of b*[R]^-1
         by solving a least squares equation
         '''
-        def func(X):
-            eta, zeta = X
-            Z3 = [eta, zeta, 
-              eta**2, eta * zeta, zeta**2,
-              eta**3, eta**2 * zeta, eta * zeta**2, zeta**3]
-            e = dot(self.E, Z3)
+        # def func(X):
+        #     eta, zeta = X
+        #     Z3 = [eta, zeta]#, 
+        #       #eta**2, eta * zeta, zeta**2,
+        #       #eta**3, eta**2 * zeta, eta * zeta**2, zeta**3]
+        #     e = dot(self.E, Z3)
             
-            err0 = eta + e[0] - eta_
-            err1 = zeta + e[1] - zeta_
-            return (err0**2 + err1**2)**0.5
+        #     err0 = eta + e[0] - eta_
+        #     err1 = zeta + e[1] - zeta_
+        #     return (err0**2 + err1**2)**0.5
         
-        X0 = eta_, zeta_
-        sol = least_squares(func, X0)
-        eta, zeta = sol.x
+        # X0 = eta_, zeta_
+        # sol = least_squares(func, X0)
+        # eta, zeta = sol.x
+        
+        # A = self.E[:-1,:]
+        # if (A==0.0).all():
+        #     return eta_, zeta_
+        
+        # a = A[0,0] + 1
+        # b = A[0,1]
+        # c = A[1,0]
+        # d = A[1,1] + 1
+        
+        # eta, zeta = dot(array([[d,-b],[-c,a]]),array([eta_, zeta_]))/(a*d-b*c)
+        
+        
+        Z3 = [eta_, zeta_, eta_**2, zeta_**2, eta_ * zeta_]
+        e_ = dot(self.E, Z3)
+        
+        e_0 = e_[0]
+        a, b, c, d, ee = self.E[0,:]
+        e_eta_0 = a + 2*c*eta_ + ee*zeta_
+        e_zeta_0 = b + 2*d*zeta_ + ee*eta_
+        
+        
+        e_1 = e_[1]
+        a, b, c, d, ee = self.E[1,:]
+        e_eta_1 = a + 2*c*eta_ + ee*zeta_
+        e_zeta_1 = b + 2*d*zeta_ + ee*eta_
+        
+        A11 = 1.0 + e_eta_0
+        A12 = e_zeta_0
+        A21 = e_eta_1
+        A22 = 1.0 + e_zeta_1
+        
+        rhs1 = eta_*(1.0 + e_eta_0) + zeta_*e_zeta_0 - e_0
+        rhs2 = zeta_*(1.0 + e_zeta_1) + eta_*e_eta_1 - e_1
+        
+        Ainv = array([[A22, -A12],[-A21, A11]]) / (A11*A22 - A12*A21)
+        eta, zeta = dot(Ainv, [rhs1, rhs2])
         return eta, zeta
     
-    
-    # def inverse_correction_term(self):
-    #     '''
-    #     In the forward direction we get the b vector from known eta, zeta
-    #     and the correction term is e(eta, zeta):   
-    #         b = ([eta, zeta, f] + e) * R
-        
-    #     But, the inverse is a bit trickyer because the e term is a function of
-    #     eta and zeta and the function is non-linear. So, this function
-    #     generates an attribute that given
-    #     b*[R]^{-1} = [eta, zeta, f] + [e(eta, zeta)], 
-    #     returns e.
-    #     '''
-    #     r0, r1 = self.resolution
-    #     eta_lst = linspace(-int(r0/2), int(r0/2), 10)
-    #     zeta_lst = linspace(-int(r1/2), int(r1/2), 10)
-    #     b_Rinv_lst = []
-    #     for eta in eta_lst:
-    #         for zeta in zeta_lst:
-    #             Z3 = [eta, zeta, 
-    #                   eta**2, eta * zeta, zeta**2,
-    #                   eta**3, eta**2 * zeta, eta * zeta**2, zeta**3]
-    #             e = dot(self.E, Z3)
-    #             b_Rinv = [-e[0]+eta, -e[1]+zeta, -e[2]+self.f, eta, zeta]
-    #             b_Rinv_lst.append(b_Rinv)
-        
-    #     b_Rinv_lst = array(b_Rinv_lst)
-    #     eta_inv = interp(b_Rinv_lst[:,0], b_Rinv_lst[:,1], 
-    #                      b_Rinv_lst[:,2], b_Rinv_lst[:,3])
-        
-    #     zeta_inv = interp(b_Rinv_lst[:,0], b_Rinv_lst[:,1], 
-    #                       b_Rinv_lst[:,2], b_Rinv_lst[:,4])
-        
-    #     self.b_Rinv_lst = b_Rinv_lst
-    #     self.inverse_correction = lambda bRinv: [eta_inv(bRinv[0],
-    #                                                      bRinv[1], 
-    #                                                      bRinv[2]),
-    #                                              zeta_inv(bRinv[0],
-    #                                                      bRinv[1], 
-    #                                                      bRinv[2])]
-    #     #return b_Rinv_lst
     
     
     def save(self, dir_path = ''):
@@ -326,7 +326,14 @@ class camera(object):
             S+= str(s)+' '
         f.write(S+'\n')
         
+        for i in range(3):
+            S = ''
+            for s in self.E[i,:]:
+                S+= str(s)+' '
+            f.write(S+'\n')
+        
         f.close()
+        
         
         
     def load(self, dir_path):
@@ -348,6 +355,11 @@ class camera(object):
         
         S = f.readline()[:-2]
         self.xh, self.yh = array([float(s) for s in S.split()])
+        
+        for i in range(3):
+            S = f.readline()[:-2]
+            self.E[i,:] = array([float(s) for s in S.split()])
+        
         f.close()
         
         self.calc_R()
