@@ -200,12 +200,18 @@ class camera(object):
         eta_ = eta - self.resolution[0]/2.0 - self.xh
         zeta_ = zeta - self.resolution[1]/2.0  - self.yh
         
-        Z3 = [eta_, zeta_, 
-              eta_**2, zeta_**2, eta_ * zeta_]#,
-              #eta_**3, eta_**2 * zeta_, eta_ * zeta_**2, zeta_**3]
+        #Z3 = [eta_, zeta_, 
+        #      eta_**2, zeta_**2, eta_ * zeta_]
+        
+        Z3 = [eta, zeta, 
+              eta**2, zeta**2, eta * zeta]
+        
         e = dot(self.E, Z3)
         
-        r = dot(array([-eta_, -zeta_, -self.f]) + e, self.R)
+        if self.name=='1': print('get_r', e)
+        
+        r = dot(array([-eta_, -zeta_, -self.f]) - e, self.R)
+        r = r / (r[0]**2 + r[1]**2 + r[2]**2)**0.5
         return r
     
     
@@ -225,8 +231,7 @@ class camera(object):
         v = dot(b, inv(self.R))
         a =  v[2] / self.f
         eta_ = v[0] / a  + self.resolution[0]/2 + self.xh
-        zeta_ = v[1] / a  + self.resolution[1]/2 + self.yh
-        
+        zeta_ = v[1] / a + self.resolution[1]/2 + self.yh
         
         # add the error correction term.
         if correction:
@@ -245,32 +250,6 @@ class camera(object):
         This function returns (eta, zeta) for an input of b*[R]^-1
         by solving a least squares equation
         '''
-        # def func(X):
-        #     eta, zeta = X
-        #     Z3 = [eta, zeta]#, 
-        #       #eta**2, eta * zeta, zeta**2,
-        #       #eta**3, eta**2 * zeta, eta * zeta**2, zeta**3]
-        #     e = dot(self.E, Z3)
-            
-        #     err0 = eta + e[0] - eta_
-        #     err1 = zeta + e[1] - zeta_
-        #     return (err0**2 + err1**2)**0.5
-        
-        # X0 = eta_, zeta_
-        # sol = least_squares(func, X0)
-        # eta, zeta = sol.x
-        
-        # A = self.E[:-1,:]
-        # if (A==0.0).all():
-        #     return eta_, zeta_
-        
-        # a = A[0,0] + 1
-        # b = A[0,1]
-        # c = A[1,0]
-        # d = A[1,1] + 1
-        
-        # eta, zeta = dot(array([[d,-b],[-c,a]]),array([eta_, zeta_]))/(a*d-b*c)
-        
         
         Z3 = [eta_, zeta_, eta_**2, zeta_**2, eta_ * zeta_]
         e_ = dot(self.E, Z3)
@@ -279,7 +258,6 @@ class camera(object):
         a, b, c, d, ee = self.E[0,:]
         e_eta_0 = a + 2*c*eta_ + ee*zeta_
         e_zeta_0 = b + 2*d*zeta_ + ee*eta_
-        
         
         e_1 = e_[1]
         a, b, c, d, ee = self.E[1,:]
@@ -296,6 +274,7 @@ class camera(object):
         
         Ainv = array([[A22, -A12],[-A21, A11]]) / (A11*A22 - A12*A21)
         eta, zeta = dot(Ainv, [rhs1, rhs2])
+        
         return eta, zeta
     
     
@@ -438,6 +417,13 @@ if __name__ == '__main__':
     
     imgsys = img_system([c1,c2,c3])
     
+    E = 1e-6 
+    c1.E[0,:] = E
+    c1.E[1,:] = E
+    c2.E[0,:] = E
+    c2.E[1,:] = E
+    c3.E[0,:] = E
+    c3.E[1,:] = E
     
     proj1 = c1.projection(x)
     proj2 = c2.projection(x)

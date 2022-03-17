@@ -68,7 +68,7 @@ class calibrate(object):
                 
             self.camera.calc_R()
             
-            meanSquaredErr = self.mean_squared_err(correction=False)
+            meanSquaredErr = self.mean_squared_err()
             self.D_lst.append( meanSquaredErr )
             return meanSquaredErr
         
@@ -95,14 +95,16 @@ class calibrate(object):
         from scipy.optimize import minimize
         
         def func(X):
-            
-            self.camera.E = X.reshape(self.camera.E.shape)
+            shape = (2, self.camera.E.shape[1])
+            X_ = X.reshape(shape)
+            self.camera.E[0,:] = X_[0,:]
+            self.camera.E[1,:] = X_[1,:]
             meanSquaredErr = self.mean_squared_err(correction=True)
             self.D_lst.append( meanSquaredErr )
             return meanSquaredErr
         
         c = self.camera
-        X0 = c.E
+        X0 = c.E[:2,:]
         res = minimize(func, X0, method='nelder-mead', 
                        options={'disp': True, 'maxiter': maxiter})
         return res
