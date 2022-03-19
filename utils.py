@@ -61,3 +61,39 @@ def point_line_dist(O,r,P):
     return d
 
 
+
+def fit_polynomial(x, y, n):
+    '''
+    A polynomial of degree n is written as:
+        
+        p_n(x) = an*x^n + ... + a0
+        
+    This function solves the least squares equation minimize  
+    the coefficients an ... a0 that minimize the resudials to 
+    the data points (x_i, y_i):  
+        R = sum_i | p_n(x_i) - y_i |^2
+        
+    input - 
+    x - a list of observations for the dependent variable 
+    y - a list of observations for the independent variable 
+    n - degree of polynomial to fit
+    
+    output - 
+    an - a list of n+1 polynomial coefficients.
+    '''
+    N = len(y)
+    X = []
+    
+    for i in range(N):
+        X.append([])
+        for j in range(n, -1, -1):
+            X[-1].append(x[i]**j)
+    
+    X = array(X)
+    A = dot( inv(dot(X.T, X)) , X.T )
+    an = dot(A, y)
+    return an
+    
+
+
+

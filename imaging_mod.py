@@ -139,10 +139,10 @@ class camera(object):
         self.yh = 0.0              # image center correction, y
         self.calc_R()
         self.resolution = resolution
-        #self.E = zeros((3,9))     # correction coefficients matrix
         self.give_name(name)
         
         self.E = zeros((3,5))     # correction coefficients matrix
+        #self.E = zeros((3,9))     # correction coefficients matrix
         
         if cal_points_fname is not None:
             cic = Cal_image_coord(cal_points_fname)
@@ -200,15 +200,12 @@ class camera(object):
         eta_ = eta - self.resolution[0]/2.0 - self.xh
         zeta_ = zeta - self.resolution[1]/2.0  - self.yh
         
-        #Z3 = [eta_, zeta_, 
-        #      eta_**2, zeta_**2, eta_ * zeta_]
         
-        Z3 = [eta, zeta, 
-              eta**2, zeta**2, eta * zeta]
+        Z3 = [eta, zeta, eta**2, zeta**2, eta * zeta]
+        #Z3 = [eta, zeta, eta**2, zeta**2, eta * zeta, 
+        #      eta**3, eta**2*zeta, eta*zeta**2, zeta**3]
         
         e = dot(self.E, Z3)
-        
-        if self.name=='1': print('get_r', e)
         
         r = dot(array([-eta_, -zeta_, -self.f]) - e, self.R)
         r = r / (r[0]**2 + r[1]**2 + r[2]**2)**0.5
@@ -252,17 +249,25 @@ class camera(object):
         '''
         
         Z3 = [eta_, zeta_, eta_**2, zeta_**2, eta_ * zeta_]
+        #Z3 = [eta_, zeta_, eta_**2, zeta_**2, eta_ * zeta_,
+        #      eta_**3, eta_**2*zeta_, eta_*zeta_**2, zeta_**3]
         e_ = dot(self.E, Z3)
         
         e_0 = e_[0]
         a, b, c, d, ee = self.E[0,:]
         e_eta_0 = a + 2*c*eta_ + ee*zeta_
         e_zeta_0 = b + 2*d*zeta_ + ee*eta_
+        #a, b, c, d, ee, f, g, h, i = self.E[0,:]
+        #e_eta_0 = a + 2*c*eta_ + ee*zeta_ + 3*f*eta_**2 + 2*g*eta_*zeta_ + h*zeta_**2
+        #e_zeta_0 = b + 2*d*zeta_ + ee*eta_ + g*eta_**2 + 2*h*eta_*zeta_ + 3*i*zeta_**2
         
         e_1 = e_[1]
         a, b, c, d, ee = self.E[1,:]
         e_eta_1 = a + 2*c*eta_ + ee*zeta_
         e_zeta_1 = b + 2*d*zeta_ + ee*eta_
+        #a, b, c, d, ee, f, g, h, i = self.E[1,:]
+        #e_eta_1 = a + 2*c*eta_ + ee*zeta_ + 3*f*eta_**2 + 2*g*eta_*zeta_ + h*zeta_**2
+        #e_zeta_1 = b + 2*d*zeta_ + ee*eta_ + g*eta_**2 + 2*h*eta_*zeta_ + 3*i*zeta_**2
         
         A11 = 1.0 + e_eta_0
         A12 = e_zeta_0
@@ -417,7 +422,7 @@ if __name__ == '__main__':
     
     imgsys = img_system([c1,c2,c3])
     
-    E = 1e-6 
+    E = 1e-6
     c1.E[0,:] = E
     c1.E[1,:] = E
     c2.E[0,:] = E

@@ -48,8 +48,8 @@ class match_blob_files(object):
         max_err - maximum acceptable uncertainty in particle position. If None,
                   (defult), than no bound is used.
                      
-        reverse_eta_zeta - Should be false is the eta and zeta coordinates 
-                           should be in reverse order so as to match the
+        reverse_eta_zeta - Should be false if the eta and zeta coordinates 
+                           need to be in reverse order so as to match the
                            calibration. This may be needed if the calibration 
                            data points were given where the x and y coordinates
                            are transposed (as happens, e.g., if using 
@@ -77,9 +77,10 @@ class match_blob_files(object):
         
         
         self.particles = []
-        
+        print('')
         for tm in time_lst:
-            print('\n', 'frame: ', tm)
+            print('', end='\r')
+            print(' frame: %d'%tm, end='\r')
             pd = {}
             for i in range(len(self.blobs)):
                 cn = cam_names[i]
@@ -103,7 +104,7 @@ class match_blob_files(object):
                     if p[4] <= self.max_err:
                         self.particles.append(p + [tm])
         
-        print('done!')                        
+        print('\n','done!')                        
         errors = [p[4] for p in self.particles]
         print('mean error: %.3f'%(sum(errors)/len(errors)))
         Np = len(self.particles)
