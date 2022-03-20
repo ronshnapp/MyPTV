@@ -1,17 +1,17 @@
 March 20, 2022
-V0.1
+Version: 0.1
 
 # MyPTV
 
 MyPTV is an open source library designed for 3D particle Tracking Velocimetry (3D-PTV) measurements. In short, 3D-PTV is a method used to track the positions of particles in three dimensions; and is used extensively in fluid mechanics and can be applied to study other fields as well. The method relies on stereoscopic digital photography from calibrated cameras to infer particle 3D positions and track their motion through time. 
 
-MyPTV builds heavily on the mathematical framework developed in the OpenPTV project (https://www.openptv.net/), and especially, the photogramatry principles are the same [1], however it uses several new adaptations of the 3D-PTV algorithms that have been introduced in more recent years, e.g. [2, 3, 4], and several novel algorithms developed here.
+MyPTV builds heavily on the mathematical framework developed in the OpenPTV project (https://www.openptv.net/), and especially, the photogrammetry principles are the same [1], however it uses several new adaptations of the 3D-PTV algorithms that have been introduced in more recent years, e.g. [2-6], and several novel algorithms developed here.
 
-## Why is MyPTV needed?
+## Why MyPTV?
 
 So, why is MyPTV needed? While OpenPTV has been used and tested for many years with proven succses in generating scientific knowledge, the shortcoming of it is that it is written in C++, and therefore, it might be unaccessible to many physics and engineering scientists. This makes it hard for OpenPTV to keep up with the more modern approaches and algorithms, make it hard to debug in case of errors, and to maintain its support in newer operating systems. 
 
-MyPTV solves these issues in two ways. First, we use the Python language, which is more accessible to the scientific, non-professional computer programmers, to handle. This accessibility to the inner workings of the code is essential for 3D-PTV to go into the future. Second, we strive to keep the number of dependencies as low as possible and write as much of the code ourselves; this will help in maintaining the project usable for many years to come as Python keeps developing (currently, the only dependencies are a few functions from Numpy and Scipy, and optional plotting relied on Matplotlib. 
+MyPTV solves these issues in two ways. First, we use the Python language, which is more accessible to the scientific, non-professional computer programmers, to handle. This accessibility to the inner workings of the code is essential for 3D-PTV to go into the future. Second, we attempt to keep the dependencies as few as possible and write as much of the code ourselves; this will help in maintaining the project usable for many years to come as Python keeps developing (currently, the only dependencies are a few functions from Numpy and Scipy, and optional plotting relied on Matplotlib). 
 
 ## Who is MyPTV for?
 
@@ -26,13 +26,36 @@ MyPTV is designed to be used by scientists and engineers who need to track the m
 5) A tracking module for tracking particles in 3D
 6) A trajectory smoothing module that can be used to smooth the results and calculate particle velocities and accelerations.
 
+## How to install:
+
+##### Requirements:
+
+MyPTV requires you have Python 3 installed with pip, along with the Python packages: numpy, scipy, skimage, itertools
+
+##### Installation:
+
+Open your terminal and change directory to the path of the code:
+	`cd path/to/myptv` 
+
+Then, build the package by insert the following command in your terminal:
+	`python setup.py bdist_wheel`
+
+Finally, we use pip to install by using the following command: 
+	`pip install ./dist/wheelfile.whl`
+
+Optionally, the basic 3D model can be tested using pytest:
+	`python setup.py pytest`
+
+Once, this is done, you can import MyPTV in your python code as usual. For example:
+	`import myptv.imaging_mod`
+
 ## How to start?
 
 Detailed instructions are given in the Manual.
 
 ## Who manages this project?
 
-MyPTV was founded and is currently maintained by Ron Shnapp (ronshnapp@gmail.com). Contributions are most welcome. 
+MyPTV was founded and is maintained by Ron Shnapp (ronshnapp@gmail.com). Contributions are most welcome. 
 
 ## References
 

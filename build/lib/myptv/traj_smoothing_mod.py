@@ -11,7 +11,7 @@ The method uses polynomial fitting after Luti et al 2005.
 
 """
 
-from myptv.utils import fit_polynomial
+from utils import fit_polynomial
 from numpy import dot
 
 
