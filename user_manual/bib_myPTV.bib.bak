@@ -1,0 +1,16 @@
+@Article{Virant1997,
+  author     = {M. Virant and T. Dracos},
+  journal    = {Measurement},
+  title      = {{3D PTV} and its Application on Lagrangian Motion},
+  year       = {1997},
+  pages      = {1552-1593},
+  volume     = {8},
+  bdsk-url-1 = {http://iopscience.iop.org/article/10.1088/0957-0233/8/12/017/meta},
+  bdsk-url-2 = {https://doi.org/10.1088/0957-0233/8/12/017},
+  doi        = {https://doi.org/10.1088/0957-0233/8/12/017},
+  owner      = {Ron},
+  timestamp  = {2016.10.09},
+  url        = {http://iopscience.iop.org/article/10.1088/0957-0233/8/12/017/meta},
+}
+
+@Comment{jabref-meta: databaseType:bibtex;}
