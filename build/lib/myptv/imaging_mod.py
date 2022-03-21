@@ -46,8 +46,8 @@ import os
 from math import sin, cos
 from numpy import zeros, array, dot
 from numpy.linalg import inv
-from utils import line_dist
-from cal_image_coords import Cal_image_coord
+from myptv.utils import line_dist
+from myptv.cal_image_coords import Cal_image_coord
 
 
 
@@ -387,80 +387,82 @@ class camera(object):
     
     
     
-    
-
-if __name__ == '__main__':
-    from numpy import pi 
-    c1 = camera('1', (1000.,1000.))
-    c2 = camera('2', (1000.,1000.))
-    c3 = camera('3', (1000.,1000.))
-    
-    c1.O = array([400.0 , 0, 1])
-    c2.O = array([0, 400.0, -1])
-    c3.O = array([200.0, 400.0 ,400])
-    
-    c1.f = 4000
-    c2.f = 4000
-    c3.f = 4000
-    
-    c1.theta = array([0.0, -1*pi / 2.0, 0.0])
-    c2.theta = array([pi / 2.0, 0., 0.])
-    c3.theta = array([0.8, -0.4, 0.0])
-    
-    c1.calc_R()
-    c2.calc_R()
-    c3.calc_R()
-    
-    c1.xh = 1.0
-    c1.yh = -1.0
-    
-    x = array([0.1,0.1,0.1])        
-    
-    imgsys = img_system([c1,c2,c3])
-    
-    E = 0.0
-    c1.E[0,:] = E
-    c1.E[1,:] = E
-    c2.E[0,:] = E
-    c2.E[1,:] = E
-    c3.E[0,:] = E
-    c3.E[1,:] = E
-    
-    proj1 = c1.projection(x)
-    proj2 = c2.projection(x)
-    proj3 = c3.projection(x)
-    
-    err1 = array([1.0, 1.0]) * 0
-    err2 = array([1.0, -2.0]) * 0
-    err3 = array([-1.0, 1.0]) * 0
-    
-    coords = {0: proj1 + err1,
-              1: proj2 + err2,
-              2: proj3 + err3}
-    
-    print('\n', proj1)
-    print('',proj2)
-    print('',proj3)
-    
-    res = imgsys.stereo_match(coords, 1e9)
-    print('\n', res)
-
-   
-'''
-    e,z = coords[0]
-    fig, ax = c1.plot_3D_epipolar_line(e, z, (-2,4), color='b')
-   
-    e,z = coords[1]
-    c2.plot_3D_epipolar_line(e, z, (-1,1), ax=ax, color='r')
-        
-    e,z = coords[2]
-    c3.plot_3D_epipolar_line(e, z, (-50,200), ax=ax, color='g')     
-
-    ax.plot3D(x[0], x[1], x[2], 'ko')
-    x_ = res[0]
-    ax.plot3D(x_[0], x_[1], x_[2], 'yo', fillstyle='none')
-        
-    ax.set_xlim(-25,25)
-    ax.set_ylim(-25,25)
-    ax.set_zlim(-25,25)
-'''
+# =============================================================================
+# A live testing of the imaging module:    
+# 
+# if __name__ == '__main__':
+#     from numpy import pi 
+#     c1 = camera('1', (1000.,1000.))
+#     c2 = camera('2', (1000.,1000.))
+#     c3 = camera('3', (1000.,1000.))
+#     
+#     c1.O = array([400.0 , 0, 1])
+#     c2.O = array([0, 400.0, -1])
+#     c3.O = array([200.0, 400.0 ,400])
+#     
+#     c1.f = 4000
+#     c2.f = 4000
+#     c3.f = 4000
+#     
+#     c1.theta = array([0.0, -1*pi / 2.0, 0.0])
+#     c2.theta = array([pi / 2.0, 0., 0.])
+#     c3.theta = array([0.8, -0.4, 0.0])
+#     
+#     c1.calc_R()
+#     c2.calc_R()
+#     c3.calc_R()
+#     
+#     c1.xh = 1.0
+#     c1.yh = -1.0
+#     
+#     x = array([0.1,0.1,0.1])        
+#     
+#     imgsys = img_system([c1,c2,c3])
+#     
+#     E = 0.0
+#     c1.E[0,:] = E
+#     c1.E[1,:] = E
+#     c2.E[0,:] = E
+#     c2.E[1,:] = E
+#     c3.E[0,:] = E
+#     c3.E[1,:] = E
+#     
+#     proj1 = c1.projection(x)
+#     proj2 = c2.projection(x)
+#     proj3 = c3.projection(x)
+#     
+#     err1 = array([1.0, 1.0]) * 0
+#     err2 = array([1.0, -2.0]) * 0
+#     err3 = array([-1.0, 1.0]) * 0
+#     
+#     coords = {0: proj1 + err1,
+#               1: proj2 + err2,
+#               2: proj3 + err3}
+#     
+#     print('\n', proj1)
+#     print('',proj2)
+#     print('',proj3)
+#     
+#     res = imgsys.stereo_match(coords, 1e9)
+#     print('\n', res)
+# 
+#    
+# 
+#     e,z = coords[0]
+#     fig, ax = c1.plot_3D_epipolar_line(e, z, (-2,4), color='b')
+#    
+#     e,z = coords[1]
+#     c2.plot_3D_epipolar_line(e, z, (-1,1), ax=ax, color='r')
+#         
+#     e,z = coords[2]
+#     c3.plot_3D_epipolar_line(e, z, (-50,200), ax=ax, color='g')     
+# 
+#     ax.plot3D(x[0], x[1], x[2], 'ko')
+#     x_ = res[0]
+#     ax.plot3D(x_[0], x_[1], x_[2], 'yo', fillstyle='none')
+#         
+#     ax.set_xlim(-25,25)
+#     ax.set_ylim(-25,25)
+#     ax.set_zlim(-25,25)
+# 
+# =============================================================================

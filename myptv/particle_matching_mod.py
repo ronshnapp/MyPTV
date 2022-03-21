@@ -24,7 +24,7 @@ from numpy import loadtxt, savetxt
 
 
 class match_blob_files(object):
-    '''A class for obtaining trangulated particles results from a 
+    '''A class for obtaining triangulated particles positions from a 
     list of segmented blobs'''
     
     

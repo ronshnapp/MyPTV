@@ -11,4 +11,16 @@ H.~G. Mass, D.~Gruen, and D.~Papantoniou.
   Photogrammetric determination of particle coordinates.
 \newblock {\em Experiments in Fluid}, 15:133--146, 1993.
 
+\bibitem{Bourgoin2020}
+M.~Bourgoin and S.~G. Huisman.
+\newblock Using ray-traversal for {3D} particle matching in the context of
+  particle tracking velocimetry in fluid mechanics.
+\newblock {\em Review of scientific instruments}, 91(8):085105, 2020.
+
+\bibitem{Ouellette2006}
+N.~T. Ouellette, H.~Xu, and E.~Bodenschatz.
+\newblock A quantitative study of three-dimensional {Lagrangian} particle
+  tracking algorithms.
+\newblock {\em Experiments in Fluids}, 40(2):301--313, 2006.
+
 \end{thebibliography}

@@ -10,7 +10,7 @@ Contains classes for tracking particles to form trajectories.
 
 """
 
-from numpy import loadtxt, array
+from numpy import loadtxt, array, savetxt
 
 
 
@@ -231,6 +231,14 @@ class tracker_four_frames(object):
         return p_list
 
 
+    def save_results(self, fname):
+        '''
+        Will save the results after tracking is done.
+        '''
+        fmt = ['%d', '%.3f', '%.3f', '%.3f', '%.3f']
+        savetxt(fname ,self.return_connected_particles(),
+                delimiter='\t', fmt=fmt)
+
 
 
 
@@ -407,7 +415,15 @@ class tracker_two_frames(object):
             for p in self.particles[tm]:
                 p_list.append(p)
         return p_list
-
+    
+    
+    def save_results(self, fname):
+        '''
+        Will save the results after tracking is done.
+        '''
+        fmt = ['%d', '%.3f', '%.3f', '%.3f', '%.3f']
+        savetxt(fname ,self.return_connected_particles(),
+                delimiter='\t', fmt=fmt)
 
 
 
@@ -520,3 +536,12 @@ class tracker_nearest_neighbour(object):
             values.append(( dist_particle(self.particles[frame_num][i]), i))
         min_val = min(values, key=lambda x: x[0])
         return min_val
+    
+    
+    def save_results(self, fname):
+        '''
+        Will save the results after tracking is done.
+        '''
+        fmt = ['%d', '%.3f', '%.3f', '%.3f', '%.3f']
+        savetxt(fname ,self.return_connected_particles(),
+                delimiter='\t', fmt=fmt)

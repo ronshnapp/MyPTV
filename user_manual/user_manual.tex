@@ -26,8 +26,8 @@
 }
 
 \title{MyPTV user manual}
-
-
+\author{Ron Shnapp\footnote{ronshnapp@gmail.com}}
+\date{\today\\[.3cm] Version 0.1}
 
 \begin{document}
 	
@@ -237,6 +237,171 @@ The important functionalities are:
 \end{enumerate}
 %
 To find an optomal calibration solution, we might need to run each function several times, and run the coarse and fine calibrations one after the other until a satisfactory solution is obtained. Once it is obtained, we should keep in mind to save the results using the \texttt{save} functionality of the \texttt{camera} object. 
+
+
+
+
+
+
+
+
+\section{Particle segmentation - \texttt{segmentation\char`_mod.py}} 
+
+
+This module handles the image analysis part of MyPTV, taking in raw camera images containing particles and outputing their image space coordinates. For the segmentation we first blur the image to remove salt and pepper noise, then we highlight particles using a local mean subtraction around each pixel, and then use a global threshold to mark foreground and backgroud pixels. Finally, the connected foreground pixels are considered to be particles, and we estimate the blob's center using a brightness weighted average of blob pixels.
+
+
+
+\subsection{The \texttt{particle\char`_segmentation} object} 
+
+Used to segment particles in a given image. Inputs:
+%
+\begin{enumerate}
+	\item \texttt{image} - the image for segmentation
+	\item \texttt{sigma=1.0} - the standard deviation of the blurring filter
+	\item \texttt{threshold=10} - the global filter's threshold brightness value (pixels with brightness higher than this number are considered foreground) 
+	\item \texttt{mask=1.0} - A mask matrix can be used to specify rigions of interest within the image
+	\item \texttt{local\char`_filter=15} - The window size (pixels) for the local filter.
+	\item a bunch of threshold pixel sizes in all directions and in area.
+\end{enumerate}
+
+
+The important funcitonalities are:
+%
+\begin{enumerate}
+	\item \texttt{get\char`_blobs} - Will return a list of blob centers, their box size and their area.
+\end{enumerate}
+
+
+
+
+
+
+\subsection{The \texttt{loop\char`_segmentation} object} 
+
+
+An object used for looping over images in a given directory to segment particles
+and save the results in a file.
+
+
+important functionalities are:
+%
+\begin{enumerate}
+	\item \texttt{segment\char`_folder\char`_images()} - Will loop over the images in the given directory and segment particles according to the given parameters
+	\item \texttt{save\char`_results(fname)} - Will save the segmented particles in a text file. The file is arranged in six columns with the following attributes: (x center position, y center position, x size, y size, area, image number), see Fig.~\ref{fig:blobfile}.
+\end{enumerate}
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=10cm]{blob_file.pdf}
+	\caption{An example of a text file holding the segmentation resuls and the description of the different columns. \label{fig:blobfile}} 
+\end{figure}
+
+
+
+
+
+
+
+
+\section{Particle matching - \texttt{particle\char`_matching\char`_mod.py}}
+
+The module used to identify the same particle in the different images and use stereo matching to estimate their 3D position. Particle matching in MyPTV uses the Ray Traversal algorith proposed in Ref~\cite{Bourgoin2020}. In short, the 3D domain is divided into voxel cubes; then, for each segmented blob we shoot a ray throught the 3D volume and list the voxels through which the ray had passed. Finally, is more than one ray had passed through a certain voxel, we stereo match the blobs at the intersection. Lastly, for each stereomatched blob, we keep the particles corresponding to the highest number of cameras (for example, we favour particles that result from a crossing of four camera views than three) and the smallest RMS distance from the epipolar lines.  
+
+
+\subsection{The \texttt{match\char`_blob\char`_files} object}
+
+
+This is the object that we use in order to obtain trangulated particles results from the segmented blob files (a file as the one in Fig.~\ref{fig:blobfile} for each camera). The inputs are:
+%
+\begin{enumerate}
+	\item \texttt{blob\char`_fnames} - a list of the (srting) file names containing the segmented blob data. The list has to be sorted according the order of cameras in the \texttt{img\char`_system}.
+	\item \texttt{img\char`_system} - an instance of the \texttt{img\char`_system} class with the calibrated cameras.
+	\item \texttt{RIO} - A nested list of 3X2 elements. The first holds the minimum and  maximum values of $x$ coordinates, the second is same for $y$, and  the third for $z$ coordinates. 
+	\item \texttt{voxel\char`_size} - the side length of voxel cubes used in the ray traversal algorithm. Given in lab space coordinates (e.g. mm).
+	\item \texttt{max\char`_err=None} - Maximum acceptable uncertainty in particle position. If None, (defult), than no bound is used.
+	\item \texttt{reverse\char`_eta\char`_zeta=False} - Should be false if the eta and zeta coordinates need to be in reverse order so as to match the calibration. This may be needed if the calibration data points were given where the x and y coordinates are transposed (as happens, e.g., if using matplotlib.pyplot.imshow).
+\end{enumerate}
+
+
+The important functionalities are:
+%
+\begin{enumerate}
+	\item \texttt{get\char`_particles()} - Use this to match blobs into particlesin 3D.
+	\item \texttt{save\char`_results(fname)} - Save the results in a text file. The format has 4 + number of cameras columns separated by tabs:
+	(x, y, z, [N columns corresponding to the blob number in each camera] , frame number, see Fig.~\ref{fig:particlefile}).
+\end{enumerate}
+
+
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=12cm]{particle_file.pdf}
+	\caption{An example of a text file holding the triangulated particles' resuls and the description of the different columns. In this example there were three cameras. \label{fig:particlefile}} 
+\end{figure}
+
+
+
+
+\subsection{The \texttt{matching} object}
+
+This object is the engine used backstage for matching particles. In practice we run the relevant functions: \texttt{get\char`_voxel\char`_dictionary()} $\rightarrow$ \texttt{list\char`_candidates()} $\rightarrow$ \texttt{get\char`_particles()}, and after that the results are held in the attribute \texttt{matched\char`_particles}.
+
+
+
+
+
+
+
+
+\section{Tracking in 3D - \texttt{tracking\char`_mod.py}}
+
+This is the module that is used to track particles in 3D. There are currently three tracking methods implemented, nearest neighbour, two-frame, and four-frame, see Ref.~\cite{Ouellette2006}. Users are welcome to choose their perfered method and use it.
+
+
+
+\subsection{The \texttt{tracker\char`_four\char`_frames} object}\label{sec:four_frames}
+
+An object used to perform tracking through the 4-frame best estimate method \cite{Ouellette2006}. Input:
+%
+\begin{enumerate}
+	\item \texttt{fname} - a string name of a particle file (e.g. Fig.~\ref{fig:particlefile}
+	\item \texttt{mean\char`_flow=0.0} - either zero (deafult) of a numpy array of the mean flow vector, in units of the calibrations spatial units per frame (e.g. mm per frame). The mean flow is assumed not to change in space and time.
+	\item \texttt{d\char`_max\char`=1e10} - maximum allowable translation between two frames for the nearest neighbour search, after subtracting the mean flow. 
+	\item \texttt{dv\char`_max\char`=1e10} - maximum allowable change in velocity for the two-frame velocity projection search. The radius around the projection is therefore dv\char`_max/dt (where dt = 1 frame$^{-1}$)
+\end{enumerate}
+
+
+The important functionalities are:
+%
+\begin{enumerate}
+	\item \texttt{track\char`_all\char`_frames()} - Will track particles through all the frames. 
+	
+	\item \texttt{return\char`_connected\char`_particles()} - Will retun the list of trajectories that were established.
+	
+	\item \texttt{save\char`_results(fname)} - Will save the results on the hard drive. The results are saved in a text file, where each row is a sample of a trajectory. The columns are specified as follows: [trajectory number, x, y, z, frame number], see Fig~\ref{fig:trajfile}.  
+\end{enumerate}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=10cm]{trajectory_files.pdf}
+	\caption{Example of a trajectory file and the column definitions. \label{fig:trajfile}}
+\end{figure}
+
+
+
+
+\subsection{The \texttt{tracker\char`_two\char`_frames} object}
+
+An object used for tracking through the 2-frame method. The description is the same as in Section~\ref{sec:four_frames}
+
+
+
+\subsection{The \texttt{tracker\char`_nearest\char`_neighbour} object}
+
+An object used for tracking through the nearest neighbour method. The description is the same as in Section~\ref{sec:four_frames}
+
+
 
 
 
