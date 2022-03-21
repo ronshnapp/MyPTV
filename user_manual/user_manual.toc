@@ -16,3 +16,5 @@
 \contentsline {subsection}{\numberline {6.1}The \texttt {tracker\char `_four\char `_frames} object}{6}{subsection.6.1}
 \contentsline {subsection}{\numberline {6.2}The \texttt {tracker\char `_two\char `_frames} object}{7}{subsection.6.2}
 \contentsline {subsection}{\numberline {6.3}The \texttt {tracker\char `_nearest\char `_neighbour} object}{7}{subsection.6.3}
+\contentsline {section}{\numberline {7}Trajectory smoothing - \texttt {traj\char `_smoothing\char `_mod.py}}{7}{section.7}
+\contentsline {subsection}{\numberline {7.1}The \texttt {smooth\char `_trajectories} object}{8}{subsection.7.1}

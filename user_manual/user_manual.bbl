@@ -23,4 +23,15 @@ N.~T. Ouellette, H.~Xu, and E.~Bodenschatz.
   tracking algorithms.
 \newblock {\em Experiments in Fluids}, 40(2):301--313, 2006.
 
+\bibitem{Luthi2005}
+B.~L{\"u}thi, A.~Tsinober, and W.~Kinzelbach.
+\newblock Lagrangian measurement of vorticity dynamics in turbulent flow.
+\newblock {\em Journal of Fluid mechanics}, 528:87--118, 2005.
+
+\bibitem{Shnapp2019}
+R.~Shnapp, E.~Shapira, D.~Peri, Y.~Bohbot-Raviv, E.~Fattal, and A.~Liberzon.
+\newblock Extended {3D-PTV} for direct measurements of {Lagrangian} statistics
+  of canopy turbulence in a wind tunnel.
+\newblock {\em Scientific reports}, 9(1):1--13, 2019.
+
 \end{thebibliography}

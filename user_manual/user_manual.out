@@ -14,3 +14,5 @@
 \BOOKMARK [2][-]{subsection.6.1}{The tracker`four`frames object}{section.6}% 14
 \BOOKMARK [2][-]{subsection.6.2}{The tracker`two`frames object}{section.6}% 15
 \BOOKMARK [2][-]{subsection.6.3}{The tracker`nearest`neighbour object}{section.6}% 16
+\BOOKMARK [1][-]{section.7}{Trajectory smoothing - traj`smoothing`mod.py}{}% 17
+\BOOKMARK [2][-]{subsection.7.1}{The smooth`trajectories object}{section.7}% 18

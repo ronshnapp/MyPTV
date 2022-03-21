@@ -3,44 +3,44 @@ Capacity: max_strings=100000, hash_size=100000, hash_prime=85009
 The top-level auxiliary file: user_manual.aux
 The style file: unsrt.bst
 Database file #1: bib_myPTV.bib
-You've used 4 entries,
+You've used 6 entries,
             1791 wiz_defined-function locations,
-            479 strings with 4287 characters,
-and the built_in function-call counts, 972 in all, are:
-= -- 87
-> -- 38
+            497 strings with 4751 characters,
+and the built_in function-call counts, 1476 in all, are:
+= -- 131
+> -- 69
 < -- 0
-+ -- 14
-- -- 10
-* -- 76
-:= -- 161
-add.period$ -- 12
-call.type$ -- 4
-change.case$ -- 4
++ -- 25
+- -- 19
+* -- 119
+:= -- 246
+add.period$ -- 18
+call.type$ -- 6
+change.case$ -- 6
 chr.to.int$ -- 0
-cite$ -- 4
-duplicate$ -- 36
-empty$ -- 96
-format.name$ -- 10
-if$ -- 211
+cite$ -- 6
+duplicate$ -- 54
+empty$ -- 139
+format.name$ -- 19
+if$ -- 316
 int.to.chr$ -- 0
-int.to.str$ -- 4
-missing$ -- 4
-newline$ -- 23
-num.names$ -- 4
-pop$ -- 4
+int.to.str$ -- 6
+missing$ -- 6
+newline$ -- 33
+num.names$ -- 6
+pop$ -- 6
 preamble$ -- 1
 purify$ -- 0
 quote$ -- 0
-skip$ -- 14
+skip$ -- 20
 stack$ -- 0
-substring$ -- 91
-swap$ -- 4
+substring$ -- 129
+swap$ -- 6
 text.length$ -- 0
 text.prefix$ -- 0
 top$ -- 0
 type$ -- 0
 warning$ -- 0
-while$ -- 9
-width$ -- 5
-write$ -- 46
+while$ -- 15
+width$ -- 7
+write$ -- 68

@@ -409,6 +409,43 @@ An object used for tracking through the nearest neighbour method. The descriptio
 
 
 
+\section{Trajectory smoothing - \texttt{traj\char`_smoothing\char`_mod.py}}
+
+This module is used to smooth trajecotries and to calculate the velocity and acceleration of the particles. For the smoothing we are using the polynomial fitting methd proposed and used in Refs.~\cite{Luthi2005, Shnapp2019}. In short, each component of the particle's position is fitted with a series of polynomials with a sliding window of fixed lenght and the derivatives are calculated by analytically differentiating the polynomial. The end result is a new file with smoothed trajectories. However note that we smooth and calculate valocities and accelerations only for trajectories longer than the window size for the smoothing (a user decided parameter). 
+
+
+\subsection{The \texttt{smooth\char`_trajectories} object}
+
+A class used to smooth trajectories in a list of trajectories. Due to the smoothing we also calculate the velocity and acceleration of the trajectories. The input trajecotry list structure is the same as the files produced by the classes in \texttt{tracking\char`_mod.py}.
+
+Note - only trajectories whose length is larger than the window size will be smoothed and saved. Shorter trajectories are svaed with zero velocity and accelerations.
+
+
+The inputs are:
+\begin{enumerate}
+	\item \texttt{traj\char`_list} -  a list of samples organized as trajecotries. This should have the same data structure used in the saving function of the tracking algorithms (see Section~\ref{sec:four_frames}). 
+	\item \texttt{window} - The window size used in the sliding polynomial fitting.
+	\item \texttt{polyorder} - The order of the polynomial used in the fitting. 
+\end{enumerate}
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=12cm]{smoothed_trajfile.pdf}
+	\caption{Example file holding the results of smoothed trajectories, and the description for each column. Note also the unsmoothed samples at the bottom of the file. \label{fig:smoothedfile}}
+\end{figure}
+
+The important functionalities are:
+
+\begin{enumerate}
+	\item \texttt{smooth()} - performs the actual smoothing
+	\item \texttt{save\char`_results(fname)} - Saves the results on the hard drive using the given (string) file name. The resulting file is a text file such that each row is a sample of a trajectory, and with 11 columns. The columns have the following meaning:
+	[traj number, $x$, $y$, $z$, $v_x$, $v_y$, $v_z$, $a_x$, $a_y$, $a_z$, frame number], where $v_i$ and $a_i$ denote components of the velocity and acceleration vectors respectively, see Fig.~\ref{fig:smoothedfile}.
+\end{enumerate}
+
+
+
+
+
 \bibliography{bib_myPTV}
 \bibliographystyle{unsrt}
 
