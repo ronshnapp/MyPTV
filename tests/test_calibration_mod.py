@@ -19,8 +19,8 @@ def test_calibrate():
     A test for the calibrate class. We attempt to do a coarse calibration
     of a synthetic camera.
     '''
-    cam = camera('cal_test_cam',(1280,1024), './tests/cal_test_points')
-    cam.load('./tests/')
+    cam = camera('cal_test_cam',(1280,1024), './tests/cal_test_files/cal_test_points')
+    cam.load('./tests/cal_test_files')
     cal = calibrate(cam, cam.lab_points, cam.image_points)
     cal.searchCalibration()
     
