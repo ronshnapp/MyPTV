@@ -1,1 +1,7 @@
 *.pyc
+*.log
+*.lot
+*.aux
+*.blg
+*.out
+*user_manual.synctex.gz
