@@ -146,14 +146,14 @@ where $[E]$ is a $3\times5$ matrix that holds the correction coefficients; the l
 
 
 
-\subsection{The \texttt{camera} object}
+\subsection{The \texttt{camera} object}\label{sec:camera}
 
 An object that stores the camera external and internal parameters and handles the projections to and from image space and lab space. Inputs are:
 
 \begin{enumerate}
 	\item \texttt{name} - string, name for the camera. This is the name used when saveing and loading the camera parameters.
 	\item \texttt{resolution} - tuple (2), two integers for the camera number of pixels
-	\item \texttt{cal\char`_points\char`_fname} - string (optional), path to a file with calibration coordinates for the camera.
+	\item \texttt{cal\char`_points\char`_fname} - string (optional), path to a file with calibration coordinates for the camera. The format fro the calibration point file is given in Section~\ref{sec:calpointreader} (see Fig.~\ref{fig:calpointfile}).
 \end{enumerate}
 
 
@@ -200,6 +200,27 @@ An object that holds several camera instances and can be used to perform stereo-
 
 
 
+
+
+
+
+
+\subsection{The \texttt{Cal\char`_image\char`_coord} object}\label{sec:calpointreader}
+
+This is a class used for reading information given in the optional argument \texttt{cal\char`_points\char`_fname} of the \texttt{camera} class (Sec.~\ref{sec:camera}). It is used internally and generally users will not have to deal with this. This class will read and interpret text files with tab separated valued, where the columns' meanings are: [x image space, y image space, x lab space, y lab space, z lab space], and each row is a single point of some known calibration target.
+
+The input for this class is:
+\begin{enumerate}
+	\item \texttt{fname} - String, the path to your calibration point file. The file is holds tab separated values with the meaning of: [x image, y image, x lab, y lab, z lab], see Fig.~\ref{fig:calpointfile}.
+\end{enumerate}
+
+
+
+\begin{figure}
+	\centering
+	\includegraphics[width=10cm]{cal_point_file.pdf}
+	\caption{An example of a text file holding the calibration point data. \label{fig:calpointfile}}
+\end{figure}
 
 
 
