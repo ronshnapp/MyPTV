@@ -275,7 +275,7 @@ This module handles the image analysis part of MyPTV, taking in raw camera image
 
 \subsection{The \texttt{particle\char`_segmentation} object} 
 
-Used to segment particles in a given image. Inputs:
+Used to segment particles in a given image. This class is used internally to iterate over frames in a single folder by the \texttt{loop\char`_segmentation} class. However, it is usefull to check the segmentation parameters manually using this \texttt{particle\char`_segmentation} over several images in order to tune the particle searching. The inputs are:
 %
 \begin{enumerate}
 	\item \texttt{image} - the image for segmentation
@@ -291,6 +291,7 @@ The important funcitonalities are:
 %
 \begin{enumerate}
 	\item \texttt{get\char`_blobs} - Will return a list of blob centers, their box size and their area.
+	\item \texttt{plot\char`_blobs()} - Uses matplotlib to plot the results of the segmentation. A very usefull functionality in the testing of segmentation parameters!
 \end{enumerate}
 
 
