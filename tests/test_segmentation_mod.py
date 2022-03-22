@@ -10,7 +10,7 @@ A test function for the segmentation module
 """
 
 
-from myptv.segmentation_mod import loop_segmentation, particle_segmentation
+from myptv.segmentation_mod import loop_segmentation
 
 
 
