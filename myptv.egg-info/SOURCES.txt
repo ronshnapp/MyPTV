@@ -1,6 +1,5 @@
 setup.py
 myptv/__init__.py
-myptv/cal_image_coords.py
 myptv/calibrate_mod.py
 myptv/imaging_mod.py
 myptv/particle_matching_mod.py

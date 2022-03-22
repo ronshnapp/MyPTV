@@ -34,20 +34,22 @@ MyPTV requires you have Python 3 installed with pip, along with the Python packa
 
 ##### Installation:
 
-Open your terminal and change directory to the path of the code:
+1) Open your terminal and change directory to the path of the code:
 	`cd path/to/myptv` 
 
-Then, build the package by insert the following command in your terminal:
+2) Build the package by insert the following command in your terminal:
 	`python setup.py bdist_wheel`
 
-Finally, we use pip to install by using the following command: 
+3) Finally, we use pip to install by using the following command: 
 	`pip install ./dist/wheelfile.whl`
 
-Optionally, the basic 3D model can be tested using pytest:
-	`python setup.py pytest`
+4) Optionally, parts of the code can be tested using pytest:
+	`pytest ./tests/ -W ignore::RuntimeWarning`
 
-Once, this is done, you can import MyPTV in your python code as usual. For example:
+5) Once this is done we are ready to go! You can now import MyPTV in your python code as usual. For example:
 	`import myptv.imaging_mod`
+or 	
+   `from myptv import imaging_mod`
 
 ## How to start?
 
