@@ -25,7 +25,8 @@ from numpy import loadtxt, savetxt
 
 class match_blob_files(object):
     '''A class for obtaining triangulated particles positions from a 
-    list of segmented blobs'''
+    list of segmented blobs. Use self.get_particles() and after that,
+    the particles found are stored in the attribute self.particles.'''
     
     
     def __init__(self, blob_fnames, img_system, RIO, voxel_size, max_err=None,
