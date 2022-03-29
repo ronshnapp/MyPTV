@@ -492,7 +492,8 @@ This object performs the stitching process. Inputs:
 The important functionalities are:
 
 \begin{enumerate}
-	\item \texttt{stitch\char`_trajectories()} - Will search for candidates and stitch the best fitting candidates. Run this function to perform the stitching.  
+	\item \texttt{stitch\char`_trajectories()} - Will search for candidates and stitch the best fitting candidates. Run this function to perform the stitching. After running the new trajectory list is held as the attribute \texttt{new\char`_traj\char`_list}.
+	
 	\item \texttt{save\char`_results(fname)} - Will save the stitched trajectories in a text file with a given file name. The format for the saved file is the same as the one used in the smoothing trajectories (Fig.~\ref{fig:smoothedfile}).
 \end{enumerate}
 

@@ -17,7 +17,7 @@ trajectories in position–velocity space, Meas. Sci. Technol. 19 (2008)
 from numpy import array, gradient, dot, savetxt
 from numpy import append as NPappend
 from myptv.utils import fit_polynomial
-
+from myptv.traj_smoothing_mod import smooth_traj_poly
 
 class traj_stitching(object):    
     '''
@@ -188,7 +188,6 @@ class traj_stitching(object):
         by using a cubic polynomial that is fitted with the last and first 
         two data points of the connected trajectories.
         '''
-        interp_samples = []
         connected_traj_i = []
         connected_traj_j = []
         for i,j,dt,dij in self.dij_list:
@@ -221,33 +220,53 @@ class traj_stitching(object):
                     tm_vect = [tm_**3, tm_**2, tm_, 1.0]
                     x_interp = dot(poly_coefs, tm_vect)
                     interp_samples_j[e][1+k] = x_interp
-                    
-                    # calculate velocity
-                    v_poly_coefs = [0.0, 3*poly_coefs[0], 
-                                    2*poly_coefs[1], poly_coefs[2]]
-                    v_interp = dot(v_poly_coefs, tm_vect)
-                    interp_samples_j[e][4+k] = v_interp
-                    
-                    # calculate acceleration
-                    acc_poly_coefs = [0.0, 0.0, 6*poly_coefs[0],
-                                      2*poly_coefs[1]]
-                    acc_interp = dot(acc_poly_coefs, tm_vect)
-                    interp_samples_j[e][7+k] = acc_interp
-                    
+                                       
             # add the interpolated samples to the traj_list
-            interp_samples += interp_samples_j
+            self.traj_list = NPappend(self.traj_list, interp_samples_j, axis=0)
             
-            # finish by changing the traj_number of traj i to j
+            # change the traj_number of traj i to j
             for k in range(len(self.traj_list)):
                 if self.traj_list[k][0] == i:
-                    self.traj_list[k] = j
+                    self.traj_list[k][0] = j
             
             connected_traj_i.append(i)
             connected_traj_j.append(j)
+
             
-        self.traj_list = NPappend(self.traj_list, interp_samples, axis=0)
+        # finish by calculating the velocity and acceleration of the 
+        # the stitched trajectory by using the smoothing function
+        self.new_traj_list = []
+        for id_ in list(set(self.traj_list[:,0])):
             
+            # (we add the single samples at the end)
+            if id_==-1:
+                continue
             
+            traj = self.get_traj(id_)
+            if id_ in connected_traj_j:
+                pos = traj[:,1:4]
+                new_p, new_v, new_acc = smooth_traj_poly(pos.T, 5, 3)
+                for i in range(len(pos)):
+                    smp = [id_, 
+                           pos[i][0], pos[i][1], pos[i][2],
+                           new_v[0][i], new_v[1][i], new_v[2][i],
+                           new_acc[0][i], new_acc[1][i], new_acc[2][i],
+                           traj[i,-1]
+                           ]
+                    self.new_traj_list.append(array(smp))
+                
+            else:
+                for smp in traj:
+                    self.new_traj_list.append(smp)
+        
+        single_samples = self.get_traj(-1)
+        for smp in single_samples:
+            self.new_traj_list.append(smp)
+            
+        self.new_traj_list = array(self.new_traj_list)
+        
+        
+        
     def stitch_trajectories(self):
         '''
         This performs all the steps of the trajectory stitching process.
@@ -284,6 +303,6 @@ class traj_stitching(object):
         '''
         fmt = ['%d', '%.3f', '%.3f', '%.3f', '%.3f', '%.3f', '%.3f', '%.3f', 
                '%.3f', '%.3f', '%.3f']
-        savetxt(fname, self.traj_list, fmt=fmt, delimiter='\t')
+        savetxt(fname, self.new_traj_list, fmt=fmt, delimiter='\t')
             
             
