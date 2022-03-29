@@ -47,7 +47,6 @@ from math import sin, cos
 from numpy import zeros, array, dot
 from numpy.linalg import inv
 from myptv.utils import line_dist
-from myptv.cal_image_coords import Cal_image_coord
 
 
 
@@ -385,7 +384,50 @@ class camera(object):
                 ax.plot3D([self.O[0]], [self.O[2]], [self.O[1]], 'o', c=color)
             
     
+
+
+
+
+
+
+class Cal_image_coord(object):
+    '''
+    A class used for reading the calibration image files. This is called
+    by the camera class if given a filename with calibration points. 
+    '''
     
+    def __init__(self, fname):
+        '''
+        input - 
+        fname - String, the path to your calibration point file. The file is
+                holds tab separated values with the meaning of: 
+                    [x_image, y_image, x_lab, y_lab, z_lab]
+        '''
+        self.image_coords = []
+        self.lab_coords = []
+        self.fname = fname
+        self.read_file()
+        
+        
+    def read_file(self):
+        
+        with open(self.fname) as f:
+            lines = f.readlines()
+            self.N_points = len(lines)
+            
+            for ln in lines:
+                ln_ = ln.split()
+                self.image_coords.append([float(ln_[0]), float(ln_[1])])
+                self.lab_coords.append( [float(ln_[2]), 
+                                         float(ln_[3]),
+                                         float(ln_[4])] )
+                f.close()
+
+
+
+
+
+
     
 # =============================================================================
 # A live testing of the imaging module:    

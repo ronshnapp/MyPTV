@@ -6,6 +6,7 @@ myptv/particle_matching_mod.py
 myptv/segmentation_mod.py
 myptv/tracking_mod.py
 myptv/traj_smoothing_mod.py
+myptv/traj_stitching_mod.py
 myptv/utils.py
 myptv.egg-info/PKG-INFO
 myptv.egg-info/SOURCES.txt
