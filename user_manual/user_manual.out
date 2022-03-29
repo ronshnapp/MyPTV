@@ -17,3 +17,5 @@
 \BOOKMARK [2][-]{subsection.6.3}{The tracker`nearest`neighbour object}{section.6}% 17
 \BOOKMARK [1][-]{section.7}{Trajectory smoothing - traj`smoothing`mod.py}{}% 18
 \BOOKMARK [2][-]{subsection.7.1}{The smooth`trajectories object}{section.7}% 19
+\BOOKMARK [1][-]{section.8}{Trajectory stitching - traj`stitching`mod.py}{}% 20
+\BOOKMARK [2][-]{subsection.8.1}{The traj`stitching object}{section.8}% 21

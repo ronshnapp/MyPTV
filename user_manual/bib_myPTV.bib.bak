@@ -65,7 +65,7 @@
   publisher = {Nature Publishing Group},
 }
 
-@Article{Luethi2005,
+@Article{Luthi2005,
   author    = {L{\"u}thi, B. and Tsinober, A. and Kinzelbach, W.},
   journal   = {Journal of Fluid mechanics},
   title     = {Lagrangian measurement of vorticity dynamics in turbulent flow},
@@ -74,6 +74,17 @@
   volume    = {528},
   doi       = {https://doi.org/10.1017/S0022112004003283},
   publisher = {Cambridge University Press},
+}
+
+@Article{Xu2008,
+  author    = {Xu, Haitao},
+  journal   = {Measurement Science and Technology},
+  title     = {Tracking {Lagrangian} trajectories in position--velocity space},
+  year      = {2008},
+  number    = {7},
+  pages     = {075105},
+  volume    = {19},
+  publisher = {IOP Publishing},
 }
 
 @Comment{jabref-meta: databaseType:bibtex;}

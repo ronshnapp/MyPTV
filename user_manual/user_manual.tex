@@ -229,7 +229,7 @@ The input for this class is:
 \section{Camera calibration - \texttt{calibrate\char`_mod.py}}
 
 
-Holds the \texttt{calibrate} object that is used to find the camera calibration parameters.
+The \texttt{calibrate\char`_mod.py} module, with the \texttt{calibrate} object, is used to find the camera calibration parameters. We calibrate each camera by taking an image of a \textit{calibration target} - a body with markings of known coordinates in lab space - and search for the camera parameters that minimize the distance between the projection of the known points in image space and the image taken with the camera. 
 
 
 
@@ -462,6 +462,38 @@ The important functionalities are:
 	\item \texttt{smooth()} - performs the actual smoothing
 	\item \texttt{save\char`_results(fname)} - Saves the results on the hard drive using the given (string) file name. The resulting file is a text file such that each row is a sample of a trajectory, and with 11 columns. The columns have the following meaning:
 	[traj number, $x$, $y$, $z$, $v_x$, $v_y$, $v_z$, $a_x$, $a_y$, $a_z$, frame number], where $v_i$ and $a_i$ denote components of the velocity and acceleration vectors respectively, see Fig.~\ref{fig:smoothedfile}.
+\end{enumerate}
+
+
+
+
+
+
+
+\section{Trajectory stitching - \texttt{traj\char`_stitching\char`_mod.py}}
+
+This module applies the algorithm by REf.~\cite{Xu2008} to connect trajectories that were broken along the process by tracking the trajectories again in the position--velocity space. We also extend this by interpolating the missing samples using a 3rd order polynomial, that is fitted to the existing 4 data points at the tips of the broken trajectories. This module is applied after the trajectory smoothing step.
+
+
+
+
+\subsection{The \texttt{traj\char`_stitching} object}
+
+This object performs the stitching process. Inputs:
+
+\begin{enumerate}
+	\item \texttt{traj\char`_list} - the list of smoothed trajectory, given as a Numpy array of shape (N,11), where N is the number of samples. The format is the same as the format generated after the smoothing process.
+	\item \texttt{Ts} - The maximum number of broken samples allowed in the connection.
+	\item \texttt{dm} - The maximum distance between the trajectory for which connections are made.
+\end{enumerate}
+
+
+
+The important functionalities are:
+
+\begin{enumerate}
+	\item \texttt{stitch\char`_trajectories()} - Will search for candidates and stitch the best fitting candidates. Run this function to perform the stitching.  
+	\item \texttt{save\char`_results(fname)} - Will save the stitched trajectories in a text file with a given file name. The format for the saved file is the same as the one used in the smoothing trajectories (Fig.~\ref{fig:smoothedfile}).
 \end{enumerate}
 
 

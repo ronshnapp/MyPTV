@@ -42,6 +42,7 @@ MyPTV requires you have Python 3 installed with pip, along with the Python packa
 
 3) Finally, we use pip to install by using the following command: 
 	`pip install ./dist/wheelfile.whl`
+    where `wheelfile.whl` is the file name of the wheel file in the `dist` folder.
 
 4) Optionally, parts of the code can be tested using pytest:
 	`pytest ./tests/ -W ignore::RuntimeWarning`
