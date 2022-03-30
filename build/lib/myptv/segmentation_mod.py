@@ -9,7 +9,7 @@ Created on Fri Dec  7 18:02:07 2018
 contains a class for segmentation of circular particles
 """
 
-from numpy import zeros
+from numpy import zeros, savetxt
 from scipy.ndimage import gaussian_filter
 from skimage.io import imread
 
@@ -193,6 +193,20 @@ class particle_segmentation(object):
                         fmt='xr', lw=0.7, capsize=2)
         
         
+    def save_results(self, fname):
+        '''
+        This is used to save the blobs found in a text file with 
+        the given name fname.
+        '''
+        blob_list = []
+        for blb in self.blobs:
+            blob_list.append([blb[0][0], blb[0][1], blb[1][0], blb[1][1],
+                              blb[2], 0])
+            
+        savetxt(fname, blob_list, 
+                fmt=['%.02f','%.02f','%d','%d','%d','%d'], delimiter='\t')
+        
+        
         
         
 
@@ -252,7 +266,10 @@ class loop_segmentation(object):
             N = self.N_img
         
         blob_list = []
+        print('Starting loop segmentation.')
         for i in range(N):
+            print('', end='\r')
+            print(' frame: %d'%i, end='\r')
             im = imread(os.path.join(self.dir_name, self.image_files[i]))
             ps = particle_segmentation(im, sigma=self.sigma, 
                                        threshold=self.th,
@@ -278,7 +295,6 @@ class loop_segmentation(object):
         The format of the results is
         center_x, center_y, size_x, size_y, area, frame_number
         '''
-        from numpy import savetxt
         savetxt(fname, self.blobs, 
                 fmt=['%.02f','%.02f','%d','%d','%d','%d'], delimiter='\t')
         

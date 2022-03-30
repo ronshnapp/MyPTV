@@ -7,17 +7,18 @@
 \contentsline {subsection}{\numberline {2.3}The \texttt {Cal\char `_image\char `_coord} object}{3}{subsection.2.3}
 \contentsline {section}{\numberline {3}Camera calibration - \texttt {calibrate\char `_mod.py}}{3}{section.3}
 \contentsline {subsection}{\numberline {3.1}The \texttt {calibrate} object}{4}{subsection.3.1}
-\contentsline {section}{\numberline {4}Particle segmentation - \texttt {segmentation\char `_mod.py}}{4}{section.4}
-\contentsline {subsection}{\numberline {4.1}The \texttt {particle\char `_segmentation} object}{5}{subsection.4.1}
-\contentsline {subsection}{\numberline {4.2}The \texttt {loop\char `_segmentation} object}{5}{subsection.4.2}
-\contentsline {section}{\numberline {5}Particle matching - \texttt {particle\char `_matching\char `_mod.py}}{5}{section.5}
-\contentsline {subsection}{\numberline {5.1}The \texttt {match\char `_blob\char `_files} object}{6}{subsection.5.1}
-\contentsline {subsection}{\numberline {5.2}The \texttt {matching} object}{6}{subsection.5.2}
-\contentsline {section}{\numberline {6}Tracking in 3D - \texttt {tracking\char `_mod.py}}{7}{section.6}
-\contentsline {subsection}{\numberline {6.1}The \texttt {tracker\char `_four\char `_frames} object}{7}{subsection.6.1}
-\contentsline {subsection}{\numberline {6.2}The \texttt {tracker\char `_two\char `_frames} object}{9}{subsection.6.2}
-\contentsline {subsection}{\numberline {6.3}The \texttt {tracker\char `_nearest\char `_neighbour} object}{9}{subsection.6.3}
-\contentsline {section}{\numberline {7}Trajectory smoothing - \texttt {traj\char `_smoothing\char `_mod.py}}{9}{section.7}
-\contentsline {subsection}{\numberline {7.1}The \texttt {smooth\char `_trajectories} object}{9}{subsection.7.1}
-\contentsline {section}{\numberline {8}Trajectory stitching - \texttt {traj\char `_stitching\char `_mod.py}}{9}{section.8}
-\contentsline {subsection}{\numberline {8.1}The \texttt {traj\char `_stitching} object}{10}{subsection.8.1}
+\contentsline {subsection}{\numberline {3.2}How calibrate your cameras}{4}{subsection.3.2}
+\contentsline {section}{\numberline {4}Particle segmentation - \texttt {segmentation\char `_mod.py}}{5}{section.4}
+\contentsline {subsection}{\numberline {4.1}The \texttt {particle\char `_segmentation} object}{6}{subsection.4.1}
+\contentsline {subsection}{\numberline {4.2}The \texttt {loop\char `_segmentation} object}{6}{subsection.4.2}
+\contentsline {section}{\numberline {5}Particle matching - \texttt {particle\char `_matching\char `_mod.py}}{6}{section.5}
+\contentsline {subsection}{\numberline {5.1}The \texttt {match\char `_blob\char `_files} object}{7}{subsection.5.1}
+\contentsline {subsection}{\numberline {5.2}The \texttt {matching} object}{7}{subsection.5.2}
+\contentsline {section}{\numberline {6}Tracking in 3D - \texttt {tracking\char `_mod.py}}{8}{section.6}
+\contentsline {subsection}{\numberline {6.1}The \texttt {tracker\char `_four\char `_frames} object}{8}{subsection.6.1}
+\contentsline {subsection}{\numberline {6.2}The \texttt {tracker\char `_two\char `_frames} object}{10}{subsection.6.2}
+\contentsline {subsection}{\numberline {6.3}The \texttt {tracker\char `_nearest\char `_neighbour} object}{10}{subsection.6.3}
+\contentsline {section}{\numberline {7}Trajectory smoothing - \texttt {traj\char `_smoothing\char `_mod.py}}{10}{section.7}
+\contentsline {subsection}{\numberline {7.1}The \texttt {smooth\char `_trajectories} object}{10}{subsection.7.1}
+\contentsline {section}{\numberline {8}Trajectory stitching - \texttt {traj\char `_stitching\char `_mod.py}}{10}{section.8}
+\contentsline {subsection}{\numberline {8.1}The \texttt {traj\char `_stitching} object}{11}{subsection.8.1}

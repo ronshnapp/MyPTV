@@ -66,8 +66,15 @@ class match_blob_files(object):
         self.max_err = max_err
         
         
-    def get_particles(self):
-        '''use this to match blobs into particlesin 3D.'''
+    def get_particles(self, frames=None):
+        '''
+        Use this to match blobs into particlesin 3D.
+        
+        input - 
+        frames - if None, this will match particles at all times. If a list of
+                 integers, this will only perform the matching on particles at
+                 the given frames.
+        '''
         time_lst = []
         for bl in self.blobs:
             for b in bl:
@@ -76,10 +83,12 @@ class match_blob_files(object):
         
         cam_names = [cam.name for cam in self.imsys.cameras]
         
+        if frames is None:
+            frames = time_lst
         
         self.particles = []
         print('')
-        for tm in time_lst:
+        for tm in frames:
             print('', end='\r')
             print(' frame: %d'%tm, end='\r')
             pd = {}
