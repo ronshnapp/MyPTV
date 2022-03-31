@@ -192,14 +192,16 @@ class traj_stitching(object):
         connected_traj_j = []
         for i,j,dt,dij in self.dij_list:
             
-            if j in connected_traj_i:
-                j = connected_traj_j[connected_traj_i.index(j)]
-            
             tr_i = self.get_traj(i)
             tr_j = self.get_traj(j)
             
+            #if j was previously connected:
+            while len(tr_j)==0:
+                j = connected_traj_j[connected_traj_i.index(j)]
+                tr_j = self.get_traj(j)
+            
             # find the times that need to be filled in
-            t_ie, t_js = tr_i[-1,-1], tr_j[0,-1]
+            t_ie = tr_i[-1,-1]
             
             # get the trajectory positions needed for the polynomial fitting
             x_i = tr_i[-2:,1:4]   # <-- last two data points of i

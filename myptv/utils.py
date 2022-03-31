@@ -14,6 +14,8 @@ Utility code to use for the MyPTV package.
 
 from numpy import dot, array
 from numpy.linalg import inv, norm
+from myptv.imaging_mod import camera
+
 
 
 def line_dist(O1, r1, O2, r2):
@@ -97,3 +99,7 @@ def fit_polynomial(x, y, n):
 
 
 
+
+class match_calibration_blobs_and_points(object):
+    def __init__(self):
+        return None
