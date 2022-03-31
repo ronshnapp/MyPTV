@@ -73,7 +73,11 @@ class smooth_trajectories(object):
         
         short_trajs = []
         smoothed_traj_list = []
+        N = len(traj_dic.keys())
+        count = 0
         for tr_num in traj_dic.keys():
+            print('', end='\r')
+            print(' progress: %.1f%%'%(count/N*100), end='\r') 
             
             # for too short trajectories mark zero velocity and acceleration:
             if len(traj_dic[tr_num]) < self.window:
@@ -109,7 +113,8 @@ class smooth_trajectories(object):
                 new_traj[-1].append(traj[i][-1])
                 
             smoothed_traj_list += new_traj
-        
+            count+=1
+            
         print('smoothed samples: %d'%(len(smoothed_traj_list)))
         print('too short to smooth: %d'%(len(short_trajs)))
         print('single samples: %d'%(len(zero_length_trajs)))

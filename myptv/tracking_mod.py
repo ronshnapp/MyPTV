@@ -62,15 +62,33 @@ class tracker_four_frames(object):
         self.N_nearest_neaighbour = 0
     
     
-    def track_all_frames(self):
-        '''Will perform tracking over all frames in a loop'''
-        for tm in self.times[:-1]:
+    def track_all_frames(self, frames=None):
+        '''
+        Will perform tracking over a range of frames in a loop.
+        
+        input -
+        frames - if None (default), will track particles over all the available
+                 frames. Else this may be a list of intergers that must be
+                 sorted and increasing in increments of one; then, these are
+                 the frame numbers used in the tracking.
+        '''
+        
+        if frames == None:
+            frames = self.times[:-1]
+        else:
+            for i in range(len(frames)-1):
+                if frames[i+1]-frames[i] != 1 or type(frames[i])!= int:
+                    raise ValueError('frame range does not follow the rules.')
+        
+        for tm in frames:
+            print('', end='\r')
+            print(' frame: %d'%tm, end='\r')            
             self.track_single_frame(tm)
+            
         N_links = 0
         for k in self.traj_lengths.keys(): N_links += self.traj_lengths[k]
         N_p = 0
         for k in self.particles.keys(): N_p += len(self.particles.keys()) 
-        print('linked %d out of %d particles '%(N_links, N_p))
         NT = len(self.traj_ids)
         print('found %d trajectories (avg. length = %.1f)'%(NT, N_links/NT))
         print('four frame links: %d'%self.N_four_frames)

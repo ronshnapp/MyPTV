@@ -12,9 +12,10 @@ Utility code to use for the MyPTV package.
 
 
 
-from numpy import dot, array
+from numpy import dot, array, loadtxt, savetxt
+from numpy import append as NPappend
 from numpy.linalg import inv, norm
-from myptv.imaging_mod import camera
+
 
 
 
@@ -101,5 +102,84 @@ def fit_polynomial(x, y, n):
 
 
 class match_calibration_blobs_and_points(object):
-    def __init__(self):
-        return None
+    '''
+    This is a tool used to matxh between a calibration "target file" and
+    the blobs extracted from the image. It takes in a pre-calibrated 
+    camera object, the target file data and the blob file data.
+    
+    To do the pairing, use 
+    match_calibration_blobs_and_points.pair_points() 
+    
+    To save the results, use
+    match_calibration_blobs_and_points.save_results(fname)
+    
+    '''
+    
+    def __init__(self, camera, blob_fname, target_file_fname):
+        '''
+        input - 
+        camera - an instance of the camera class, already calibrated with at
+                 least a rough calibration
+        blob_fname - string, path of the file containing the segmented 
+                     calibration points
+        target_file_fname - string, path to the calibration target file.
+        '''
+        self.cam = camera
+        self.blobs = loadtxt(blob_fname)
+        self.targets = loadtxt(target_file_fname)
+        
+    
+    def pair_points(self):
+        '''
+        Does the actual pairing of blobs and target points.
+        The paired points are stored in the attribute self.point_pairs.
+        '''
+        
+        target_points_eta_zeta = [self.cam.projection(p) for p in self.targets]
+        point_pairs = []
+        
+        for i in range(len(self.blobs)):
+            j_min = 10000
+            d_min = 1000
+            for j in range(len(target_points_eta_zeta)):
+                d = norm(target_points_eta_zeta[j] - self.blobs[i][1::-1])
+                if d<d_min:
+                    d_min = d
+                    j_min = j
+            
+            if d_min < 30:
+                blob_point_pair = NPappend(self.blobs[i][1::-1],
+                                            self.targets[j_min])
+                point_pairs.append(blob_point_pair)
+        
+        self.point_pairs = point_pairs
+        
+        
+    def save_results(self, fname):
+        '''
+        Saves the pairs of blobs and target points in a given file name.
+        '''
+        fmt = ['%.3f', '%.3f', '%.3f', '%.3f', '%.3f']
+        savetxt(self.point_pairs, fmt=fmt, delimeter='\t')
+        
+        
+    def plot_projections(self):
+        '''
+        Plots the projection of the target points on the camera, and the 
+        blobs that were segmented.
+        
+        Requires matplotlib.
+        '''
+        import matplotlib.pyplot as plt
+        fig, ax = plt.subplots()
+        
+        for p in self.targets:
+            eta, zeta = self.cam.projection(p)
+            ax.plot(eta, zeta, 'ob')
+            
+        ax.plot(self.blobs[:,1], self.blobs[:,0], 'rx') 
+        
+        ax.plot([],[],'ob', label='target points')
+        ax.plot([],[],'rx', label='segmented plobs')
+        ax.legend()
+        return fig, ax

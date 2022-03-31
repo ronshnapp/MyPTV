@@ -75,22 +75,27 @@ class match_blob_files(object):
                  integers, this will only perform the matching on particles at
                  the given frames.
         '''
+        # set up a list of the frames in which particles are matched
         time_lst = []
         for bl in self.blobs:
             for b in bl:
                 time_lst.append(b[-1])
         time_lst = list(set(time_lst))
         
-        cam_names = [cam.name for cam in self.imsys.cameras]
-        
         if frames is None:
             frames = time_lst
         
+        cam_names = [cam.name for cam in self.imsys.cameras]
+        
+        
+        # start matching, one frame at a time
         self.particles = []
         print('')
         for tm in frames:
             print('', end='\r')
             print(' frame: %d'%tm, end='\r')
+            
+            # set up a blobs dictionary with camera names as key
             pd = {}
             for i in range(len(self.blobs)):
                 cn = cam_names[i]
@@ -100,11 +105,13 @@ class match_blob_files(object):
                 else:
                     pd[cn] = self.blobs[i][self.blobs[i][:,-1] == tm][:,:2]
             
+            # match particles using the matching object
             M = matching(self.imsys, pd, self.RIO, self.voxel_size)
             M.get_voxel_dictionary()
             M.list_candidates()
             M.get_particles()
             
+            # extract the matched particles to the list self.particles 
             if self.max_err is None:
                 for p in M.matched_particles:
                     self.particles.append(p + [tm])
