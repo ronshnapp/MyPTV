@@ -16,7 +16,7 @@ by Bourgion and Huisman, 2020 (https://arxiv.org/pdf/2003.12135.pdf).
 """
 
 from math import ceil, floor
-from itertools import combinations
+from itertools import combinations, product
 from numpy import loadtxt, savetxt
 
 
@@ -106,7 +106,9 @@ class match_blob_files(object):
                     pd[cn] = self.blobs[i][self.blobs[i][:,-1] == tm][:,:2]
             
             # match particles using the matching object
-            M = matching(self.imsys, pd, self.RIO, self.voxel_size)
+            M = matching(self.imsys, pd, self.RIO, self.voxel_size,
+                         max_err = self.max_err)
+            #return M  # <-- used for checks
             M.get_voxel_dictionary()
             M.list_candidates()
             M.get_particles()
@@ -128,6 +130,7 @@ class match_blob_files(object):
         times = [p[-1] for p in self.particles]
         Nframes = len(set(times))
         print('avg. particles in frame: %.2f'%(Np/Nframes))
+
     
     
     def save_results(self, fname):
@@ -181,7 +184,7 @@ class matching(object):
     
     
     def __init__(self, img_system, particles_dic, 
-                 RIO, voxel_size):
+                 RIO, voxel_size, max_err=None):
         '''
         img_system - is an instance of the img_system object with camera 
                      objects. 
@@ -196,6 +199,7 @@ class matching(object):
         
         voxel size - the side length of voxel cubes used in the ray traversal
                      algorithm. Given in lab coordinate scales (e.g. mm).
+        max_err - maximum allowable triangulation rms error.
         
         '''
         
@@ -216,7 +220,7 @@ class matching(object):
         
         self.RIO = RIO
         self.voxel_size = voxel_size
-        
+        self.max_err = max_err
         
         # set up lists of voxel centers:
             
@@ -296,23 +300,30 @@ class matching(object):
         and the epipolar lines.'''
         
         candidate_dic = {}
-        for i in range(2, len(self.imsys.cameras)+1):
+        group_sizes = range(2, len(self.imsys.cameras)+1)
+        for i in group_sizes:
             candidate_dic[i] = []
         
-        for group_size in sorted(list(candidate_dic.keys()), reverse=True):
-            for k in self.voxel_dic.keys():
-                if len(self.voxel_dic[k]) >= group_size:
-                    for comb in combinations(self.voxel_dic[k], group_size):
-                        cam_nums = [ray[0] for ray in comb]
-                        #ray_nums = [ray[1] for ray in comb]
-                        if len(cam_nums) == len(set(cam_nums)):
-                            if comb not in candidate_dic[group_size]: 
-                                candidate_dic[group_size].append(comb)
-                            
+        for k in self.voxel_dic.keys():
+            if len(self.voxel_dic[k]) >= 2:
+                # make a nested list of the rays, by their camera number 
+                ray_by_cams = [[] for i in range(len(self.imsys.cameras))]
+                for ray in self.voxel_dic[k]:
+                    ray_by_cams[ray[0]].append(ray)
+                
+                # find all possible combinations of the rays for various
+                # numbers of cameras
+                for gs in group_sizes:
+                    for comb in combinations(ray_by_cams, gs):
+                        candidate_dic[gs] += product(*comb)
+        
+        for k in candidate_dic.keys():
+            candidate_dic[k] = list(set(candidate_dic[k]))
+        
         self.candidate_dic = candidate_dic
-        
-        
-        
+
+
+
     def triangulate_rays(self, rays):
         '''will return the results of stereo matching of a list of rays'''
         dc = {}
@@ -337,21 +348,37 @@ class matching(object):
         number of camera participating and with the smallest RNS triangulaiton 
         error.
         '''
+        import time
         
         matched_particles = []
         used_rays = []
         for k in sorted(self.candidate_dic.keys(), reverse=True):
+            
+            t0 = time.time()
+            # triangulate all the candidate rays
             cand_k = self.candidate_dic[k]
-            ray_crosses = [self.triangulate_rays(cand) for cand in cand_k]
+            ray_crosses = []
+            for cand in cand_k:
+                triangulation = self.triangulate_rays(cand)
+                if triangulation[-1] <= self.max_err:
+                    ray_crosses.append(triangulation)
+            print(len(cand_k), time.time()-t0)
+            
+            # zip and sort candidates by RMS error
             key = lambda x: x[1][2]
             dist_sorted_cands = sorted(zip(cand_k, ray_crosses), key = key)
             
+            
+            # if the rays in the candidate have not been used, adde the
+            # particle to the results list 
             for i in range(len(dist_sorted_cands)):
                 used_check = False
                 for ray in dist_sorted_cands[i][0]:
-                    if ray in used_rays: used_check=True
+                    if ray in used_rays: 
+                        used_check = True
+                        continue
                 
-                if used_check==False:
+                if not used_check:
                     p = dist_sorted_cands[i][1]
                     new_p = [round(p[0][0], ndigits=3), 
                              round(p[0][1], ndigits=3),
