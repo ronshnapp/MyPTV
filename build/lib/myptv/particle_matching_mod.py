@@ -351,21 +351,13 @@ class matching(object):
         number of camera participating and with the smallest RNS triangulaiton 
         error.
         '''
-        import time
-        
         matched_particles = []
         used_rays = []
         for k in sorted(self.candidate_dic.keys(), reverse=True):
             
-            t0 = time.time()
             # triangulate all the candidate rays
             cand_k = self.candidate_dic[k]
-            ray_crosses = []
-            for cand in cand_k:
-                triangulation = self.triangulate_rays(cand)
-                if triangulation[-1] <= self.max_err:
-                    ray_crosses.append(triangulation)
-            print(len(cand_k), time.time()-t0)
+            ray_crosses = [self.triangulate_rays(cand) for cand in cand_k]
             
             # zip and sort candidates by RMS error
             key = lambda x: x[1][2]
