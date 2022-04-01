@@ -16,7 +16,7 @@ by Bourgion and Huisman, 2020 (https://arxiv.org/pdf/2003.12135.pdf).
 """
 
 from math import ceil, floor
-from itertools import combinations
+from itertools import combinations, product
 from numpy import loadtxt, savetxt
 
 
@@ -65,6 +65,13 @@ class match_blob_files(object):
         self.reverse_eta_zeta = reverse_eta_zeta
         self.max_err = max_err
         
+        time_lst = []
+        for bl in self.blobs:
+            for b in bl:
+                time_lst.append(b[-1])
+        self.time_lst = list(set(time_lst))
+        
+        
         
     def get_particles(self, frames=None):
         '''
@@ -76,14 +83,8 @@ class match_blob_files(object):
                  the given frames.
         '''
         # set up a list of the frames in which particles are matched
-        time_lst = []
-        for bl in self.blobs:
-            for b in bl:
-                time_lst.append(b[-1])
-        time_lst = list(set(time_lst))
-        
         if frames is None:
-            frames = time_lst
+            frames = self.time_lst
         
         cam_names = [cam.name for cam in self.imsys.cameras]
         
@@ -97,29 +98,28 @@ class match_blob_files(object):
             
             # set up a blobs dictionary with camera names as key
             pd = {}
-            for i in range(len(self.blobs)):
-                cn = cam_names[i]
-                if self.reverse_eta_zeta:
+            if self.reverse_eta_zeta:
+                for i in range(len(self.blobs)):
+                    cn = cam_names[i]
                     pd[cn] = self.blobs[i][self.blobs[i][:,-1] == tm][:,1::-1]
-                
-                else:
+            
+            else:
+                for i in range(len(self.blobs)):
+                    cn = cam_names[i]
                     pd[cn] = self.blobs[i][self.blobs[i][:,-1] == tm][:,:2]
             
             # match particles using the matching object
-            M = matching(self.imsys, pd, self.RIO, self.voxel_size)
+            M = matching(self.imsys, pd, self.RIO, self.voxel_size,
+                         max_err = self.max_err)
+            #return M  # <-- used for checks
             M.get_voxel_dictionary()
             M.list_candidates()
             M.get_particles()
             
             # extract the matched particles to the list self.particles 
-            if self.max_err is None:
-                for p in M.matched_particles:
-                    self.particles.append(p + [tm])
+            for p in M.matched_particles:
+                self.particles.append(p + [tm])
             
-            else: 
-                for p in M.matched_particles:
-                    if p[4] <= self.max_err:
-                        self.particles.append(p + [tm])
         
         print('\n','done!')                        
         errors = [p[4] for p in self.particles]
@@ -128,6 +128,7 @@ class match_blob_files(object):
         times = [p[-1] for p in self.particles]
         Nframes = len(set(times))
         print('avg. particles in frame: %.2f'%(Np/Nframes))
+
     
     
     def save_results(self, fname):
@@ -181,7 +182,7 @@ class matching(object):
     
     
     def __init__(self, img_system, particles_dic, 
-                 RIO, voxel_size):
+                 RIO, voxel_size, max_err=None):
         '''
         img_system - is an instance of the img_system object with camera 
                      objects. 
@@ -196,6 +197,7 @@ class matching(object):
         
         voxel size - the side length of voxel cubes used in the ray traversal
                      algorithm. Given in lab coordinate scales (e.g. mm).
+        max_err - maximum allowable triangulation rms error.
         
         '''
         
@@ -216,7 +218,7 @@ class matching(object):
         
         self.RIO = RIO
         self.voxel_size = voxel_size
-        
+        self.max_err = max_err
         
         # set up lists of voxel centers:
             
@@ -240,50 +242,55 @@ class matching(object):
         elif Nz%2!=0: f = floor(Nz/2)*voxel_size
         self.Nz = Nz
         self.z = [i*voxel_size + cz - f for i in range(Nz)]
+
+
+    
+    def ray_traversed_voxels(self, ray):
+        '''
+        Given a ray, this will add the voxel through which it
+        traverses into the list self.traversed_voxels .
+        '''
+        cam  = self.imsys.cameras[ray[2][0]]
+        O = cam.O
+        r = cam.get_r(ray[0], ray[1])
+        r_ = r / sum(r**2)**0.5
         
-        
-    def get_traversed_voxels(self):
-        '''This will return a list that holds for each ray in self.rays
-        the pixels in RIO through which it traverses. '''
-        
-        traversed_voxels = []
-        for ray in self.rays:
-            cam  = self.imsys.cameras[ray[2][0]]
-            O = cam.O
-            r = cam.get_r(ray[0], ray[1])
-            r_ = r / sum(r**2)**0.5
+        for k in range(len(self.z)):
+            z_ = self.z[k]
+            a = (z_ - O[2])/r_[2]
+            x_, y_ = O[0] + r_[0]*a, O[1] + r_[1]*a
+            if x_>self.RIO[0][1] or x_<self.RIO[0][0]: continue
+            if y_>self.RIO[1][1] or y_<self.RIO[1][0]: continue
+            i = int((x_ - self.x[0] - self.voxel_size/2)/self.voxel_size +1)
+            j = int((y_ - self.y[0] - self.voxel_size/2)/self.voxel_size +1)
             
-            for k in range(len(self.z)):
-                z_ = self.z[k]
-                a = (z_ - O[2])/r_[2]
-                x_, y_ = O[0] + r_[0]*a, O[1] + r_[1]*a
-                if x_>self.RIO[0][1] or x_<self.RIO[0][0]: continue
-                if y_>self.RIO[1][1] or y_<self.RIO[1][0]: continue
-                i = int((x_ - self.x[0] - self.voxel_size/2)/self.voxel_size +1)
-                j = int((y_ - self.y[0] - self.voxel_size/2)/self.voxel_size +1)
-                
-                for i_ in range(max([0,i-1]), min([self.Nx-1,i+1])+1):
-                    for j_ in range(max([0,j-1]), min([self.Ny-1,j+1])+1):
-                        for k_ in range(max([0,k-1]), min([self.Nz-1,k+1])+1):
-                            traversed_voxels.append( [(i_,j_,k_), ray[2]] )
-        
-        return traversed_voxels
-        
+            
+            i0, i1 = max([0,i-1]), min([self.Nx-1,i+1])+1
+            j0, j1 = max([0,j-1]), min([self.Ny-1,j+1])+1
+            k0, k1 = max([0,k-1]), min([self.Nz-1,k+1])+1
+            
+            for i_ in range(i0,i1):
+                for j_ in range(j0,j1):
+                    for k_ in range(k0,k1):
+                        self.traversed_voxels.append( [(i_,j_,k_), ray[2]] )
+    
     
     def get_voxel_dictionary(self):
         '''This generates a dicionary who's keys are voxel indexes and
         who's values are the rays that passed through this voxel.'''
         
-        traversed_voxels = self.get_traversed_voxels()
+        self.traversed_voxels = []
+        for ray in self.rays:
+            self.ray_traversed_voxels(ray)
+        
         
         voxel_dic = {}
-        for vxl in traversed_voxels:
-            if vxl[0] in voxel_dic.keys():
-                if vxl[1] not in voxel_dic[vxl[0]]:
-                    voxel_dic[vxl[0]].append(vxl[1])
-            else:
-                voxel_dic[vxl[0]] = [vxl[1]]
-        
+        for vxl in self.traversed_voxels:
+            try:
+                voxel_dic[vxl[0]].add(vxl[1])
+            except:
+                voxel_dic[vxl[0]] = set([vxl[1]])
+                
         self.voxel_dic = voxel_dic
         
     
@@ -296,23 +303,30 @@ class matching(object):
         and the epipolar lines.'''
         
         candidate_dic = {}
-        for i in range(2, len(self.imsys.cameras)+1):
+        group_sizes = range(2, len(self.imsys.cameras)+1)
+        for i in group_sizes:
             candidate_dic[i] = []
         
-        for group_size in sorted(list(candidate_dic.keys()), reverse=True):
-            for k in self.voxel_dic.keys():
-                if len(self.voxel_dic[k]) >= group_size:
-                    for comb in combinations(self.voxel_dic[k], group_size):
-                        cam_nums = [ray[0] for ray in comb]
-                        #ray_nums = [ray[1] for ray in comb]
-                        if len(cam_nums) == len(set(cam_nums)):
-                            if comb not in candidate_dic[group_size]: 
-                                candidate_dic[group_size].append(comb)
-                            
+        for k in self.voxel_dic.keys():
+            if len(self.voxel_dic[k]) >= 2:
+                # make a nested list of the rays, by their camera number 
+                ray_by_cams = [[] for i in range(len(self.imsys.cameras))]
+                for ray in self.voxel_dic[k]:
+                    ray_by_cams[ray[0]].append(ray)
+                
+                # find all possible combinations of the rays for various
+                # numbers of cameras
+                for gs in group_sizes:
+                    for comb in combinations(ray_by_cams, gs):
+                        candidate_dic[gs] += product(*comb)
+        
+        for k in candidate_dic.keys():
+            candidate_dic[k] = list(set(candidate_dic[k]))
+        
         self.candidate_dic = candidate_dic
-        
-        
-        
+
+
+
     def triangulate_rays(self, rays):
         '''will return the results of stereo matching of a list of rays'''
         dc = {}
@@ -337,21 +351,37 @@ class matching(object):
         number of camera participating and with the smallest RNS triangulaiton 
         error.
         '''
+        import time
         
         matched_particles = []
         used_rays = []
         for k in sorted(self.candidate_dic.keys(), reverse=True):
+            
+            t0 = time.time()
+            # triangulate all the candidate rays
             cand_k = self.candidate_dic[k]
-            ray_crosses = [self.triangulate_rays(cand) for cand in cand_k]
+            ray_crosses = []
+            for cand in cand_k:
+                triangulation = self.triangulate_rays(cand)
+                if triangulation[-1] <= self.max_err:
+                    ray_crosses.append(triangulation)
+            print(len(cand_k), time.time()-t0)
+            
+            # zip and sort candidates by RMS error
             key = lambda x: x[1][2]
             dist_sorted_cands = sorted(zip(cand_k, ray_crosses), key = key)
             
+            
+            # if the rays in the candidate have not been used, adde the
+            # particle to the results list 
             for i in range(len(dist_sorted_cands)):
                 used_check = False
                 for ray in dist_sorted_cands[i][0]:
-                    if ray in used_rays: used_check=True
+                    if ray in used_rays: 
+                        used_check = True
+                        continue
                 
-                if used_check==False:
+                if not used_check:
                     p = dist_sorted_cands[i][1]
                     new_p = [round(p[0][0], ndigits=3), 
                              round(p[0][1], ndigits=3),

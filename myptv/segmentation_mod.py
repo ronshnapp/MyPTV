@@ -219,7 +219,7 @@ class loop_segmentation(object):
     and save the results in a file.'''
     
     def __init__(self, dir_name, extension='.tif', N_img = None,
-                 sigma=1.0, threshold=10, mask=1.0,
+                 sigma=1.0, threshold=10, mask=1.0, local_filter = 15,
                  min_xsize=None, max_xsize=None,
                  min_ysize=None, max_ysize=None,
                  min_area=None, max_area=None):
@@ -243,6 +243,7 @@ class loop_segmentation(object):
         self.mask = mask
         self.bbox_limits = (min_xsize, max_xsize, min_ysize, max_ysize)
         self.area_limits = (min_area, max_area)
+        self.loc_filter = local_filter
     
     
     def get_file_names(self):
@@ -273,6 +274,7 @@ class loop_segmentation(object):
             im = imread(os.path.join(self.dir_name, self.image_files[i]))
             ps = particle_segmentation(im, sigma=self.sigma, 
                                        threshold=self.th,
+                                       local_filter=self.loc_filter,
                                        mask=self.mask,
                                        max_xsize=self.bbox_limits[1],
                                        min_xsize=self.bbox_limits[0],

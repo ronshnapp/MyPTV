@@ -58,10 +58,16 @@ def point_line_dist(O,r,P):
     for a line (O + a r) and a point P, this returns the distance between
     the line and the point.
     '''
-    a = dot(r, P - O) / dot(r, r)
-    l = O + a*r
-    d = norm(l-P)
+     
+    anum = sum([ r[i]*(P[i]-O[i]) for i in range(3)])
+    adenum = sum([ r[i]*r[i] for i in range(3)])
+    a = anum / adenum
+    l = [O[i] + a*r[i] for i in range(3)]
+    d = ((l[0]-P[0])**2 + (l[1]-P[1])**2 + (l[2]-P[2])**2)**0.5
     return d
+
+
+
 
 
 
@@ -183,3 +189,66 @@ class match_calibration_blobs_and_points(object):
         ax.plot([],[],'rx', label='segmented plobs')
         ax.legend()
         return fig, ax
+    
+    
+    
+
+
+
+
+
+#=============================================================================
+#Line intersects. Not in use at the moment - only, testing.
+
+
+def find_point_nearest_to_lines(line_list):
+    '''
+    Will use least squares in order to solve the problem of finding the
+    point that is the closest to several lines. (Note that for two lines there
+    is an analytical solution that is used in the function line_dist()).
+    
+    This function uses scipy.optimize.least_squares() !
+    
+    input -
+    line_list - a list of tuples (O, r) where O and r are the origin and 
+                direction vectors (numpy arrays, 3) that define a line in 
+                3d space.
+                
+    returns -
+    P - the point in 3d space that minimizes the distance to the lines in the 
+        list.
+    '''
+    from scipy.optimize import least_squares
+    
+    def dist_sum(P):
+        dist = 0
+        for O,r in line_list:
+            dist += point_line_dist(O, r, P)
+        return dist
+    
+    x0 = line_dist(line_list[0][0], line_list[0][1], 
+                   line_list[1][0], line_list[1][1])[1]
+    P = least_squares(dist_sum, x0, method='dogbox', ftol=1e-8)
+    return P
+    
+
+
+
+
+def nearest_intersect(lines):
+    import numpy as np
+    I = np.eye(3)
+    
+    S1 = 0
+    S2 = 0
+    for i in range(len(lines)):
+        Oi = np.array([lines[i][0]])
+        ri = lines[i][1]
+        S1 += I - np.dot(Oi.T, Oi)
+        S2 += np.dot(I - np.dot(Oi.T, Oi), ri)
+    return np.linalg.lstsq(S1, S2, rcond=None)
+        
+#=============================================================================
+
+
+
