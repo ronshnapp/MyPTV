@@ -11,7 +11,7 @@ Contains classes for tracking particles to form trajectories.
 """
 
 from numpy import loadtxt, array, savetxt
-
+from scipy.spatial import KDTree
 
 
 
@@ -55,6 +55,11 @@ class tracker_four_frames(object):
             for i in range(p_.shape[0]):
                 p = array([-1] + list(p_[i,[0,1,2,-1]]))
                 self.particles[tm].append(p)
+        
+        for k in self.particles.keys():
+            self.particles[k] = array(self.particles[k])
+        
+        self.trees = {}
         
         self.traj_ids = []
         self.traj_lengths = {}
@@ -153,12 +158,17 @@ class tracker_four_frames(object):
         neighbour in the frame number given, adn the distance between them.'''
         dt_particles = (frame_num - particle[4])
         dX = self.U * dt_particles
-        dist_particle = lambda p2 : sum((particle[1:4] - (p2[1:4]-dX))**2)**0.5
-        values = []
-        for i in range(len(self.particles[frame_num])):
-            values.append(( dist_particle(self.particles[frame_num][i]), i))
-        min_val = min(values, key=lambda x: x[0])
-        return min_val
+        p = particle[1:4] + dX
+        
+        try:
+            tree = self.trees[frame_num]
+        except:
+            tree = KDTree(self.particles[frame_num][:,1:4])
+            self.trees[frame_num] = tree
+        
+        return tree.query(p, k=1)
+        
+
     
     
     def get_particle_by_id(self, id_, frame_num):
@@ -202,13 +212,17 @@ class tracker_four_frames(object):
         v = (particle[1:4] - p_im1[1:4])/dt
         x_proj = particle[1:4] + dt * v
         
-        # 2: find neighbours of the projection at n+1:
-        dist = lambda p: sum((x_proj - p[1:4])**2)**0.5
-        proj_neighbours = []                       
-        for i in range(len(self.particles[frame_num])):
-            d = dist(self.particles[frame_num][i])
-            if d < self.dv_max:
-                proj_neighbours.append( (d, i) )
+        # 2: find neighbours of the projection at n+1 using KDTree:
+        try:
+            tree = self.trees[frame_num]
+        except:
+            tree = KDTree(self.particles[frame_num][:,1:4])
+            self.trees[frame_num] = tree
+        dist = lambda p: sum((x_proj - p[1:4])**2)**0.5 
+        proj_neighbours = [(dist(self.particles[frame_num][i]), i) for i in 
+                           tree.query_ball_point(x_proj, self.dv_max, )]
+
+        
         
         # 2.1: if there are no projection neighbours, return None
         if len(proj_neighbours)==0: return None
@@ -222,6 +236,12 @@ class tracker_four_frames(object):
         
         # 3: for each n+1 neighbour, project to frame n+2 and 
         #    locate this projection's nearest neighbour and write it
+        
+        try:
+            tree = self.trees[frame_num+1]
+        except:
+            tree = KDTree(self.particles[frame_num+1][:,1:4])
+        
         for j in range(len(proj_neighbours)):
             d,i = proj_neighbours[j]
             xip1 = self.particles[frame_num][i][1:4]
@@ -231,8 +251,7 @@ class tracker_four_frames(object):
             ai = (xip1 - 2*xi + xim1)/(dt**2)
             xip2 = xi + 2*dt*vi + 2*dt**2*ai     # <-- projection at frame n+2
             
-            dist = lambda p: sum((p[1:4] - xip2)**2)**0.5
-            nnd = min([dist(p) for p in self.particles[frame_num+1]])
+            nnd, dump = tree.query(xip2, k=1)
             proj_neighbours[j] = (nnd, proj_neighbours[j][1])
         
         # 4: return the candidate with the smallest nearest neighbour distance
@@ -480,15 +499,28 @@ class tracker_nearest_neighbour(object):
             for i in range(p_.shape[0]):
                 p = array([-1] + list(p_[i,[0,1,2,-1]]))
                 self.particles[tm].append(p)
+    
+        for k in self.particles.keys():
+            self.particles[k] = array(self.particles[k])
+            
+        self.trees = {}
         
         self.traj_ids = []
         self.traj_lengths = {}
+        
     
     
-    
-    def track_all_frames(self):
+    def track_all_frames(self, frames=None):
         '''Will perform nearest neighbour tracking over all frames in a loop'''
-        for tm in self.times[:-1]:
+        
+        if frames == None:
+            frames = self.times[:-1]
+        else:
+            for i in range(len(frames)-1):
+                if frames[i+1]-frames[i] != 1 or type(frames[i])!= int:
+                    raise ValueError('frame range does not follow the rules.')
+        
+        for tm in frames:
             self.nearest_neighbour_one_frame(tm)
         N_links = 0
         for k in self.traj_lengths.keys(): N_links += self.traj_lengths[k]
@@ -548,12 +580,22 @@ class tracker_nearest_neighbour(object):
         neighbour in the frame number given, adn the distance between them.'''
         dt_particles = (frame_num - particle[4])
         dX = self.U * dt_particles
-        dist_particle = lambda p2 : sum((particle[1:4] - (p2[1:4]-dX))**2)**0.5
-        values = []
-        for i in range(len(self.particles[frame_num])):
-            values.append(( dist_particle(self.particles[frame_num][i]), i))
-        min_val = min(values, key=lambda x: x[0])
-        return min_val
+        p = particle[1:4] + dX
+        
+        try:
+            tree = self.trees[frame_num]
+        except:
+            tree = KDTree(self.particles[frame_num][:,1:4])
+            self.trees[frame_num] = tree
+        
+        return tree.query(p, k=1)
+        
+        # dist_particle = lambda p2 : sum((particle[1:4] - (p2[1:4]-dX))**2)**0.5
+        # values = []
+        # for i in range(len(self.particles[frame_num])):
+        #     values.append(( dist_particle(self.particles[frame_num][i]), i))
+        # min_val = min(values, key=lambda x: x[0])
+        # return min_val
     
     
     def save_results(self, fname):
