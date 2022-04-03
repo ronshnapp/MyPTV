@@ -119,7 +119,9 @@ class match_blob_files(object):
             # extract the matched particles to the list self.particles 
             for p in M.matched_particles:
                 self.particles.append(p + [tm])
-            
+        
+        self.particles = list(filter(lambda p: p[4]<self.max_err,
+                                     self.particles))
         
         print('\n','done!')                        
         errors = [p[4] for p in self.particles]

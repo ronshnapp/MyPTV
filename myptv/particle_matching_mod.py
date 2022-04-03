@@ -22,7 +22,6 @@ from numpy import loadtxt, savetxt
 
 
 
-
 class match_blob_files(object):
     '''A class for obtaining triangulated particles positions from a 
     list of segmented blobs. Use self.get_particles() and after that,
@@ -119,7 +118,9 @@ class match_blob_files(object):
             # extract the matched particles to the list self.particles 
             for p in M.matched_particles:
                 self.particles.append(p + [tm])
-            
+        
+        self.particles = list(filter(lambda p: p[4]<self.max_err,
+                                     self.particles))
         
         print('\n','done!')                        
         errors = [p[4] for p in self.particles]
@@ -244,7 +245,7 @@ class matching(object):
         self.z = [i*voxel_size + cz - f for i in range(Nz)]
 
 
-    
+
     def ray_traversed_voxels(self, ray):
         '''
         Given a ray, this will add the voxel through which it
@@ -254,35 +255,75 @@ class matching(object):
         O = cam.O
         r = cam.get_r(ray[0], ray[1])
         r_ = r / sum(r**2)**0.5
+
+        a1, a2 = (self.RIO[2][0] - O[2])/r_[2], (self.RIO[2][1] - O[2])/r_[2]
+        if a2<a1:
+            a2, a1 = a1, a2
         
-        for k in range(len(self.z)):
-            z_ = self.z[k]
-            a = (z_ - O[2])/r_[2]
-            x_, y_ = O[0] + r_[0]*a, O[1] + r_[1]*a
-            if x_>self.RIO[0][1] or x_<self.RIO[0][0]: continue
-            if y_>self.RIO[1][1] or y_<self.RIO[1][0]: continue
+        da = self.voxel_size/4.0
+        
+        ray_voxels = []
+        a = a1
+        while a<=a2:
+            x_, y_, z_ = O[0] + r_[0]*a, O[1] + r_[1]*a, O[2] + r_[2]*a
+            if x_>self.RIO[0][1] or x_<self.RIO[0][0]: 
+                a += self.voxel_size/4.0
+                continue
+            
+            if y_>self.RIO[1][1] or y_<self.RIO[1][0]: 
+                a += self.voxel_size/4.0
+                continue
+            
             i = int((x_ - self.x[0] - self.voxel_size/2)/self.voxel_size +1)
             j = int((y_ - self.y[0] - self.voxel_size/2)/self.voxel_size +1)
+            k = int((z_ - self.z[0] - self.voxel_size/2)/self.voxel_size +1)
+            ray_voxels.append(((i, j, k), ray[2]))
+            a += da
+        
+        self.traversed_voxels += list(set(ray_voxels))
+
+
+# =============================================================================
+#         Older methods used for legacy:
+#
+#         for k in range(len(self.z)):
+#             z_ = self.z[k]
+#             a = (z_ - O[2])/r_[2]
+#             x_, y_ = O[0] + r_[0]*a, O[1] + r_[1]*a
+#             if x_>self.RIO[0][1] or x_<self.RIO[0][0]: continue
+#             if y_>self.RIO[1][1] or y_<self.RIO[1][0]: continue
+#             i = int((x_ - self.x[0] - self.voxel_size/2)/self.voxel_size +1)
+#             j = int((y_ - self.y[0] - self.voxel_size/2)/self.voxel_size +1)
+#             
+#             self.traversed_voxels.append( [(i, j, k), ray[2]] )
+# =============================================================================
             
-            
-            i0, i1 = max([0,i-1]), min([self.Nx-1,i+1])+1
-            j0, j1 = max([0,j-1]), min([self.Ny-1,j+1])+1
-            k0, k1 = max([0,k-1]), min([self.Nz-1,k+1])+1
-            
-            for i_ in range(i0,i1):
-                for j_ in range(j0,j1):
-                    for k_ in range(k0,k1):
-                        self.traversed_voxels.append( [(i_,j_,k_), ray[2]] )
+# =============================================================================
+#             i0, i1 = max([0,i-1]), min([self.Nx-1,i+1])+1
+#             j0, j1 = max([0,j-1]), min([self.Ny-1,j+1])+1
+#             #k0, k1 = max([0,k-1]), min([self.Nz-1,k+1])+1
+#             
+#             
+#             for i_ in range(i0,i1):
+#                 for j_ in range(j0,j1):
+#                     self.traversed_voxels.append( [(i_,j_,k), ray[2]] )
+#                     #for k_ in range(k0,k1):
+#                     #    self.traversed_voxels.append( [(i_,j_,k_), ray[2]] )
+# =============================================================================
+        
+
+
+
     
     
     def get_voxel_dictionary(self):
         '''This generates a dicionary who's keys are voxel indexes and
         who's values are the rays that passed through this voxel.'''
-        
+
         self.traversed_voxels = []
         for ray in self.rays:
             self.ray_traversed_voxels(ray)
-        
+
         
         voxel_dic = {}
         for vxl in self.traversed_voxels:
@@ -302,10 +343,10 @@ class matching(object):
         RMS and the maximum distance between the estimated particle location 
         and the epipolar lines.'''
         
-        candidate_dic = {}
+        self.candidate_dic = {}
         group_sizes = range(2, len(self.imsys.cameras)+1)
         for i in group_sizes:
-            candidate_dic[i] = []
+            self.candidate_dic[i] = []
         
         for k in self.voxel_dic.keys():
             if len(self.voxel_dic[k]) >= 2:
@@ -318,12 +359,12 @@ class matching(object):
                 # numbers of cameras
                 for gs in group_sizes:
                     for comb in combinations(ray_by_cams, gs):
-                        candidate_dic[gs] += product(*comb)
+                        self.candidate_dic[gs] += product(*comb)
         
-        for k in candidate_dic.keys():
-            candidate_dic[k] = list(set(candidate_dic[k]))
+        for k in self.candidate_dic.keys():
+            self.candidate_dic[k] = list(set(self.candidate_dic[k]))
         
-        self.candidate_dic = candidate_dic
+
 
 
 
@@ -338,6 +379,16 @@ class matching(object):
         return self.imsys.stereo_match(dc, 1e19)
     
     
+    def is_used(self, cand):
+        '''
+        Returns True if al least one of the rays in the candidate had been
+        used up, and False if all of the rays have not been used yet.
+        '''
+        for ray in cand:
+            if ray in self.used_rays:
+                return True
+        return False
+
     
     def get_particles(self):
         '''Once all candidates are found, this function chooses the "best"
@@ -352,13 +403,22 @@ class matching(object):
         error.
         '''
         matched_particles = []
-        used_rays = []
+        self.used_rays = []
+        
+
+        count = 0
         for k in sorted(self.candidate_dic.keys(), reverse=True):
             
-            # triangulate all the candidate rays
             cand_k = self.candidate_dic[k]
-            ray_crosses = [self.triangulate_rays(cand) for cand in cand_k]
             
+            # get rid of candidates with rays that were used
+            if count>0:
+                cand_k = list(filter(lambda c: not(self.is_used(c)), cand_k))
+            
+            
+            # triangulate all the candidate rays
+            ray_crosses = [self.triangulate_rays(cand) for cand in cand_k]
+                        
             # zip and sort candidates by RMS error
             key = lambda x: x[1][2]
             dist_sorted_cands = sorted(zip(cand_k, ray_crosses), key = key)
@@ -367,11 +427,11 @@ class matching(object):
             # if the rays in the candidate have not been used, adde the
             # particle to the results list 
             for i in range(len(dist_sorted_cands)):
-                used_check = False
-                for ray in dist_sorted_cands[i][0]:
-                    if ray in used_rays: 
-                        used_check = True
-                        continue
+                used_check = self.is_used(dist_sorted_cands[i][0])
+                #for ray in dist_sorted_cands[i][0]:
+                #    if ray in self.used_rays: 
+                #        used_check = True
+                #        continue
                 
                 if not used_check:
                     p = dist_sorted_cands[i][1]
@@ -381,13 +441,9 @@ class matching(object):
                              dist_sorted_cands[i][0],
                              round(p[-1], ndigits=3)]
                     matched_particles.append(new_p)
-                    used_rays += dist_sorted_cands[i][0]
+                    self.used_rays += dist_sorted_cands[i][0]
+            count += 1
         
-        
-        #d_list = [p[4] for p in matched_particles]
-        #print('')
-        #print('Found %d particles'%(len(matched_particles)))
-        #print('with maximum RMS error of %.2f'%(max(d_list)))
         self.matched_particles = matched_particles
         
         
