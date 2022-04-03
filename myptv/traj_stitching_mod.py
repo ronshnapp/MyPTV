@@ -19,6 +19,7 @@ from numpy import append as NPappend
 from myptv.utils import fit_polynomial
 from myptv.traj_smoothing_mod import smooth_traj_poly
 
+
 class traj_stitching(object):    
     '''
     Finds a list of trajectory pairs to connect to each
@@ -276,7 +277,8 @@ class traj_stitching(object):
         traj_ids = list(set(self.traj_list[:,0]))
         ntr = len(traj_ids)
         print('starting at %d trajectories'%(ntr))
-        nsmp = len(self.traj_list)*1.0
+        whr = self.traj_list[:,0] != -1
+        nsmp = len(self.traj_list[whr])*1.0
         print('with %.1f samples per trajectory on average'%(nsmp/ntr),'\n')
         
         print('searching for candidates to connect')
@@ -293,8 +295,9 @@ class traj_stitching(object):
         print('interpolated %d new samples'%(len(self.traj_list) - ntraj0))
         traj_ids = list(set(self.traj_list[:,0]))
         ntr = len(traj_ids)
-        print('funished with %d trajectories'%(ntr))
-        nsmp = len(self.traj_list)*1.0
+        print('finished with %d trajectories'%(ntr))
+        whr = self.traj_list[:,0] != -1
+        nsmp = len(self.traj_list[whr])*1.0
         print('at %.1f samples per trajectory on average'%(nsmp/ntr),'\n')    
             
     
