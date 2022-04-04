@@ -312,9 +312,6 @@ class matching(object):
 # =============================================================================
         
 
-
-
-    
     
     def get_voxel_dictionary(self):
         '''This generates a dicionary who's keys are voxel indexes and

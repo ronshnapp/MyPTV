@@ -19,6 +19,8 @@ from numpy.linalg import inv, norm
 
 
 
+
+
 def line_dist(O1, r1, O2, r2):
     '''
     2 lines are defined as (O1 + a r1) and  (O2 + b r2), where O are origins,
@@ -34,19 +36,30 @@ def line_dist(O1, r1, O2, r2):
     '''
     
     # find the a,b that minimize the distance:
-    A = array([[dot(r1,r1), -dot(r1,r2)],
-               [dot(r1,r2), -dot(r2,r2)]])
+    # A = array([[dot(r1,r1), -dot(r1,r2)],
+    #            [dot(r1,r2), -dot(r2,r2)]])
     
-    B = array([[dot(r1,O2-O1)],[dot(r2,O2-O1)]])
+    r1r2 = r1[0]*r2[0] + r1[1]*r2[1] + r1[2]*r2[2]
+    r12 = r1[0]**2 + r1[1]**2 + r1[2]**2
+    r22 = r2[0]**2 + r2[1]**2 + r2[2]**2
+
+    Ainv = [[-r22, r1r2],
+            [-r1r2, r12]]
+    
+    dO = O2-O1
+    B = [r1[0]*dO[0] + r1[1]*dO[1] + r1[2]*dO[2],
+         r2[0]*dO[0] + r2[1]*dO[1] + r2[2]*dO[2]]
     
     try:
-        a,b = dot(inv(A), B)
+        #a,b = dot(Ainv, B)
+        a = (Ainv[0][0]*B[0] + Ainv[0][1]*B[1])/(r1r2**2 - r12 * r22)
+        b = (Ainv[1][0]*B[0] + Ainv[1][1]*B[1])/(r1r2**2 - r12 * r22)
     except:
         a,b = 0.0, 0.0
     
     # use the a,b to calc the minimum distance:
     l1,l2 = O1 + a*r1 , O2 + b*r2
-    dist = norm(l1 - l2)
+    dist = sum((l1 - l2)**2)**0.5
     x = (l1+l2)*0.5
     
     return dist, x
