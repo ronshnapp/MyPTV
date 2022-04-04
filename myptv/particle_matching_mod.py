@@ -15,6 +15,7 @@ by Bourgion and Huisman, 2020 (https://arxiv.org/pdf/2003.12135.pdf).
 
 """
 
+from myptv.utils import line_dist
 from math import ceil, floor
 from itertools import combinations, product
 from numpy import loadtxt, savetxt
@@ -215,7 +216,8 @@ class matching(object):
                                            self.ray_camera_indexes[-1])
             for j in range(len(particles_i)):
                 x, y = particles_i[j][0], particles_i[j][1]
-                self.rays.append( (x, y, (i,j)) )
+                r_ij = cam.get_r(x, y)
+                self.rays.append( (x, y, (i,j), r_ij) )
         
         self.RIO = RIO
         self.voxel_size = voxel_size
@@ -312,6 +314,9 @@ class matching(object):
 # =============================================================================
         
 
+
+
+    
     
     def get_voxel_dictionary(self):
         '''This generates a dicionary who's keys are voxel indexes and
@@ -363,17 +368,41 @@ class matching(object):
         
 
 
-
-
     def triangulate_rays(self, rays):
         '''will return the results of stereo matching of a list of rays'''
+        
         dc = {}
+        cams = []
         for ray in rays:
             i = self.ray_camera_indexes[ray[0]] 
             ip1 = self.ray_camera_indexes[ray[0]+1]
-            eta, zeta = self.rays[i:ip1][ray[1]][:2]
-            dc[ray[0]] = [eta, zeta]
-        return self.imsys.stereo_match(dc, 1e19)
+            ri = self.rays[i:ip1][ray[1]][3]
+            Oi = self.imsys.cameras[self.rays[i:ip1][ray[1]][2][0]].O
+            dc[ray[0]] = Oi, ri
+            cams.append(ray[0])
+        
+        n = len(rays)
+        d, x = [], []
+        
+        for i in range(n):
+            Oi, ri = dc[cams[i]]
+            for j in range(i+1, n):
+                Oj, rj = dc[cams[j]]
+                D, x_ij = line_dist(Oi, ri, Oj, rj)
+                d.append(D)
+                x.append(x_ij)
+        
+        return sum(x)/1.0/len(x), cams, sum(d)/1.0/len(x)
+        
+        
+        # dc = {}
+        # for ray in rays:
+        #     i = self.ray_camera_indexes[ray[0]] 
+        #     ip1 = self.ray_camera_indexes[ray[0]+1]
+        #     eta, zeta = self.rays[i:ip1][ray[1]][:2]
+        #     dc[ray[0]] = [eta, zeta]
+        
+        # return self.imsys.stereo_match(dc, 1e19)
     
     
     def is_used(self, cand):
@@ -400,9 +429,8 @@ class matching(object):
         error.
         '''
         matched_particles = []
-        self.used_rays = []
+        self.used_rays = set([])
         
-
         count = 0
         for k in sorted(self.candidate_dic.keys(), reverse=True):
             
@@ -412,24 +440,18 @@ class matching(object):
             if count>0:
                 cand_k = list(filter(lambda c: not(self.is_used(c)), cand_k))
             
-            
             # triangulate all the candidate rays
-            ray_crosses = [self.triangulate_rays(cand) for cand in cand_k]
-                        
-            # zip and sort candidates by RMS error
-            key = lambda x: x[1][2]
-            dist_sorted_cands = sorted(zip(cand_k, ray_crosses), key = key)
+            ray_crosses = [self.triangulate_rays(cand) for cand in cand_k]                
             
+            # zip and sort candidates by RMS error
+            dist_sorted_cands = sorted(zip(cand_k, ray_crosses),
+                                       key = lambda x: x[1][2])
+
             
             # if the rays in the candidate have not been used, adde the
             # particle to the results list 
             for i in range(len(dist_sorted_cands)):
-                used_check = self.is_used(dist_sorted_cands[i][0])
-                #for ray in dist_sorted_cands[i][0]:
-                #    if ray in self.used_rays: 
-                #        used_check = True
-                #        continue
-                
+                used_check = self.is_used(dist_sorted_cands[i][0])                
                 if not used_check:
                     p = dist_sorted_cands[i][1]
                     new_p = [round(p[0][0], ndigits=3), 
@@ -438,8 +460,9 @@ class matching(object):
                              dist_sorted_cands[i][0],
                              round(p[-1], ndigits=3)]
                     matched_particles.append(new_p)
-                    self.used_rays += dist_sorted_cands[i][0]
-            count += 1
+                    self.used_rays.update(dist_sorted_cands[i][0])
+            count += 1     
+                 
         
         self.matched_particles = matched_particles
         
