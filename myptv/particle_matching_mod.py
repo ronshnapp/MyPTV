@@ -19,6 +19,7 @@ from myptv.utils import line_dist
 from math import ceil, floor
 from itertools import combinations, product
 from numpy import loadtxt, savetxt
+from scipy.spatial import KDTree
 
 
 
@@ -92,7 +93,8 @@ class match_blob_files(object):
         # start matching, one frame at a time
         self.particles = []
         print('')
-        for tm in frames:
+        
+        for e,tm in enumerate(frames):
             print('', end='\r')
             print(' frame: %d'%tm, end='\r')
             
@@ -101,12 +103,29 @@ class match_blob_files(object):
             if self.reverse_eta_zeta:
                 for i in range(len(self.blobs)):
                     cn = cam_names[i]
-                    pd[cn] = self.blobs[i][self.blobs[i][:,-1] == tm][:,1::-1]
+                    arr = self.blobs[i][self.blobs[i][:,-1] == tm][:,1::-1]
+                    pd[cn] = arr.tolist()
             
             else:
                 for i in range(len(self.blobs)):
                     cn = cam_names[i]
-                    pd[cn] = self.blobs[i][self.blobs[i][:,-1] == tm][:,:2]
+                    arr = self.blobs[i][self.blobs[i][:,-1] == tm][:,:2]
+                    pd[cn] = arr.tolist()
+                    
+            # for iterations after the first run, use the time
+            # augmented matching
+            if e>0:
+                fltr = lambda p: p[-1]==frames[e-1]
+                previous_particles = list(filter(fltr, self.particles))
+                mut = matching_using_time(self.imsys, pd, previous_particles,
+                                          max_err = self.max_err)
+                #return mut  # <-- used for checks
+                mut.triangulate_candidates()
+                for p in mut.matched_particles:
+                    self.particles.append(p + [tm])
+                
+                pd = mut.return_updated_particle_dict()
+                
             
             # match particles using the matching object
             M = matching(self.imsys, pd, self.RIO, self.voxel_size,
@@ -119,7 +138,7 @@ class match_blob_files(object):
             # extract the matched particles to the list self.particles 
             for p in M.matched_particles:
                 self.particles.append(p + [tm])
-        
+            
         self.particles = list(filter(lambda p: p[4]<self.max_err,
                                      self.particles))
         
@@ -145,7 +164,7 @@ class match_blob_files(object):
             
             for i in range(Ncams):
                 if i in list(rd.keys()):
-                    p_.append(rd[i])
+                    p_.append(rd[i][0])
                 else:
                     p_.append(-1)
             p_.append(p[4])
@@ -313,9 +332,6 @@ class matching(object):
 #                     #    self.traversed_voxels.append( [(i_,j_,k_), ray[2]] )
 # =============================================================================
         
-
-
-
     
     
     def get_voxel_dictionary(self):
@@ -445,20 +461,34 @@ class matching(object):
                 used_check = self.is_used(dist_sorted_cands[i][0])                
                 if not used_check:
                     p = dist_sorted_cands[i][1]
+                    r_list = [(ri[0], (ri[1], self.get_eta_zeta(ri))) 
+                              for ri in dist_sorted_cands[i][0]]
+                    
                     new_p = [round(p[0][0], ndigits=3), 
                              round(p[0][1], ndigits=3),
                              round(p[0][2], ndigits=3),
-                             dist_sorted_cands[i][0],
+                             r_list,
                              round(p[-1], ndigits=3)]
                     matched_particles.append(new_p)
                     self.used_rays.update(dist_sorted_cands[i][0])
             count += 1     
                  
-        
         self.matched_particles = matched_particles
         
         
         
+        
+    def get_eta_zeta(self, ray):
+        '''
+        Retrieves the image space coordinates, eta and zeta from the 
+        list self.rays.
+        '''
+        i = self.ray_camera_indexes[ray[0]] 
+        ip1 = self.ray_camera_indexes[ray[0]+1]
+        return self.rays[i:ip1][ray[1]][0], self.rays[i:ip1][ray[1]][1]
+
+        
+
     def plot_ray_epipolar_lines(self, ray, zlims, ax):
         '''will plot a ray's epipolar line for a given 3D axis.'''
         import matplotlib.pyplot as plt
@@ -472,6 +502,131 @@ class matching(object):
         
 
         
+        
+        
+        
+        
+
+        
+        
+        
+class matching_using_time(object):
+    '''
+    An implementation of a novel algorithm to improve the matching
+    process using temporal information.
+    '''
+    
+    def __init__(self, img_system, particles_dic,
+                 previously_used_blobs, max_err=1e9):
+        '''
+        An implementation of a novel algorithm to improve the matching
+        process using temporal information.
+        
+        inputs - 
+        img_system - is an instance of the img_system object with camera 
+                     objects. 
+                     
+        particles_dic - A dictionary with keys that are camera names, and 
+                        values are lists of particle coordinates segmented in 
+                        each of the cameras.
+                     
+        previously_used_blobs - A list. Each item in the list is a particle 
+                                that was matched successfully in the previous 
+                                frame.
+        max_err - the maximum allowable triangulation error.
+        
+        '''
+        self.imsys = img_system
+        self.pd = particles_dic
+        self.prev_used_blobs = previously_used_blobs
+        self.max_err = max_err
+        
+        # we form KDTrees for the nearest neighbour blobs search        
+        self.trees = [KDTree(self.pd[k]) for k in self.pd.keys()]
+        
+    
+    def triangulate_candidates(self):
+        '''
+        Will do the triangulation of blobs that are nearest to those that 
+        were successfully matched in the previous frame.
+        
+        1) for each successfully matched particles in the previous frame, 
+           we find the nearest neighbouring blobs in the current frame
+           
+        2) we triangulate the blobs
+        
+        3) if the trangulation error is lower than the threshold max_err,
+           we add the particle to a list self.matched particles.
+        '''
+        
+        triangulated_particles = []
+        for p in self.prev_used_blobs:
+            
+            # first, find the nearest neighboring blobs
+            p_blobs = p[3]
+            nearest_blobs_num = {}
+            nearest_blobs_coords = {}
+            
+            for blb in p_blobs:
+                ci,(rn, (x, y)) = blb
+                cn = self.imsys.cameras[ci].name
+                bn = self.trees[ci].query((x, y))[1]
+                nearest_blobs_num[ci] = bn
+                nearest_blobs_coords[ci] = self.pd[cn][bn]
+                
+            # second, triangulate them:
+            triangulated = self.imsys.stereo_match(nearest_blobs_coords, 1e9)
+            
+        
+            # third, if the RMS triangulation error is low enough, add the 
+            # triangulation to a list of matched particles
+            if triangulated[2] < self.max_err:
+                r = [(ci, 
+                      (nearest_blobs_num[ci],tuple(nearest_blobs_coords[ci]))) 
+                     for ci in nearest_blobs_num.keys()]
+                
+                p = triangulated[0]
+                new_p = []
+                
+                new_p = [round(p[0], ndigits=3), 
+                         round(p[1], ndigits=3),
+                         round(p[2], ndigits=3),
+                         r,
+                         round(triangulated[2], ndigits=3)]
+                
+                triangulated_particles.append(new_p)
+        
+        
+        # To finish off, make sure we're not using a blob more than once
+        self.matched_particles = []
+        key = lambda tr: tr[-1]
+        triangulated_particles = sorted(triangulated_particles, key=key)
+        self.used_blobs = set([])
+        for p in triangulated_particles:
+            test = [blb not in self.used_blobs for blb in p[3]]
+            if all(test):
+                self.matched_particles.append(p)
+                for blob in p[3]:
+                    self.used_blobs.add(blob)
+        
+        
+        
+    def return_updated_particle_dict(self):
+        '''
+        After finding matched particles (self.triangulate_candidates),  
+        this will return an updated copy of particle_dictionary, that does
+        not contain the used blobs.
+        '''
+        new_pd = self.pd.copy()
+        for e,p in enumerate(self.matched_particles):
+            p_blobs = p[3]
+            for blb in p_blobs:
+                ci,(rn, xy) = blb
+                cn = self.imsys.cameras[ci].name
+                new_pd[cn].remove(list(xy))
+                
+        return new_pd
+                
         
         
         
