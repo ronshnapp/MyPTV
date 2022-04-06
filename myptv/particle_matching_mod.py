@@ -393,16 +393,7 @@ class matching(object):
                 x.append(x_ij)
         
         return sum(x)/1.0/len(x), cams, sum(d)/1.0/len(x)
-        
-        
-        # dc = {}
-        # for ray in rays:
-        #     i = self.ray_camera_indexes[ray[0]] 
-        #     ip1 = self.ray_camera_indexes[ray[0]+1]
-        #     eta, zeta = self.rays[i:ip1][ray[1]][:2]
-        #     dc[ray[0]] = [eta, zeta]
-        
-        # return self.imsys.stereo_match(dc, 1e19)
+
     
     
     def is_used(self, cand):
@@ -479,43 +470,6 @@ class matching(object):
         camera.plot_3D_epipolar_line(eta, zeta, zlims, ax=ax, color=colors[ray[0]])
         
         
-        
-
-
-
-    
-# if __name__ == '__main__':
-#     from imaging_mod import camera, img_system
-#     import numpy as np
-#     import os
-    
-#     dirname ='/home/ron/Desktop/Research/plankton_sweeming/experiments/PTV_test3'
-#     cnames = ['cam1', 'cam3', 'cam4']
-#     res = 1280, 1024
-#     cameras = []
-#     for c in cnames:
-#         cameras.append(camera(c, res))
-    
-#     for cam in cameras:
-#         cam.load(dirname)
-    
-#     particles_dic = {}
-#     for c in cnames:
-#         blobs = np.loadtxt( os.path.join(dirname, 'blobs_'+c) )
-#         particles_dic[c] = blobs[:,:2]
-    
-#     RIO = ((0.0, 68.0),
-#            (0.0, 66.0),
-#            (-30.0, 20.0))
-    
-#     voxel_size = 2.0
-    
-#     imsys = img_system(cameras)
-    
-#     m = matching(imsys, particles_dic, RIO, voxel_size)
-#     m.get_voxel_dictionary()
-#     m.list_candidates()
-    
 
         
         
