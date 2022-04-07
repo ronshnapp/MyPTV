@@ -30,8 +30,8 @@ class match_blob_files(object):
     the particles found are stored in the attribute self.particles.'''
     
     
-    def __init__(self, blob_fnames, img_system, RIO, voxel_size, max_err=None,
-                 reverse_eta_zeta = False):
+    def __init__(self, blob_fnames, img_system, RIO, voxel_size, max_blob_dist,
+                 max_err=None, reverse_eta_zeta = False):
         '''
         blob_fname - a list of the file names containing the segmented blob
                      data. The list has to be sorted according the order of
@@ -46,6 +46,10 @@ class match_blob_files(object):
         
         voxel size - the side length of voxel cubes used in the ray traversal
                      algorithm. Given in lab coordinate scales (e.g. mm).
+                     
+        max_blob_dist - the largest distance for which blobs are concidered 
+                        neighbours in the image space coordinates (namely, the
+                        highest pemissible particle displacement in pixels).
                      
         max_err - maximum acceptable uncertainty in particle position. If None,
                   (defult), than no bound is used.
@@ -64,6 +68,7 @@ class match_blob_files(object):
         self.RIO = RIO
         self.voxel_size = voxel_size
         self.reverse_eta_zeta = reverse_eta_zeta
+        self.max_blob_dist = max_blob_dist
         self.max_err = max_err
         
         time_lst = []
@@ -71,6 +76,28 @@ class match_blob_files(object):
             for b in bl:
                 time_lst.append(b[-1])
         self.time_lst = list(set(time_lst))
+        
+        
+        
+    def get_particles_dic(self, frame):
+        '''
+        returns a particles dicionary (with camera names as keys and blob
+        values) for particles in the given frame.
+        '''
+        pd = {}
+        if self.reverse_eta_zeta:
+            for i in range(len(self.blobs)):
+                cn = self.cam_names[i]
+                arr = self.blobs[i][self.blobs[i][:,-1] == frame][:,1::-1]
+                pd[cn] = arr.tolist()
+        
+        else:
+            for i in range(len(self.blobs)):
+                cn = self.cam_names[i]
+                arr = self.blobs[i][self.blobs[i][:,-1] == frame][:,:2]
+                pd[cn] = arr.tolist()
+                
+        return pd
         
         
         
@@ -87,7 +114,7 @@ class match_blob_files(object):
         if frames is None:
             frames = self.time_lst
         
-        cam_names = [cam.name for cam in self.imsys.cameras]
+        self.cam_names = [cam.name for cam in self.imsys.cameras]
         
         
         # start matching, one frame at a time
@@ -99,19 +126,9 @@ class match_blob_files(object):
             print(' frame: %d'%tm, end='\r')
             
             # set up a blobs dictionary with camera names as key
-            pd = {}
-            if self.reverse_eta_zeta:
-                for i in range(len(self.blobs)):
-                    cn = cam_names[i]
-                    arr = self.blobs[i][self.blobs[i][:,-1] == tm][:,1::-1]
-                    pd[cn] = arr.tolist()
+            pd = self.get_particles_dic(tm)
             
-            else:
-                for i in range(len(self.blobs)):
-                    cn = cam_names[i]
-                    arr = self.blobs[i][self.blobs[i][:,-1] == tm][:,:2]
-                    pd[cn] = arr.tolist()
-                    
+            
             # for iterations after the first run, use the time
             # augmented matching
             if e>0:
@@ -126,6 +143,22 @@ class match_blob_files(object):
                 
                 pd = mut.return_updated_particle_dict()
                 
+                
+            # for the first iteration, initiate search using the neighbouring
+            # blobs paradigm
+            if e==0:
+                pd1 = self.get_particles_dic(frames[e+1])
+                itm = initiate_time_matching(self.imsys, pd, pd1, 
+                                             self.max_blob_dist, self.RIO, 
+                                             self.voxel_size, 
+                                             max_err = self.max_err)
+                itm.choose_blobs_with_neghbours()
+                itm.match_blobs_with_neighbours()
+                for p in itm.matched_particles:
+                    self.particles.append(p + [tm])
+                
+                pd = itm.return_updated_particle_dict()
+                                
             
             # match particles using the matching object
             M = matching(self.imsys, pd, self.RIO, self.voxel_size,
@@ -501,15 +534,11 @@ class matching(object):
         
         
 
-        
-        
-        
-        
-        
 
-        
-        
-        
+
+
+
+
 class matching_using_time(object):
     '''
     An implementation of a novel algorithm to improve the matching
@@ -629,7 +658,132 @@ class matching_using_time(object):
                 
         
         
+
+
+
+
+
+
+class initiate_time_matching(object):
+    '''
+    A class used in the time matching algorithm to initiate the first
+    frame. This class will search for blobs that have a nearest neighbours in 
+    the next frame lower than a given threshold and will first stereo-match
+    only these particles.
+    '''
+    
+    def __init__(self, img_system, particles_dic_0, particles_dic_1,
+                 max_distance, RIO, voxel_size, max_err=1e9):
+        '''
+        input - 
         
+        img_system - an instance of the imaging system class
+        
+        particles_dic_0 - A dictionary; keys are camera names, and values 
+                         are lists of particle coordinates segmented in 
+                         each of the cameras at the first frame, t=0.
+                         
+        particles_dic_1 - A dictionary; keys are camera names, and values 
+                         are lists of particle coordinates segmented in 
+                         each of the cameras at the second frame, t=0+dt.
+                         
+        max_distance - The maximum alowable distance between blobs to be 
+                       considered neighbours. This is in image space 
+                       coordinates (how many pixels blobs move in the 2D
+                       images?).
+        
+        RIO - A nested list of 3X2 elements. The first holds the minimum and 
+              maximum values of x coordinates, the second is same for y, and 
+              the third for z coordinates. 
+        
+        voxel size - the side length of voxel cubes used in the ray traversal
+                     algorithm. Given in lab coordinate scales (e.g. mm).
+        
+        max_err - maximum allowable RMS triangulation error.
+        '''
+        self.imsys = img_system
+        self.pd = particles_dic_0
+        self.pd1 = particles_dic_1
+        self.max_dist = max_distance
+        self.max_err = max_err
+        self.RIO = RIO
+        self.voxel_size = voxel_size
+        # we form KDTrees for the nearest neighbour blobs search        
+        self.trees = {}
+        for k in self.pd.keys():
+            self.trees[k] = KDTree(self.pd[k])
+        
+    
+    
+    def has_neighbour(self, blob, cam):
+        '''
+        Return True if the given blos has a neares neighbour and False if not.
+        '''
+        x,y = blob
+        dist, dump = self.trees[cam].quary((x, y))
+        
+        if dist < self.max_dist:
+            return True
+        
+        return False
+    
+    
+    
+    def choose_blobs_with_neghbours(self):
+        '''
+        Will go over the blobs in particles_dic_0; if a blob has valid
+        neighbours in particles_dic_1, it is added to a new
+        particles_dictionary.
+        '''
+        
+        # form the new dictionary
+        self.new_pd = {}
+        
+        # add blobs with neighbours
+        for k in self.pd.keys():
+            self.new_pd[k] = []
+            for blb in self.pd.keys():
+                if self.has_neighbour(blb, k):
+                    self.new_pd[k].append(blb)
+                    
+                    
+    def match_blobs_with_neighbours(self):
+        '''
+        Once blobs that have neighbours have been found, we match them using
+        the matching() class (namely, using the voxel method).
+        '''
+        
+        # match particles using the matching object
+        M = matching(self.imsys, self.new_pd, self.RIO, self.voxel_size,
+                     max_err = self.max_err)
+        #return M  # <-- used for checks
+        M.get_voxel_dictionary()
+        M.list_candidates()
+        M.get_particles()
+        self.matched_particles = M.matched_particles
+        
+
+        
+    def return_updated_particle_dict(self):
+        '''
+        After finding matched particles (self.match_blobs_with_neighbours),  
+        this will return an updated copy of particle_dictionary, that does
+        not contain the used blobs.
+        '''
+        updated_pd = self.pd.copy()
+        for e,p in enumerate(self.matched_particles):
+            p_blobs = p[3]
+            for blb in p_blobs:
+                ci,(rn, xy) = blb
+                cn = self.imsys.cameras[ci].name
+                updated_pd[cn].remove(list(xy))
+                
+        return updated_pd
+
+
+
+
+    
         
         
         
