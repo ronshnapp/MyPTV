@@ -420,13 +420,15 @@ important functionalities are:
 
 \section{Particle matching - \texttt{particle\char`_matching\char`_mod.py}} \label{sec:matching}
 
-The module used to identify the same particle in the different images and use stereo matching to estimate their 3D position. Particle matching in MyPTV uses the Ray Traversal algorith proposed in Ref~\cite{Bourgoin2020}. In short, the 3D domain is divided into voxel cubes; then, for each segmented blob we shoot a ray throught the 3D volume and list the voxels through which the ray had passed. Finally, is more than one ray had passed through a certain voxel, we stereo match the blobs at the intersection. Lastly, for each stereomatched blob, we keep the particles corresponding to the highest number of cameras (for example, we favour particles that result from a crossing of four camera views than three) and the smallest RMS distance from the epipolar lines.  
+The module used to link particles in the different images through stereo matching and estimating their 3D positions. One of the main issue in this process is that stereo matching all possible candidates is an NP hard problem, so to track numerous particles in each frame we have to choose which particles are likely to produce a 3D particle coordinate. Thus, particle matching in MyPTV uses two algorithms in conjunction. First is a novel algorithm that uses 2D time tracking of blobs to deduce which candidates are more likely to produce trackable particles in 3D. Second is the Ray Traversal algorith proposed in Ref~\cite{Bourgoin2020}, in which the lab space volume is devided to voxels and stereo matching is attempted for rays within each voxel. Using the two algorithms in conjunction was found to yield a 50\% reduction in conputational time and more trackable trajectories (45\% more trajectories were found in a test). 
+
+
 
 
 \subsection{The \texttt{match\char`_blob\char`_files} object}
 
 
-This is the object that we use in order to obtain trangulated particles results from the segmented blob files (a file as the one in Fig.~\ref{fig:blobfile} for each camera). The inputs are:
+This is the object that we use to get trangulated particles results from the segmented blob files (a file as the one in Fig.~\ref{fig:blobfile} for each camera). For each frame it first runs the first algorithm using time information, and only then uses the Ray traversal algorithm on the blobs that were not successfully connected. The inputs are:
 %
 \begin{enumerate}
 	\item \texttt{blob\char`_fnames} - a list of the (srting) file names containing the segmented blob data. The list has to be sorted according the order of cameras in the \texttt{img\char`_system}.
@@ -436,6 +438,8 @@ This is the object that we use in order to obtain trangulated particles results 
 	\item \texttt{RIO} - A nested list of 3X2 elements. The first holds the minimum and  maximum values of $x$ coordinates, the second is same for $y$, and  the third for $z$ coordinates. 
 	
 	\item \texttt{voxel\char`_size} - the side length of voxel cubes used in the ray traversal algorithm. Given in lab space coordinates (e.g. mm). Note - a too large voxel size will result in high computational times due a high number of candidates, while a too small voxel size might lead to erronous intersection of rays, leading to matching errors. Thus, this parameter should be optimized.
+	
+	\item \texttt{max\char`_blob\char`_dist} - the largest distance for which blobs are concidered neighbours in the image space coordinates (namely, the largest permissible blob displacement in pixels).
 	
 	\item \texttt{max\char`_err=None} - Maximum acceptable uncertainty in particle position. If None, (defult), than no bound is used.
 	
@@ -464,7 +468,27 @@ The important functionalities are:
 
 \subsection{The \texttt{matching} object}
 
-This object is the engine used backstage for matching particles. In practice we run the relevant functions: \texttt{get\char`_voxel\char`_dictionary()} $\rightarrow$ \texttt{list\char`_candidates()} $\rightarrow$ \texttt{get\char`_particles()}, and after that the results are held in the attribute \texttt{matched\char`_particles}.
+This object is the "engine" used to match particles using the Ray Traversal algorithm. In practice we run the relevant functions: \texttt{get\char`_voxel\char`_dictionary()} $\rightarrow$ \texttt{list\char`_candidates()} $\rightarrow$ \texttt{get\char`_particles()}, and after that the results are held in the attribute \texttt{matched\char`_particles}.
+
+
+
+
+\subsection{The \texttt{matching\char`_using\char`_time} object}
+
+This object performs the matching of blobs using the 2D tracking heuristic. In principle, it is given a list of blobs that were successfully used to form 3D particles in the previous frame. Then, for each of the given blobs it searches for nearest neighbours in the current frame, and stereo-matches those blobs that were found (using the \texttt{.triangulate\char`_candidates()} method). 
+
+
+
+
+
+\subsection{The \texttt{initiate\char`_time\char`_matching} object}
+
+This object is used to initiate the time searching algorithm on the first frame. It goes over the blobs at the first frame and searches for blobs that have nearest neighbours at the second frame. Those that have neighbours are used in a first run of the Ray Traversal algorithm, thus they are given priority in the search.
+
+
+
+
+
 
 
 

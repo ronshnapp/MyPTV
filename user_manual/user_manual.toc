@@ -14,11 +14,13 @@
 \contentsline {section}{\numberline {5}Particle matching - \texttt {particle\char `_matching\char `_mod.py}}{8}{section.5}
 \contentsline {subsection}{\numberline {5.1}The \texttt {match\char `_blob\char `_files} object}{8}{subsection.5.1}
 \contentsline {subsection}{\numberline {5.2}The \texttt {matching} object}{9}{subsection.5.2}
-\contentsline {section}{\numberline {6}Tracking in 3D - \texttt {tracking\char `_mod.py}}{9}{section.6}
+\contentsline {subsection}{\numberline {5.3}The \texttt {matching\char `_using\char `_time} object}{10}{subsection.5.3}
+\contentsline {subsection}{\numberline {5.4}The \texttt {initiate\char `_time\char `_matching} object}{10}{subsection.5.4}
+\contentsline {section}{\numberline {6}Tracking in 3D - \texttt {tracking\char `_mod.py}}{10}{section.6}
 \contentsline {subsection}{\numberline {6.1}The \texttt {tracker\char `_four\char `_frames} object}{10}{subsection.6.1}
-\contentsline {subsection}{\numberline {6.2}The \texttt {tracker\char `_two\char `_frames} object}{11}{subsection.6.2}
-\contentsline {subsection}{\numberline {6.3}The \texttt {tracker\char `_nearest\char `_neighbour} object}{11}{subsection.6.3}
-\contentsline {section}{\numberline {7}Trajectory smoothing - \texttt {traj\char `_smoothing\char `_mod.py}}{11}{section.7}
-\contentsline {subsection}{\numberline {7.1}The \texttt {smooth\char `_trajectories} object}{11}{subsection.7.1}
-\contentsline {section}{\numberline {8}Trajectory stitching - \texttt {traj\char `_stitching\char `_mod.py}}{11}{section.8}
-\contentsline {subsection}{\numberline {8.1}The \texttt {traj\char `_stitching} object}{12}{subsection.8.1}
+\contentsline {subsection}{\numberline {6.2}The \texttt {tracker\char `_two\char `_frames} object}{10}{subsection.6.2}
+\contentsline {subsection}{\numberline {6.3}The \texttt {tracker\char `_nearest\char `_neighbour} object}{10}{subsection.6.3}
+\contentsline {section}{\numberline {7}Trajectory smoothing - \texttt {traj\char `_smoothing\char `_mod.py}}{12}{section.7}
+\contentsline {subsection}{\numberline {7.1}The \texttt {smooth\char `_trajectories} object}{12}{subsection.7.1}
+\contentsline {section}{\numberline {8}Trajectory stitching - \texttt {traj\char `_stitching\char `_mod.py}}{13}{section.8}
+\contentsline {subsection}{\numberline {8.1}The \texttt {traj\char `_stitching} object}{13}{subsection.8.1}

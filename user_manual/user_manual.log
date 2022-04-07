@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2021.5.25)  3 APR 2022 17:14
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2021.5.25)  7 APR 2022 15:51
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -970,26 +970,32 @@ Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\char' on input line 426.
+(hyperref)                removing `\char' on input line 428.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `subscript' on input line 426.
+(hyperref)                removing `subscript' on input line 428.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\char' on input line 426.
+(hyperref)                removing `\char' on input line 428.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `subscript' on input line 426.
+(hyperref)                removing `subscript' on input line 428.
 
 [8 <./blob_file.pdf>]
-<particle_file.pdf, id=339, 390.14703pt x 291.52518pt>
+<particle_file.pdf, id=337, 390.14703pt x 291.52518pt>
 File: particle_file.pdf Graphic file (type pdf)
 <use particle_file.pdf>
-Package pdftex.def Info: particle_file.pdf  used on input line 458.
+Package pdftex.def Info: particle_file.pdf  used on input line 462.
 (pdftex.def)             Requested size: 341.43306pt x 255.13727pt.
+
+Overfull \hbox (18.38263pt too wide) in paragraph at lines 471--472
+\T1/cmr/m/n/10 we run the rel-e-vant func-tions: \T1/cmtt/m/n/10 get_voxel_dict
+ionary() $\OMS/cmsy/m/n/10 !$ \T1/cmtt/m/n/10 list_candidates() $\OMS/cmsy/m/n/
+10 !$ \T1/cmtt/m/n/10 get_particles()\T1/cmr/m/n/10 ,
+ []
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
@@ -1001,130 +1007,166 @@ Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\char' on input line 482.
+(hyperref)                removing `\char' on input line 476.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `subscript' on input line 482.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\char' on input line 482.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `subscript' on input line 482.
+(hyperref)                removing `subscript' on input line 476.
 
 [9 <./particle_file.pdf>]
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `\char' on input line 484.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `subscript' on input line 484.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `\char' on input line 484.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `subscript' on input line 484.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `\char' on input line 500.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `subscript' on input line 500.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `\char' on input line 506.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `subscript' on input line 506.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `\char' on input line 506.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `subscript' on input line 506.
+
 <trajectory_files.pdf, id=362, 351.41846pt x 436.35342pt>
 File: trajectory_files.pdf Graphic file (type pdf)
 <use trajectory_files.pdf>
-Package pdftex.def Info: trajectory_files.pdf  used on input line 506.
+Package pdftex.def Info: trajectory_files.pdf  used on input line 530.
 (pdftex.def)             Requested size: 284.52756pt x 353.30452pt.
 
-
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\char' on input line 513.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `subscript' on input line 513.
+(hyperref)                removing `\char' on input line 537.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\char' on input line 513.
+(hyperref)                removing `subscript' on input line 537.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `subscript' on input line 513.
-
-[10 <./trajectory_files.pdf>]
-
-Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\char' on input line 519.
+(hyperref)                removing `\char' on input line 537.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `subscript' on input line 519.
+(hyperref)                removing `subscript' on input line 537.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\char' on input line 519.
+(hyperref)                removing `\char' on input line 543.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `subscript' on input line 519.
+(hyperref)                removing `subscript' on input line 543.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\char' on input line 531.
+(hyperref)                removing `\char' on input line 543.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `subscript' on input line 531.
+(hyperref)                removing `subscript' on input line 543.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\char' on input line 531.
+(hyperref)                removing `\char' on input line 555.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `subscript' on input line 531.
+(hyperref)                removing `subscript' on input line 555.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\char' on input line 536.
+(hyperref)                removing `\char' on input line 555.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `subscript' on input line 536.
+(hyperref)                removing `subscript' on input line 555.
 
-<smoothed_trajfile.pdf, id=388, 514.2885pt x 471.065pt>
+[10] [11 <./trajectory_files.pdf>]
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `\char' on input line 560.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `subscript' on input line 560.
+
+<smoothed_trajfile.pdf, id=395, 514.2885pt x 471.065pt>
 File: smoothed_trajfile.pdf Graphic file (type pdf)
 <use smoothed_trajfile.pdf>
-Package pdftex.def Info: smoothed_trajfile.pdf  used on input line 552.
+Package pdftex.def Info: smoothed_trajfile.pdf  used on input line 576.
 (pdftex.def)             Requested size: 341.43306pt x 312.73677pt.
+[12 <./smoothed_trajfile.pdf>]
 
-LaTeX Warning: `!h' float specifier changed to `!ht'.
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `\char' on input line 594.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\char' on input line 570.
+(hyperref)                removing `subscript' on input line 594.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `subscript' on input line 570.
+(hyperref)                removing `\char' on input line 594.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\char' on input line 570.
+(hyperref)                removing `subscript' on input line 594.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `subscript' on input line 570.
+(hyperref)                removing `\char' on input line 601.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\char' on input line 577.
+(hyperref)                removing `subscript' on input line 601.
 
-
-Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `subscript' on input line 577.
-
-[11] (./user_manual.bbl [12 <./smoothed_trajfile.pdf>])
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 604.
- [13]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 604.
+(./user_manual.bbl [13])
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 628.
+ [14]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 628.
  (./user_manual.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 604.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 604.
-Package rerunfilecheck Info: File `user_manual.out' has not changed.
-(rerunfilecheck)             Checksum: E5BAC2C3A4586CB2BB47FDF2293EA0BD;1635.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 604.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 628.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 628.
+
+
+Package rerunfilecheck Warning: File `user_manual.out' has changed.
+(rerunfilecheck)                Rerun to get outlines right
+(rerunfilecheck)                or use package `bookmark'.
+
+Package rerunfilecheck Info: Checksums for `user_manual.out':
+(rerunfilecheck)             Before: E5BAC2C3A4586CB2BB47FDF2293EA0BD;1635
+(rerunfilecheck)             After:  A4613E9557263313DE2ED5AFBD079A29;1798.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 628.
  ) 
 Here is how much of TeX's memory you used:
- 9607 strings out of 494847
- 137730 string characters out of 6179080
+ 9611 strings out of 494847
+ 137772 string characters out of 6179080
  244285 words of memory out of 5000000
  12641 multiletter control sequences out of 15000+600000
  18529 words of font info for 53 fonts, out of 8000000 for 9000
@@ -1148,10 +1190,10 @@ public/cm-super/sfrm1000.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfrm
 /texmf/fonts/type1/public/cm-super/sfti1000.pfb></usr/share/texmf/fonts/type1/p
 ublic/cm-super/sftt1000.pfb></usr/share/texmf/fonts/type1/public/cm-super/sftt1
 200.pfb></usr/share/texmf/fonts/type1/public/cm-super/sftt1440.pfb>
-Output written on user_manual.pdf (14 pages, 986521 bytes).
+Output written on user_manual.pdf (15 pages, 987614 bytes).
 PDF statistics:
- 526 PDF objects out of 1000 (max. 8388607)
- 451 compressed objects within 5 object streams
- 127 named destinations out of 1000 (max. 500000)
+ 533 PDF objects out of 1000 (max. 8388607)
+ 457 compressed objects within 5 object streams
+ 131 named destinations out of 1000 (max. 500000)
  232 words of extra memory for PDF output out of 10000 (max. 10000000)
 
