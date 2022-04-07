@@ -38,9 +38,10 @@ def test_matching():
            (-20, 20),
            (-20, 20))
     
-    voxel_size = 2.0
-
-    match = match_blob_files(blob_files, imsys, ROI, voxel_size)
+    voxel_size = 40.0
+    max_blob_dist = 0.0
+    
+    match = match_blob_files(blob_files, imsys, ROI, voxel_size, max_blob_dist)
     match.get_particles()
     particles = match.particles
     
