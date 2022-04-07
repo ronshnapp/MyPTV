@@ -9,18 +9,27 @@ Created on Fri Nov  1 12:15:21 2019
 Matching module for extracting lab coordinate particles from 
 segmented particles' image coordinates.
 
-We are using the Ray Traversal algorithm reported 
+We are using two matching algorithms in conjunction:
+    
+1) the Ray Traversal algorithm reported 
 by Bourgion and Huisman, 2020 (https://arxiv.org/pdf/2003.12135.pdf).
 
+2) a novel alrorithm which prioratises the matching of blobs who are trackable 
+   in the 2D images.
+   
+The two algorithms are stitched to work together in the match_blob_files()
+class, first running the trackalble blobs search and then the Ray Traversal
+algorithm.
 
 """
 
 from myptv.utils import line_dist
 from math import ceil, floor
 from itertools import combinations, product
-from numpy import loadtxt, savetxt
+from numpy import loadtxt, savetxt, array
 from scipy.spatial import KDTree
 
+from pandas import read_csv
 
 
 
@@ -63,7 +72,9 @@ class match_blob_files(object):
         '''
         self.blobs = []
         for fn in blob_fnames:
-            self.blobs.append(loadtxt(fn))
+            #self.blobs.append(loadtxt(fn))
+            self.blobs.append(array(read_csv(fn, sep='\t')))
+                     
         self.imsys = img_system
         self.RIO = RIO
         self.voxel_size = voxel_size
@@ -156,10 +167,9 @@ class match_blob_files(object):
                 itm.match_blobs_with_neighbours()
                 for p in itm.matched_particles:
                     self.particles.append(p + [tm])
-                
+                print(len(itm.matched_particles))
                 pd = itm.return_updated_particle_dict()
                                 
-            
             # match particles using the matching object
             M = matching(self.imsys, pd, self.RIO, self.voxel_size,
                          max_err = self.max_err)
@@ -711,7 +721,7 @@ class initiate_time_matching(object):
         # we form KDTrees for the nearest neighbour blobs search        
         self.trees = {}
         for k in self.pd.keys():
-            self.trees[k] = KDTree(self.pd[k])
+            self.trees[k] = KDTree(self.pd1[k])
         
     
     
@@ -720,7 +730,7 @@ class initiate_time_matching(object):
         Return True if the given blos has a neares neighbour and False if not.
         '''
         x,y = blob
-        dist, dump = self.trees[cam].quary((x, y))
+        dist, dump = self.trees[cam].query((x, y))
         
         if dist < self.max_dist:
             return True
@@ -742,7 +752,7 @@ class initiate_time_matching(object):
         # add blobs with neighbours
         for k in self.pd.keys():
             self.new_pd[k] = []
-            for blb in self.pd.keys():
+            for blb in self.pd[k]:
                 if self.has_neighbour(blb, k):
                     self.new_pd[k].append(blb)
                     
