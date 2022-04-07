@@ -66,7 +66,7 @@ class match_blob_files(object):
         reverse_eta_zeta - Should be false if the eta and zeta coordinates 
                            need to be in reverse order so as to match the
                            calibration. This may be needed if the calibration 
-                           data points were given where the x and y coordinates
+                           data points were given where the x, y coordinates
                            are transposed (as happens, e.g., if using 
                            matplotlib.pyplot.imshow).
         '''
@@ -167,7 +167,6 @@ class match_blob_files(object):
                 itm.match_blobs_with_neighbours()
                 for p in itm.matched_particles:
                     self.particles.append(p + [tm])
-                print(len(itm.matched_particles))
                 pd = itm.return_updated_particle_dict()
                                 
             # match particles using the matching object
@@ -251,7 +250,7 @@ class matching(object):
         img_system - is an instance of the img_system object with camera 
                      objects. 
                      
-        particles_dic - A dictionary with keys that are camera names, and values
+        particles_dic - A dictionary, keys are camera names, and values
                      are lists of particle coordinates segmented in each of 
                      the cameras.
                      
@@ -540,7 +539,8 @@ class matching(object):
         i = self.ray_camera_indexes[ray[0]] 
         ip1 = self.ray_camera_indexes[ray[0]+1]
         eta, zeta = self.rays[i:ip1][ray[1]][:2]
-        camera.plot_3D_epipolar_line(eta, zeta, zlims, ax=ax, color=colors[ray[0]])
+        camera.plot_3D_epipolar_line(eta, zeta, zlims,
+                                     ax=ax, color=colors[ray[0]])
         
         
 
