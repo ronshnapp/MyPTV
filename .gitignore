@@ -9,5 +9,6 @@
 *.out
 *.toc
 .eggs/*
-.dist/*
+dist/*
 myptv.egg-info/*
+build/*

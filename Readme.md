@@ -30,7 +30,7 @@ MyPTV is designed to be used by scientists and engineers who need to track the m
 
 ##### Requirements:
 
-MyPTV requires you have Python 3 installed with pip, along with the Python packages: numpy, scipy, scikit-image, pandas, itertools
+MyPTV requires you have Python 3 installed with pip, along with the Python packages: numpy, scipy, scikit-image, pandas, matplotlib, itertools
 
 ##### Installation:
 
