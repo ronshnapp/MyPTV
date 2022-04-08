@@ -33,13 +33,24 @@ MyPTV is designed to be used by scientists and engineers who need to track the m
 MyPTV requires you have Python 3 installed with pip, along with the Python packages: numpy, scipy, scikit-image, pandas, matplotlib, itertools
 
 ##### Installation:
+###### Using `pip`
 
 1) Open your terminal and change directory to the path of the code:
 	`cd path/to/myptv` 
 	
 2) Finally, we use pip to install by using the following command: 
 	`pip install .`
-    where `wheelfile.whl` is the file name of the wheel file in the `dist` folder.
+or 
+	`pip install -r .\requirements.txt`
+
+###### Using `conda` 
+1) Install Anaconda or Miniconda and from the command shell inside the directory
+where the package is downloaded:
+
+	`conda env create -f environment.yml`
+2) Activate the environment:
+
+	`conda activate myptv`
 
 3) Optionally, parts of the code can be tested using pytest:
 	`pytest ./tests/ -W ignore::RuntimeWarning`

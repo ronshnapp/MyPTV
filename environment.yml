@@ -1,0 +1,16 @@
+name: myptv
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - matplotlib
+  - pandas
+  - pip
+  - pytest
+  - setuptools
+  - six
+  - wheel
+  - imageio
+  - numpy
+  - scikit-image
+  - scipy
