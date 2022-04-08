@@ -45,6 +45,6 @@ The MyPTV repository contains a detailed user manual which outlines all of the f
 
 # Acknowledgements
 
-The author acknowledges fruitful discussions with Alex Liberzon, Markus Holzner, and Gal Schnapp, along with help in the testing experiment and fruitful discussions with Stefano Brizzolara. 
+The author acknowledges fruitful discussions with Alex Liberzon, Markus Holzner, and Gal Schnapp, and the help in the testing experiment and fruitful discussions with Stefano Brizzolara. 
 
 # References
