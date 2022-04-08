@@ -40,7 +40,7 @@ class match_blob_files(object):
     
     
     def __init__(self, blob_fnames, img_system, RIO, voxel_size, max_blob_dist,
-                 max_err=None, reverse_eta_zeta = False):
+                 max_err=1e9, reverse_eta_zeta = False):
         '''
         blob_fname - a list of the file names containing the segmented blob
                      data. The list has to be sorted according the order of
@@ -73,7 +73,7 @@ class match_blob_files(object):
         self.blobs = []
         for fn in blob_fnames:
             #self.blobs.append(loadtxt(fn))
-            self.blobs.append(array(read_csv(fn, sep='\t')))
+            self.blobs.append(array(read_csv(fn, sep='\t', header=None)))
                      
         self.imsys = img_system
         self.RIO = RIO
@@ -157,7 +157,7 @@ class match_blob_files(object):
                 
             # for the first iteration, initiate search using the neighbouring
             # blobs paradigm
-            if e==0:
+            if e==0 and len(frames)>1:
                 pd1 = self.get_particles_dic(frames[e+1])
                 itm = initiate_time_matching(self.imsys, pd, pd1, 
                                              self.max_blob_dist, self.RIO, 
@@ -325,7 +325,7 @@ class matching(object):
         
         da = self.voxel_size/4.0
         
-        ray_voxels = []
+        ray_voxels = set([])
         a = a1
         while a<=a2:
             x_, y_, z_ = O[0] + r_[0]*a, O[1] + r_[1]*a, O[2] + r_[2]*a
@@ -340,10 +340,10 @@ class matching(object):
             i = int((x_ - self.x[0] - self.voxel_size/2)/self.voxel_size +1)
             j = int((y_ - self.y[0] - self.voxel_size/2)/self.voxel_size +1)
             k = int((z_ - self.z[0] - self.voxel_size/2)/self.voxel_size +1)
-            ray_voxels.append(((i, j, k), ray[2]))
+            ray_voxels.add(((i, j, k), ray[2]))
             a += da
         
-        self.traversed_voxels += list(set(ray_voxels))
+        self.traversed_voxels += list(ray_voxels)
 
 
 # =============================================================================
