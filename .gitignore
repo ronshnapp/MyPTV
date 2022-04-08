@@ -8,3 +8,6 @@
 *.log
 *.out
 *.toc
+.eggs/*
+.dist/*
+myptv.egg-info/*
