@@ -37,6 +37,7 @@ _MyPTV_, currently in version 0.2, contains all the necessary code needed to obt
 
 *MyPTV* had been tested in a series of laboratory experiments. For example, in one of the experiments, seeding particles were tracked in moderate Reynolds numbers turbulent flows generated through an 8-rotating wheels device [@Hoyer2005]. Images were taken at 50 frames per second per camera,  for a duration of 11.68 seconds using a three camera system. The camera resolution was $1280\times1024\,\,\text{pixels}^2$. The calibration, obtained through MyPTV's calibration module, had a static calibration error of 84 microns, estimated through stereo-matching the 437 points of the calibration target. The particles in our experiment, $50 \,\, \mu \text{m}$ in diameter, were tracked over a volume of $70\times70\times40$ mm$^3$. In each time step, about 850 particles were successfully linked in space and time. A 3D rendered image of particle trajectories obtained in the experiment is shown in \autoref{fig2}, showing a subset of 718 particle trajectories recorded during 3 seconds of the measurement.
 
+
 ![A 3D-rendered image, showing particle trajectories obtained in an experiment. The data shown corresponds to three seconds of measurement and shows 718 trajectories. \label{fig2}](traj_image.jpg)
 
 # Documentation and usability 
@@ -48,5 +49,6 @@ Furthermore, to enable users who are not experienced with Python to use the soft
 # Acknowledgements
 
 The author is grateful for help in structuring the package and for numerous suggestions by Alex Liberzon, for fruitful discussions and suggestions by Markus Holzner, and Gal Schnapp, for help in conducting the test experiments and fruitful discussions with Stefano Brizzolara, and for the help in writing this paper from Dana Omer-Shnapp. Furthermore, the author wishes to acknowledge the significant contribution of the developers and the community of the openPTV project to the development of the current software and the 3D-PTV method in general. 
+
 
 # References
