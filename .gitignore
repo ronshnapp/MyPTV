@@ -5,3 +5,6 @@
 *.blg
 *.out
 *user_manual.synctex.gz
+*.log
+*.out
+*.toc
