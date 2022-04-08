@@ -1,6 +1,7 @@
 cycler
 fonttools
 imageio
+ipykernel
 kiwisolver
 matplotlib
 networkx
