@@ -12,7 +12,7 @@ authors:
     affiliation: 1
 affiliations:
  - name: Swiss Federal Institute for Forest, Snow and Landscape Research WSL
- - index: 1
+   index: 1
 date: 22 March 2022
 bibliography: bib_myPTV.bib
 ---
