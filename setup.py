@@ -1,4 +1,3 @@
-#!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 """
 Created on Sun 20 March 2022
@@ -12,7 +11,7 @@ setup(
     packages=find_packages(include=['myptv']),
     version='0.1.0',
     description='A 3D Particle Tracking Velocimetry library',
-    install_requires=['numpy', 'scipy'],
+    install_requires=['numpy', 'scipy', 'scikit-image','pandas','matplotlib'],
     author='Ron Shnapp',
     author_email='ronshnapp@gmail.com',
     license='MIT',
