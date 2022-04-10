@@ -40,13 +40,18 @@ class workflow(object):
                  'smoothing', and 'stitching'.
         '''
         
+        # read the parameter file:
         self.param_file_path = param_file
         self.params = self.read_params_file()
         
+        # perform the wanted action:
         if action != None:
             
             if action == 'segmentation':
                 self.do_segmentation()
+                
+            if action == 'matching':
+                self.do_matching()
             
             else:
                 raise ValueError('given action %s not allowed'%action)
@@ -58,10 +63,11 @@ class workflow(object):
         '''
         
         with open(self.param_file_path, 'r') as f:
-            params = safe_load(f)[0]
-            
-        #print(params)
-        
+            params = {}
+            sl = safe_load(f)
+            for i in range(len(sl)):
+                params.update(sl[i])
+                    
         as_dict = {'operation':[], 'param': [], 'value': [] }
         for k in params.keys():
             for kk in params[k].keys():
@@ -74,6 +80,8 @@ class workflow(object):
                 as_dict['value'][i] = None
         
         return df(as_dict)
+    
+    
     
     
     def do_segmentation(self):
@@ -178,15 +186,74 @@ class workflow(object):
                 print('file saved.')
                 
             print('done.')
+            
+            
+            
+            
+    def do_matching(self):
+        '''
+        Will perform the stereo matching with the file given parameters
+        '''
+        from myptv.particle_matching_mod import match_blob_files
+        from myptv.imaging_mod import camera, img_system
+        
+        # fetching the parameters
+        par_seg = self.params[self.params['operation']=='matching']
+        
+        blob_fn = par_seg[par_seg['param']=='blob_files']['value'].iloc[0]
+        blob_fn = [val.strip() for val in blob_fn.split(',')]
+        cam_names = par_seg[par_seg['param']=='camera_names']['value'].iloc[0]
+        cam_names = [val.strip() for val in cam_names.split(',')]
+        res = par_seg[par_seg['param']=='cam_resolution']['value'].iloc[0]
+        res = tuple([float(val) for val in res.split(',')])
+        ROI = par_seg[par_seg['param']=='ROI']['value'].iloc[0].split(',')
+        ROI = [[float(ROI[2*i]), float(ROI[2*i+1])] for i in [0,1,2]]
+        voxel_size = par_seg[par_seg['param']=='voxel_size']['value'].iloc[0]
+        max_blob_distance = par_seg[par_seg['param']=='max_blob_distance']['value'].iloc[0]
+        max_err = par_seg[par_seg['param']=='max_err']['value'].iloc[0]
+        N_frames = par_seg[par_seg['param']=='N_frames']['value'].iloc[0]
+        
+        # setting up the img_system 
+        cams = [camera(cn, res) for cn in cam_names]
+        for cam in cams:
+            try:
+                cam.load('')
+            except:
+                raise ValueError('camera file %s not found'%cam.name)
+        imsys = img_system(cams)
+        
+        
+        mbf = match_blob_files(blob_fn, 
+                               imsys, 
+                               ROI, 
+                               voxel_size, 
+                               max_blob_distance,
+                               max_err=max_err, 
+                               reverse_eta_zeta=True)
+        
+        if N_frames is None:
+            frames = None
+        
+        else:
+            try:
+                frames = range(N_frames)
+            except:
+                tp = type(frames)
+                msg = 'N_frames must be an integer of None (given %s).'%tp
+                raise TypeError(msg)
+        
+
+
+
 
 
 if __name__ == '__main__':
     
     import sys
     fname, action = sys.argv[1], sys.argv[2]
-    print('given inputs -')
+    print('\n','given inputs -')
     print('params file name:', fname)
-    print('action:', action)
+    print('action:', action, '\n')
     wf = workflow(fname, action)
     
     

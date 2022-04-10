@@ -1,11 +1,11 @@
 - segmentation:
-    images_folder: 'Cam1'
+    Number_of_images: None
+    images_folder: 'Cam3'
     image_extension: '.tif'
     mask: 1.0
     ROI: 10, -10, 40, -10
-    Number_of_images: 1
     plot_result: True
-    threshold: 15.0
+    threshold: 14.0
     blur_sigma: 0.4 
     local_filter: 20
     min_xsize: None
@@ -14,5 +14,14 @@
     max_xsize: 10.0
     max_ysize: 10.0
     max_area: 20.0
-    save_name: 'blobs_cam1'
+    save_name: blobs_cam3
+- matching:
+    blob_files: blobs_cam1, blobs_cam2, blobs_cam3
+    N_frames: 2
+    camera_names: cam1, cam2, cam3
+    cam_resolution: 1280, 1024
+    ROI: 0.0, 70.0, 0.0, 70.0, -25.0, 15.0
+    voxel_size: 2.0
+    max_blob_distance: 1.0
+    max_err: 0.2
 
