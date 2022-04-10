@@ -40,3 +40,9 @@
     polynom_order: 3
     save_name: smoothed_trajectories
 
+- stitching:
+    trajectory_file: smoothed_trajectories
+    max_time_separation: 4
+    max_distance: 0.4
+    save_name: trajecotries_stitched
+

@@ -45,25 +45,32 @@ class workflow(object):
         self.params = self.read_params_file()
         
         # perform the wanted action:
-        if action != None:
+        if action is None:
+            print('Started workflow wi no particular action.')
             
-            if action == 'segmentation':
-                self.do_segmentation()
-                
-            if action == 'matching':
-                self.do_matching()
-                
-            if action == 'tracking':
-                self.do_tracking()
-                
-            if action == 'smoothing':
-                self.do_smoothing()
-            
+        elif action != None:
             
             allowd_actions = ['segmentation', 'matching', 'tracking',
-                              'smoothing']
+                              'smoothing', 'stitching']
+            
             if action not in allowd_actions:
-                raise ValueError('given action (%s) unknown.'%action)
+                raise ValueError('The given action is unknown.')
+            
+            elif action == 'segmentation':
+                self.do_segmentation()
+                
+            elif action == 'matching':
+                self.do_matching()
+                
+            elif action == 'tracking':
+                self.do_tracking()
+                
+            elif action == 'smoothing':
+                self.do_smoothing()
+            
+            elif action == 'stitching':
+                self.do_stitching()
+            
             
     
     
@@ -368,10 +375,41 @@ class workflow(object):
         sm.smooth()
         
         # saving the data
-        print('Saving the smoothed data (%s).'%save_name)
-        sm.save_results(save_name)
+        if save_name is not None:
+            print('\n', 'Saving the smoothed data (%s).'%save_name)
+            sm.save_results(save_name)
         
-        print('Done.')
+        print('\n', 'Done.')
+        
+        
+    
+    
+    def do_stitching(self):
+        '''
+        Will perfrom trajectory stitching using the file given parameters.
+        '''
+        from numpy import loadtxt
+        from myptv.traj_stitching_mod import traj_stitching
+        
+        # fethching the stitching parameters
+        trajectory_file = self.get_param('stitching', 'trajectory_file')
+        Ts = self.get_param('stitching', 'max_time_separation')
+        dm = self.get_param('stitching', 'max_distance')
+        save_name = self.get_param('stitching', 'save_name')
+        
+        traj_list = loadtxt(trajectory_file)
+        
+        # stitch the trajectories
+        ts = traj_stitching(traj_list, Ts, dm)
+        ts.stitch_trajectories()
+        
+        # saveing the data
+        if save_name is not None:
+            print('\n', 'Saveing the data.')    
+            ts.save_results(save_name)
+        
+        print('\n', 'Done.')
+        
         
         
         
