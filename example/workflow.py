@@ -55,11 +55,15 @@ class workflow(object):
                 
             if action == 'tracking':
                 self.do_tracking()
+                
+            if action == 'smoothing':
+                self.do_smoothing()
             
             
-            allowd_actions = ['segmentation', 'matching', 'tracking']
+            allowd_actions = ['segmentation', 'matching', 'tracking',
+                              'smoothing']
             if action not in allowd_actions:
-                raise ValueError('given action %s not allowed'%action)
+                raise ValueError('given action (%s) unknown.'%action)
             
     
     
@@ -70,7 +74,12 @@ class workflow(object):
         
         with open(self.param_file_path, 'r') as f:
             params = {}
-            sl = safe_load(f)
+            
+            try:
+                sl = safe_load(f)
+            except:
+                raise ValueError('Error in loading the parameters file.')
+                
             for i in range(len(sl)):
                 params.update(sl[i])
                     
@@ -86,6 +95,7 @@ class workflow(object):
                 as_dict['value'][i] = None
         
         return df(as_dict)
+    
     
     
     
@@ -335,6 +345,33 @@ class workflow(object):
         print('\n', 'Finished tracking.')
         
         
+        
+    def do_smoothing(self):
+        '''
+        Will smooth the trajectories using the specified file given paramters.
+        '''
+        from numpy import loadtxt
+        from myptv.traj_smoothing_mod import smooth_trajectories
+        
+        # fethching the smoothing parameters
+        trajectory_file = self.get_param('smoothing', 'trajectory_file')
+        window = self.get_param('smoothing', 'window_size')
+        polyorder = self.get_param('smoothing', 'polynom_order')
+        save_name = self.get_param('smoothing', 'save_name')
+        
+        traj_list = loadtxt(trajectory_file)
+        
+        
+        # smoothing the trajecotries     
+        print('Starting to smooth trajectories.')
+        sm = smooth_trajectories(traj_list, window, polyorder)
+        sm.smooth()
+        
+        # saving the data
+        print('Saving the smoothed data (%s).'%save_name)
+        sm.save_results(save_name)
+        
+        print('Done.')
         
         
         

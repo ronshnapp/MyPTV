@@ -33,5 +33,10 @@
     d_max: 1.0
     dv_max: 1.0
     save_name: trajectories
-    
+
+- smoothing:
+    trajectory_file: trajectories
+    window_size: 5
+    polynom_order: 3
+    save_name: smoothed_trajectories
 
