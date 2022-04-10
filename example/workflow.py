@@ -212,6 +212,8 @@ class workflow(object):
         max_blob_distance = par_seg[par_seg['param']=='max_blob_distance']['value'].iloc[0]
         max_err = par_seg[par_seg['param']=='max_err']['value'].iloc[0]
         N_frames = par_seg[par_seg['param']=='N_frames']['value'].iloc[0]
+        save_name = par_seg[par_seg['param']=='save_name']['value'].iloc[0]
+        
         
         # setting up the img_system 
         cams = [camera(cn, res) for cn in cam_names]
@@ -231,9 +233,9 @@ class workflow(object):
                                max_err=max_err, 
                                reverse_eta_zeta=True)
         
+        # setting the frame range to match
         if N_frames is None:
             frames = None
-        
         else:
             try:
                 frames = range(N_frames)
@@ -241,7 +243,20 @@ class workflow(object):
                 tp = type(frames)
                 msg = 'N_frames must be an integer of None (given %s).'%tp
                 raise TypeError(msg)
+                
         
+        # mathing
+        print('Starting stereo-matching.')
+        mbf.get_particles(frames=frames)
+        print('particles matched:', len(mbf.particles))
+        
+        # saving the results
+        if save_name is not None:
+            print('\n','saving file.')
+            mbf.save_results(save_name)
+        
+        print('\n', 'Finished Matching.')
+            
 
 
 
