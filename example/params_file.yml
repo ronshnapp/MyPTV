@@ -1,0 +1,18 @@
+- segmentation:
+    images_folder: 'Cam1'
+    image_extension: '.tif'
+    mask: 1.0
+    ROI: 10, -10, 40, -10
+    Number_of_images: 1
+    plot_result: True
+    threshold: 15.0
+    blur_sigma: 0.4 
+    local_filter: 20
+    min_xsize: None
+    min_ysize: 1.0
+    min_area: 1.0
+    max_xsize: 10.0
+    max_ysize: 10.0
+    max_area: 20.0
+    save_name: 'blobs_cam1'
+
