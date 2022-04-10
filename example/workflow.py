@@ -13,7 +13,7 @@ for users.
 
 """
 
-from pandas import json_normalize
+
 from pandas import DataFrame as df
 from yaml import safe_load
 
@@ -52,10 +52,16 @@ class workflow(object):
                 
             if action == 'matching':
                 self.do_matching()
+                
+            if action == 'tracking':
+                self.do_tracking()
             
-            else:
+            
+            allowd_actions = ['segmentation', 'matching', 'tracking']
+            if action not in allowd_actions:
                 raise ValueError('given action %s not allowed'%action)
             
+    
     
     def read_params_file(self):
         '''
@@ -83,6 +89,15 @@ class workflow(object):
     
     
     
+    def get_param(self, act, param):
+        '''
+        Fetches a parameter value from the self.params DataFrame.
+        '''
+        par_seg = self.params[self.params['operation']==act]
+        return par_seg[par_seg['param']==param]['value'].iloc[0]
+    
+    
+    
     
     def do_segmentation(self):
         '''
@@ -95,28 +110,28 @@ class workflow(object):
         from skimage.io import imread
         import os
         
-        par_seg = self.params[self.params['operation']=='segmentation']
+        # fetching parameters
+        dirname = self.get_param('segmentation', 'images_folder')
+        ext = self.get_param('segmentation', 'image_extension')
+        N_img = self.get_param('segmentation', 'Number_of_images')
+        sigma = self.get_param('segmentation', 'blur_sigma')
+        threshold = self.get_param('segmentation', 'threshold')
+        local_filter = self.get_param('segmentation', 'local_filter')
+        max_xsize = self.get_param('segmentation', 'max_xsize')
+        max_ysize = self.get_param('segmentation', 'max_ysize')
+        max_area = self.get_param('segmentation', 'max_area')
+        min_xsize = self.get_param('segmentation', 'min_xsize')
+        min_ysize = self.get_param('segmentation', 'min_ysize')
+        min_area = self.get_param('segmentation', 'min_area')
+        mask = self.get_param('segmentation', 'mask')
+        plot_res = self.get_param('segmentation', 'plot_result')
+        save_name = self.get_param('segmentation', 'save_name')
+        ROI = self.get_param('segmentation', 'ROI')
         
-        dirname = par_seg[par_seg['param']=='images_folder']['value'].iloc[0]
-        ext = par_seg[par_seg['param']=='image_extension']['value'].iloc[0]
-        N_img = par_seg[par_seg['param']=='Number_of_images']['value'].iloc[0]
-        sigma = par_seg[par_seg['param']=='blur_sigma']['value'].iloc[0]
-        threshold = par_seg[par_seg['param']=='threshold']['value'].iloc[0]
-        local_filter = par_seg[par_seg['param']=='local_filter']['value'].iloc[0]
-        max_xsize = par_seg[par_seg['param']=='max_xsize']['value'].iloc[0]
-        max_ysize = par_seg[par_seg['param']=='max_ysize']['value'].iloc[0]
-        max_area = par_seg[par_seg['param']=='max_area']['value'].iloc[0]
-        min_xsize = par_seg[par_seg['param']=='min_xsize']['value'].iloc[0]
-        min_ysize = par_seg[par_seg['param']=='min_ysize']['value'].iloc[0]
-        min_area = par_seg[par_seg['param']=='min_area']['value'].iloc[0]
-        mask = par_seg[par_seg['param']=='mask']['value'].iloc[0]
-        plot_res = par_seg[par_seg['param']=='plot_result']['value'].iloc[0]
-        save_name = par_seg[par_seg['param']=='save_name']['value'].iloc[0]
-        ROI = par_seg[par_seg['param']=='ROI']['value'].iloc[0]
         
+        # reading preprepared mask
         if type(mask)==str:
             mask = imread(mask)
-        
         
         # get the shape of the images
         allfiles = os.listdir(dirname)
@@ -124,7 +139,7 @@ class workflow(object):
         image_files = sorted(list(filter(lambda s: s[-n_ext:]==ext, allfiles)))
         image0 = imread(os.path.join(dirname,image_files[0]))
         
-        # prepare a mask using the given ROI
+        # preparing a mask using the given ROI
         if ROI is not None:
             ROI = [int(val) for val in ROI.split(',')]
             mask_ROI = zeros(image0.shape)
@@ -132,7 +147,7 @@ class workflow(object):
             mask = mask * mask_ROI
         
         
-        
+        # segmenting the image if there are more than 1 frames
         if N_img is None or N_img>1:
             loopSegment = loop_segmentation(dirname, 
                                             extension=ext,
@@ -152,11 +167,14 @@ class workflow(object):
             
             print('\n','blobs found:', len(loopSegment.blobs))
             
-            loopSegment.save_results(save_name)
-            print('Done, file saved.')
+            if save_name is not None:
+                loopSegment.save_results(save_name)
+                print('File saved (%s).'%(save_name))
+            
+            print('Done.')
         
         
-        
+        # segmenting the image if is only 1 frames
         if N_img == 1:
             print('starting segmentation on a single image.')
             print(os.path.join(dirname,image_files[0]))
@@ -198,21 +216,20 @@ class workflow(object):
         from myptv.imaging_mod import camera, img_system
         
         # fetching the parameters
-        par_seg = self.params[self.params['operation']=='matching']
-        
-        blob_fn = par_seg[par_seg['param']=='blob_files']['value'].iloc[0]
+        blob_fn = self.get_param('matching', 'blob_files')
         blob_fn = [val.strip() for val in blob_fn.split(',')]
-        cam_names = par_seg[par_seg['param']=='camera_names']['value'].iloc[0]
+        cam_names = self.get_param('matching', 'camera_names')
         cam_names = [val.strip() for val in cam_names.split(',')]
-        res = par_seg[par_seg['param']=='cam_resolution']['value'].iloc[0]
+        res = self.get_param('matching', 'cam_resolution')
         res = tuple([float(val) for val in res.split(',')])
-        ROI = par_seg[par_seg['param']=='ROI']['value'].iloc[0].split(',')
+        ROI = self.get_param('matching', 'ROI').split(',')
         ROI = [[float(ROI[2*i]), float(ROI[2*i+1])] for i in [0,1,2]]
-        voxel_size = par_seg[par_seg['param']=='voxel_size']['value'].iloc[0]
-        max_blob_distance = par_seg[par_seg['param']=='max_blob_distance']['value'].iloc[0]
-        max_err = par_seg[par_seg['param']=='max_err']['value'].iloc[0]
-        N_frames = par_seg[par_seg['param']=='N_frames']['value'].iloc[0]
-        save_name = par_seg[par_seg['param']=='save_name']['value'].iloc[0]
+        voxel_size = self.get_param('matching', 'voxel_size')
+        max_blob_distance = self.get_param('matching', 'max_blob_distance')
+        max_err = self.get_param('matching', 'max_err')
+        N_frames = self.get_param('matching', 'N_frames')
+        save_name = self.get_param('matching', 'save_name')
+        
         
         
         # setting up the img_system 
@@ -244,22 +261,85 @@ class workflow(object):
                 msg = 'N_frames must be an integer of None (given %s).'%tp
                 raise TypeError(msg)
                 
-        
+                
         # mathing
         print('Starting stereo-matching.')
         mbf.get_particles(frames=frames)
-        print('particles matched:', len(mbf.particles))
         
-        # saving the results
+        # print matching statistics
+        print('particles matched:', len(mbf.particles))
+        c4 = sum([1 for p in mbf.particles if len(p[3])==4])
+        print('quadruplets:', c4)
+        c3 = sum([1 for p in mbf.particles if len(p[3])==3])
+        print('triplets:', c3)
+        c2 = sum([1 for p in mbf.particles if len(p[3])==2])
+        print('pairs:', c2)
+        
+        
+        # save the results
         if save_name is not None:
             print('\n','saving file.')
             mbf.save_results(save_name)
         
         print('\n', 'Finished Matching.')
             
+        
+        
+    def do_tracking(self):
+        '''
+        Will perform the tracking using the file given parameters.
+        '''
+        from myptv.tracking_mod import tracker_four_frames
+        from numpy import array
+        
+        # fetching parameters
+        particles_fm = self.get_param('tracking', 'particles_file_name')
+        N_frames = self.get_param('tracking', 'N_frames')
+        d_max = self.get_param('tracking', 'd_max')
+        dv_max = self.get_param('tracking', 'dv_max')
+        save_name = self.get_param('tracking', 'save_name')
+        
+        
+        
+        # setting the frame range to match
+        if N_frames is None:
+            frames = None
+        else:
+            try:
+                frames = range(N_frames)
+            except:
+                tp = type(frames)
+                msg = 'N_frames must be an integer of None (given %s).'%tp
+                raise TypeError(msg)
+        
+        
+        
+        # do the tracking
+        t4f = tracker_four_frames(particles_fm, 
+                                  d_max=d_max, 
+                                  dv_max=dv_max)
+        t4f.track_all_frames(frames=frames)
+        
+        # print some statistics
+        tr = array(t4f.return_connected_particles())
+        untracked = len(tr[tr[:,0]==-1])
+        tot = len(tr)
+        print('untracked fract.:', untracked/tot)
+        print('tracked per frame:', (tot-untracked)/len(set(tr[:,-1])))
 
-
-
+        # save the results
+        if save_name is not None:
+            print('\n','saving file.')
+            t4f.save_results(save_name)
+        
+        print('\n', 'Finished tracking.')
+        
+        
+        
+        
+        
+        
+        
 
 
 if __name__ == '__main__':
