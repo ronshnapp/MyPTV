@@ -126,6 +126,7 @@ class workflow(object):
         Starts a suquence to guide users through the calibration process.
         '''
         from myptv.imaging_mod import camera
+        from myptv.calibrate_mod import calibrate
         from os import listdir
         
         # fetch parameters from the file
@@ -133,15 +134,48 @@ class workflow(object):
         blob_file = self.get_param('calibration', 'calibration_points_file')
         target_file = self.get_param('calibration', 'target_file')
         cal_image = self.get_param('calibration', 'calibration_image')
-        res = self.get_param('calibration', 'resolution')
+        res = self.get_param('calibration', 'resolution').split(',')
+        res = (float(res[0]), float(res[1]))
+        
         
         # checking that a camera file in the working directory
-        cam = camera(cam_name, res, cal_points_fname = blob_file)
         ls = listdir('.')
         
-        # if it is, start calibration sequence
+        # if the file is found, start calibration sequence
         if cam_name in ls:
+            print('Starting calibration sequence.')
+            cam = camera(cam_name, res, cal_points_fname = blob_file)
             cam.load('.')
+            print('camera data loaded successfully.')
+            cal = calibrate(cam, cam.lab_points, cam.image_points)
+            print('initial error:', cal.mean_squared_err())
+            print('')
+            
+            user = True
+            print('Starting calibration sequence:')
+            while user != '9':
+                print("enter '1' for external parameters calibration")
+                print("enter '2' for internal correction ('fine') calibration")
+                print("enter '8' to save teh results")
+                print("enter '9' to quit")
+                user = input('')
+                
+                if user == '1':
+                    print('\n', 'Iterating to minimize external parameters')
+                    cal.searchCalibration(maxiter=2000)
+                    print('\n','calibration error:', cal.mean_squared_err(),'\n')
+                
+                if user == '2':
+                    print('\n', 'Iterating to minimize correction terms')
+                    cal.fineCalibration()
+                    print('\n','calibration error:', cal.mean_squared_err(),'\n')
+                    
+                if user == '8':
+                    print('\n', 'Saving results')
+                    cam.save('.')
+                    print('\n','calibration error:', cal.mean_squared_err(),'\n')
+                    
+            
         
         # if not, generate an empty file camera file
         else:
@@ -152,6 +186,8 @@ class workflow(object):
             print('empty file, and then run again the calibration sequence.')
             cam.save('.')
             print('\n', 'Done.')
+    
+    
     
     
     def do_segmentation(self):

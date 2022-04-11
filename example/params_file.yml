@@ -1,8 +1,8 @@
 - calibration:
     camera_name: cam1
-    calibration_points_file: None
-    target_file: target_file
-    calibration_image: fname
+    calibration_points_file: ./Calibration/cal_points1_full
+    target_file: ./Calibration/target_file
+    calibration_image: ./Calibration/cal1.tif
     resolution: 1280, 1024
 
 - segmentation:
