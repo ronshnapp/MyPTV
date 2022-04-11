@@ -1,3 +1,10 @@
+- calibration:
+    camera_name: cam1
+    calibration_points_file: None
+    target_file: target_file
+    calibration_image: fname
+    resolution: 1280, 1024
+
 - segmentation:
     Number_of_images: None
     images_folder: 'Cam3'

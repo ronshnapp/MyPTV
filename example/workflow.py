@@ -50,12 +50,17 @@ class workflow(object):
             
         elif action != None:
             
-            allowd_actions = ['segmentation', 'matching', 'tracking',
-                              'smoothing', 'stitching']
+            allowd_actions = ['calibration', 'segmentation', 'matching',
+                              'tracking', 'smoothing', 'stitching']
             
+            msg1 = 'The given action is unknown.'
+            msg2 = 'allowed actions are:'+str(allowd_actions)
             if action not in allowd_actions:
-                raise ValueError('The given action is unknown.')
+                raise ValueError(msg1+'\n'+msg2)
             
+            elif action == 'calibration':
+                self.calibration_sequence()
+                
             elif action == 'segmentation':
                 self.do_segmentation()
                 
@@ -114,6 +119,39 @@ class workflow(object):
         return par_seg[par_seg['param']==param]['value'].iloc[0]
     
     
+    
+    
+    def calibration_sequence(self):
+        '''
+        Starts a suquence to guide users through the calibration process.
+        '''
+        from myptv.imaging_mod import camera
+        from os import listdir
+        
+        # fetch parameters from the file
+        cam_name = self.get_param('calibration', 'camera_name')
+        blob_file = self.get_param('calibration', 'calibration_points_file')
+        target_file = self.get_param('calibration', 'target_file')
+        cal_image = self.get_param('calibration', 'calibration_image')
+        res = self.get_param('calibration', 'resolution')
+        
+        # checking that a camera file in the working directory
+        cam = camera(cam_name, res, cal_points_fname = blob_file)
+        ls = listdir('.')
+        
+        # if it is, start calibration sequence
+        if cam_name in ls:
+            cam.load('.')
+        
+        # if not, generate an empty file camera file
+        else:
+            print('')
+            print('camera files not detected in the working directory.')
+            print('Generating a new empty file and leaving calib. sequence.')
+            print('To continue calibration, fill in an initial guess in the')
+            print('empty file, and then run again the calibration sequence.')
+            cam.save('.')
+            print('\n', 'Done.')
     
     
     def do_segmentation(self):
