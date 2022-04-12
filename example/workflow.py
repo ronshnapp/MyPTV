@@ -128,6 +128,7 @@ class workflow(object):
         from myptv.imaging_mod import camera
         from myptv.calibrate_mod import calibrate
         from os import listdir
+        from matplotlib.pyplot import subplots, show, imread, imshow
         
         # fetch parameters from the file
         cam_name = self.get_param('calibration', 'camera_name')
@@ -156,6 +157,8 @@ class workflow(object):
             while user != '9':
                 print("enter '1' for external parameters calibration")
                 print("enter '2' for internal correction ('fine') calibration")
+                print("enter '3' to show current camera external parameters")
+                print("enter '4' to plot the calibration points' projection")
                 print("enter '8' to save teh results")
                 print("enter '9' to quit")
                 user = input('')
@@ -169,6 +172,16 @@ class workflow(object):
                     print('\n', 'Iterating to minimize correction terms')
                     cal.fineCalibration()
                     print('\n','calibration error:', cal.mean_squared_err(),'\n')
+                    
+                if user == '3':
+                    print('\n', cam, '\n')
+                
+                if user == '4':
+                    img = imread(cal_image)
+                    fig, ax = subplots()
+                    ax.imshow(img, cmap='gray')
+                    cal.plot_proj(ax=ax)
+                    show()
                     
                 if user == '8':
                     print('\n', 'Saving results')
