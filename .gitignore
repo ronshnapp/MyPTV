@@ -12,3 +12,5 @@
 dist/*
 myptv.egg-info/*
 build/*
+./example/*
+
