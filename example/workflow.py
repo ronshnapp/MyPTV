@@ -149,7 +149,7 @@ class workflow(object):
             cam.load('.')
             print('camera data loaded successfully.')
             cal = calibrate(cam, cam.lab_points, cam.image_points)
-            print('initial error:', cal.mean_squared_err())
+            print('initial error: %.3f pixels'%(cal.mean_squared_err()))
             print('')
             
             user = True
@@ -166,7 +166,7 @@ class workflow(object):
                 if user == '1':
                     print('\n', 'Iterating to minimize external parameters')
                     cal.searchCalibration(maxiter=2000)
-                    print('\n','calibration error:', cal.mean_squared_err(),'\n')
+                    print('\n','calibration error: %.3f pixels'%(cal.mean_squared_err()),'\n')
                 
                 if user == '2':
                     print('\n', 'Iterating to minimize correction terms')

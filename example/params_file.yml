@@ -1,8 +1,8 @@
 - calibration:
-    camera_name: cam1
-    calibration_points_file: ./Calibration/cal_points1_full
+    camera_name: cam3
+    calibration_points_file: ./Calibration/cal_points3_full
     target_file: ./Calibration/target_file
-    calibration_image: ./Calibration/cal1.tif
+    calibration_image: ./Calibration/cal3.tif
     resolution: 1280, 1024
 
 - segmentation:
