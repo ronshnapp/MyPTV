@@ -1,0 +1,56 @@
+- calibration:
+    camera_name: cam2
+    calibration_points_file: ./Calibration/cal_points2_full
+    target_file: ./Calibration/target_file
+    segmented_points_file: ./Calibration/cal_blobs_2
+    calibration_image: ./Calibration/cal2.tif
+    resolution: 1280, 1024
+
+- segmentation:
+    Number_of_images: 1
+    images_folder: 'Calibration'
+    image_extension: '.tif'
+    mask: 1.0
+    ROI: 227, 1050, 156, 932
+    plot_result: False
+    threshold: 14.0
+    blur_sigma: 0.4 
+    local_filter: 20
+    min_xsize: 3.0
+    min_ysize: 3.0
+    min_area: 3.0
+    max_xsize: 10.0
+    max_ysize: 10.0
+    max_area: 20.0
+    save_name: None
+
+- matching:
+    blob_files: blobs_cam1, blobs_cam2, blobs_cam3
+    N_frames: None
+    camera_names: cam1, cam2, cam3
+    cam_resolution: 1280, 1024
+    ROI: 0.0, 70.0, 0.0, 70.0, -25.0, 15.0
+    voxel_size: 10.0
+    max_blob_distance: 1.0
+    max_err: 0.2
+    save_name: particles
+
+- tracking:
+    particles_file_name: particles
+    N_frames: None
+    d_max: 1.0
+    dv_max: 1.0
+    save_name: trajectories
+
+- smoothing:
+    trajectory_file: trajectories
+    window_size: 5
+    polynom_order: 3
+    save_name: smoothed_trajectories
+
+- stitching:
+    trajectory_file: smoothed_trajectories
+    max_time_separation: 4
+    max_distance: 0.4
+    save_name: trajecotries_stitched
+

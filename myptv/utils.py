@@ -177,8 +177,8 @@ class match_calibration_blobs_and_points(object):
         '''
         Saves the pairs of blobs and target points in a given file name.
         '''
-        fmt = ['%.3f', '%.3f', '%.3f', '%.3f', '%.3f']
-        savetxt(self.point_pairs, fmt=fmt, delimeter='\t')
+        fmt = ['%.2f', '%.2f', '%.2f', '%.2f', '%.2f']
+        savetxt(fname, self.point_pairs, fmt=fmt, delimiter='\t')
         
         
     def plot_projections(self):
