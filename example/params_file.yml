@@ -22,7 +22,7 @@
     max_xsize: 10.0
     max_ysize: 10.0
     max_area: 20.0
-    save_name: cal_blobs_1
+    save_name: None
 
 - matching:
     blob_files: blobs_cam1, blobs_cam2, blobs_cam3
