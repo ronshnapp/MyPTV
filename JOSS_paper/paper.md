@@ -31,7 +31,7 @@ _MyPTV_ is a Python package designed to make 3D-PTV accessible throughout the sc
 
 # Current capabilities
 
-_MyPTV_, currently in version 0.1, contains all the necessary code needed to obtain three dimensional particle trajectories from a set of raw image data. In particular, this includes camera calibration, particle segmentation, stereo-matching, particle tracking, smoothing and stitching of broken trajectories. Each of these steps is built as a separate module of _MyPTV_ and generally contains a Python class or two used to perform the particular task needed. The code is written in an object oriented style which is suited for the step-oriented structure of 3D-PTV.
+_MyPTV_, currently in version 0.2, contains all the necessary code needed to obtain three dimensional particle trajectories from a set of raw image data. In particular, this includes camera calibration, particle segmentation, stereo-matching, particle tracking, smoothing and stitching of broken trajectories. Each of these steps is built as a separate module of _MyPTV_ and generally contains a Python class or two used to perform the particular task needed. The code is written in an object oriented style which is suited for the step-oriented structure of 3D-PTV.
 
 # Tests
 
@@ -41,10 +41,12 @@ _MyPTV_, currently in version 0.1, contains all the necessary code needed to obt
 
 # Documentation and usability 
 
-The MyPTV repository contains a detailed user manual which outlines all of the functionalities of the various modules, including figures that demonstrate the various file formats used for saving the results of each module. In addition, there is a detailed guide on the process of camera calibration and an example using *Jupyter notebook*. Furthermore, _MyPTV_ can easily be installed through _pip_, the Python package installer, and automated tests are included for each of the various modules.
+MyPTV includes several helpful tools to ensure the software can be used by users. In particular, MyPTV comes with a detailed user manual which outlines the instructions on how to use the software to achieve desired results, and all of the functionalities of the various modules including figures that demonstrate the various file formats used for saving the results of each module. In addition, the software includes an example data set that demonstrates the use of MyPTV on real data. 
+
+Furthermore, to enable users who are not experienced with Python to use the software, MyPTV includes a dedicated "workflow" script used to run the various processing steps through a command line interface. Specifically, parameters for each particular experiment can be inserted by the users into a dedicated yaml file, and the workflow script can then be used to automatically perform any particular task needed. The results of the computations are then saved as text files following a tab-separated value format, which guaranties that the data can be analyzed through the use of other softwares chosen by the users.
 
 # Acknowledgements
 
-The author acknowledges fruitful discussions with Alex Liberzon, Markus Holzner, and Gal Schnapp, and the help in the testing experiment and fruitful discussions with Stefano Brizzolara. 
+The author is grateful for help in structuring the package and from numerous suggestions by Alex Liberzon, for fruitful discussions and suggestions by Markus Holzner, and Gal Schnapp, and for help in conducting the test experiments and fruitful discussions with Stefano Brizzolara. Furthermore, the author wishes to acknowledge the significant contribution of the developers and the community of the openPTV project, to the development of the current software and the 3D-PTV method in general. 
 
 # References
