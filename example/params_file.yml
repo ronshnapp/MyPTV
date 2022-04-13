@@ -1,9 +1,9 @@
 - calibration:
-    camera_name: cam2
-    calibration_points_file: ./Calibration/cal_points2_full
+    camera_name: cam1
+    calibration_points_file: ./Calibration/cal_points1_full
     target_file: ./Calibration/target_file
-    segmented_points_file: ./Calibration/cal_blobs_2
-    calibration_image: ./Calibration/cal2.tif
+    segmented_points_file: ./Calibration/cal_blobs_1
+    calibration_image: ./Calibration/cal1.tif
     resolution: 1280, 1024
 
 - segmentation:
