@@ -50,7 +50,8 @@ class workflow(object):
             
         elif action != None:
             
-            allowd_actions = ['calibration', 'segmentation', 'matching',
+            allowd_actions = ['calibration', 'match_target_file', 
+                              'segmentation', 'matching',
                               'tracking', 'smoothing', 'stitching']
             
             msg1 = 'The given action is unknown.'
@@ -60,6 +61,9 @@ class workflow(object):
             
             elif action == 'calibration':
                 self.calibration_sequence()
+                
+            elif action == 'match_target_file':
+                self.match_target_file()
                 
             elif action == 'segmentation':
                 self.do_segmentation()
@@ -121,6 +125,63 @@ class workflow(object):
     
     
     
+    
+    def match_target_file(self):
+        '''
+        This function is used to match calibration points to a target file.
+        '''
+        from myptv.imaging_mod import camera
+        from myptv.utils import match_calibration_blobs_and_points
+        from matplotlib.pyplot import show
+        
+        # fetch parameters from the file
+        cam_name = self.get_param('calibration', 'camera_name')
+        points_file = self.get_param('calibration', 'calibration_points_file')
+        target_file = self.get_param('calibration', 'target_file')
+        segmented_file = self.get_param('calibration', 'segmented_points_file')
+        res = self.get_param('calibration', 'resolution').split(',')
+        res = (float(res[0]), float(res[1]))
+        
+        print('Matching target file and segmental calibration points')
+        print('for camera: %s'%cam_name)
+        # initiate the camera
+        cam = camera(cam_name, res)
+        cam.load('.')
+        
+        # match the points
+        mtf = match_calibration_blobs_and_points(cam,
+                                                 segmented_file,
+                                                 target_file)
+        mtf.pair_points()
+    
+        # plot the pairs
+        mtf.plot_projections()
+        show()
+        
+        print('Please confirm that the points were pairs correctly')
+        print("in the figure, by making sure that the blue points")
+        print("and the red x's are close to each other." ,'\n')
+        
+        print("To confirm and save the calibration point file, enter '1'")
+        print("If there are errors, enter '2' and improve the initial calibraiton.")
+        user = input()
+        
+        if user == '1':
+            mtf.save_results(points_file)
+            print('\n', 'file saved', '\n')
+        
+        elif user == '2':
+            print('\n', 'file not saved', '\n')
+        
+        else:
+            print('\n','unrecognized command. Leaving the workflow.', '\n')
+            
+        print('Done.')
+        
+        
+    
+    
+    
     def calibration_sequence(self):
         '''
         Starts a suquence to guide users through the calibration process.
@@ -133,7 +194,6 @@ class workflow(object):
         # fetch parameters from the file
         cam_name = self.get_param('calibration', 'camera_name')
         blob_file = self.get_param('calibration', 'calibration_points_file')
-        target_file = self.get_param('calibration', 'target_file')
         cal_image = self.get_param('calibration', 'calibration_image')
         res = self.get_param('calibration', 'resolution').split(',')
         res = (float(res[0]), float(res[1]))
@@ -166,12 +226,14 @@ class workflow(object):
                 if user == '1':
                     print('\n', 'Iterating to minimize external parameters')
                     cal.searchCalibration(maxiter=2000)
-                    print('\n','calibration error: %.3f pixels'%(cal.mean_squared_err()),'\n')
+                    err = cal.mean_squared_err()
+                    print('\n','calibration error: %.3f pixels'%(err),'\n')
                 
                 if user == '2':
                     print('\n', 'Iterating to minimize correction terms')
                     cal.fineCalibration()
-                    print('\n','calibration error:', cal.mean_squared_err(),'\n')
+                    err = cal.mean_squared_err()
+                    print('\n','calibration error:', err,'\n')
                     
                 if user == '3':
                     print('\n', cam, '\n')
@@ -186,7 +248,6 @@ class workflow(object):
                 if user == '8':
                     print('\n', 'Saving results')
                     cam.save('.')
-                    print('\n','calibration error:', cal.mean_squared_err(),'\n')
                     
             
         

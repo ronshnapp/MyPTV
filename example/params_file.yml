@@ -1,27 +1,28 @@
 - calibration:
-    camera_name: cam3
-    calibration_points_file: ./Calibration/cal_points3_full
+    camera_name: cam2
+    calibration_points_file: ./Calibration/cal_points2_full
     target_file: ./Calibration/target_file
-    calibration_image: ./Calibration/cal3.tif
+    segmented_points_file: ./Calibration/cal_blobs_2
+    calibration_image: ./Calibration/cal2.tif
     resolution: 1280, 1024
 
 - segmentation:
-    Number_of_images: None
-    images_folder: 'Cam3'
+    Number_of_images: 1
+    images_folder: 'Calibration'
     image_extension: '.tif'
     mask: 1.0
-    ROI: 10, -10, 40, -10
-    plot_result: True
+    ROI: 227, 1050, 156, 932
+    plot_result: False
     threshold: 14.0
     blur_sigma: 0.4 
     local_filter: 20
-    min_xsize: None
-    min_ysize: 1.0
-    min_area: 1.0
+    min_xsize: 3.0
+    min_ysize: 3.0
+    min_area: 3.0
     max_xsize: 10.0
     max_ysize: 10.0
     max_area: 20.0
-    save_name: None
+    save_name: cal_blobs_1
 
 - matching:
     blob_files: blobs_cam1, blobs_cam2, blobs_cam3
