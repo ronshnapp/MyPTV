@@ -11,7 +11,7 @@ setup(
     packages=find_packages(include=['myptv']),
     version='0.2.0',
     description='A 3D Particle Tracking Velocimetry library',
-    install_requires=['numpy', 'scipy', 'scikit-image','pandas','matplotlib','yaml'],
+    install_requires=['numpy', 'scipy', 'scikit-image','pandas','matplotlib','pyyaml'],
     author='Ron Shnapp',
     author_email='ronshnapp@gmail.com',
     license='MIT',

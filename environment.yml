@@ -15,4 +15,4 @@ dependencies:
   - numpy
   - scikit-image
   - scipy
-  - yaml
+  - pyyaml

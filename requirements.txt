@@ -19,4 +19,4 @@ scikit-image
 scipy
 six
 tifffile
-yaml
+pyyaml
