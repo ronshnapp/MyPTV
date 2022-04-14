@@ -71,7 +71,7 @@ or
 
 ## How to start?
 
-Detailed instructions are given in the Manual.
+Detailed instructions are given in the Manual, see `/user_manual/user_manual.pdf`.
 
 ## Who manages this project?
 
