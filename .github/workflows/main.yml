@@ -9,4 +9,5 @@ jobs:
       - name: Compile LaTeX document
         uses: xu-cheng/latex-action@v2
         with:
+          working_directory: user_manual
           root_file: user_manual/user_manual.tex
