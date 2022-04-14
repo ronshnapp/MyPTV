@@ -258,6 +258,7 @@ class workflow(object):
             print('Generating a new empty file and leaving calib. sequence.')
             print('To continue calibration, fill in an initial guess in the')
             print('empty file, and then run again the calibration sequence.')
+            cam = camera(cam_name, res)
             cam.save('.')
             print('\n', 'Done.')
     
