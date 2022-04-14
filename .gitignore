@@ -12,5 +12,13 @@
 dist/*
 myptv.egg-info/*
 build/*
-./example/*
 
+*.aux
+*.bbl
+*.fdb_latexmk
+*.log
+*.out
+*.aux
+*.fls
+*.log
+*.out
