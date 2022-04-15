@@ -5,25 +5,24 @@
   year      = {1997},
   pages     = {1552--1593},
   volume    = {8},
-  doi       = {https://doi.org/10.1088/0957-0233/8/12/017},
+  doi       = {10.1088/0957-0233/8/12/017},
   owner     = {Ron},
   timestamp = {2016.10.09},
 }
 
 @Article{Mass1993,
-  Title                    = {Particle Tracking Velocimetry in Three-Dimensional Flows Part I: Photogrammetric Determination of Particle Coordinates},
-  Author                   = {Mass, H. G. and Gruen, D. and Papantoniou, D.},
-  Journal                  = {Experiments in Fluid},
-  Year                     = {1993},
-  Pages                    = {133-146},
-  Volume                   = {15},
-
-  Bdsk-url-1               = {https://link.springer.com/article/10.1007/BF00190953#citeas},
-  Bdsk-url-2               = {https://doi.org/10.1007/BF00190953},
-  Doi                      = {https://doi.org/10.1007/BF00190953},
-  Owner                    = {ron},
-  Timestamp                = {2018.02.28},
-  Url                      = {https://link.springer.com/article/10.1007/BF00190953#citeas}
+  author     = {Mass, H. G. and Gruen, D. and Papantoniou, D.},
+  journal    = {Experiments in Fluid},
+  title      = {Particle Tracking Velocimetry in Three-Dimensional Flows Part I: Photogrammetric Determination of Particle Coordinates},
+  year       = {1993},
+  pages      = {133-146},
+  volume     = {15},
+  bdsk-url-1 = {https://link.springer.com/article/10.1007/BF00190953#citeas},
+  bdsk-url-2 = {https://doi.org/10.1007/BF00190953},
+  doi        = {10.1007/BF00190953},
+  owner      = {ron},
+  timestamp  = {2018.02.28},
+  url        = {https://link.springer.com/article/10.1007/BF00190953#citeas},
 }
 
 @Article{Bourgoin2020,
@@ -34,7 +33,7 @@
   number    = {8},
   pages     = {085105},
   volume    = {91},
-  doi       = {https://doi.org/10.1063/5.0009357},
+  doi       = {10.1063/5.0009357},
   publisher = {AIP Publishing LLC},
 }
 
@@ -46,7 +45,7 @@
   number    = {2},
   pages     = {301--313},
   volume    = {40},
-  doi       = {https://doi.org/10.1007/s00348-005-0068-7},
+  doi       = {10.1007/s00348-005-0068-7},
   publisher = {Springer},
 }
 
@@ -58,7 +57,7 @@
   number    = {1},
   pages     = {1--13},
   volume    = {9},
-  doi       = {https://doi.org/10.1038/s41598-019-43555-2},
+  doi       = {10.1038/s41598-019-43555-2},
   publisher = {Nature Publishing Group},
 }
 
@@ -69,7 +68,7 @@
   year      = {2005},
   pages     = {87--118},
   volume    = {528},
-  doi       = {https://doi.org/10.1017/S0022112004003283},
+  doi       = {10.1017/S0022112004003283},
   publisher = {Cambridge University Press},
 }
 
@@ -80,7 +79,7 @@
   year      = {2009},
   pages     = {375--404},
   volume    = {41},
-  doi       = {https://doi.org/10.1146/annurev.fluid.010908.165210},
+  doi       = {10.1146/annurev.fluid.010908.165210},
   publisher = {Annual Reviews},
 }
 
@@ -92,7 +91,7 @@
   pages      = {207--223},
   volume     = {422},
   bdsk-url-1 = {https://doi.org/10.1017/S0022112000001658},
-  doi        = {https://doi.org/10.1017/S0022112000001658},
+  doi        = {10.1017/S0022112000001658},
   owner      = {ron},
   timestamp  = {2018.05.24},
 }
@@ -104,6 +103,7 @@
   year      = {2008},
   pages     = {465--475},
   volume    = {598},
+  doi       = {10.1017/S0022112008000141},
   publisher = {Cambridge University Press},
 }
 
@@ -160,7 +160,7 @@
   number    = {2},
   pages     = {193--209},
   volume    = {95},
-  doi       = {https://doi.org/10.1007/s10494-015-9616-2},
+  doi       = {10.1007/s10494-015-9616-2},
   publisher = {Springer},
 }
 
@@ -172,7 +172,7 @@
   number    = {5},
   pages     = {923--934},
   volume    = {39},
-  doi       = {https://doi.org/10.1007/s00348-005-0031-7},
+  doi       = {10.1007/s00348-005-0031-7},
   publisher = {Springer},
 }
 
@@ -184,7 +184,7 @@
   number    = {1853},
   pages     = {20170235},
   volume    = {284},
-  doi       = {https://doi.org/10.1098/rspb.2017.0235},
+  doi       = {10.1098/rspb.2017.0235},
   publisher = {The Royal Society},
 }
 
@@ -208,7 +208,7 @@
   number    = {52},
   pages     = {E11199--E11207},
   volume    = {114},
-  doi       = {https://doi.org/10.1073/pnas.1708888114},
+  doi       = {10.1073/pnas.1708888114},
   publisher = {National Acad Sciences},
 }
 
@@ -230,7 +230,7 @@
   number    = {1},
   pages     = {1--8},
   volume    = {6},
-  doi       = {https://doi.org/10.1038/sdata.2019.36},
+  doi       = {10.1038/sdata.2019.36},
   publisher = {Nature Publishing Group},
 }
 
@@ -242,8 +242,18 @@
   number    = {10},
   pages     = {e0240963},
   volume    = {15},
-  doi       = {https://doi.org/10.1371/journal.pone.0240963},
+  doi       = {10.1371/journal.pone.0240963},
   publisher = {Public Library of Science San Francisco, CA USA},
+}
+
+@Misc{openptv,
+  author     = {{OpenPTV consortium}},
+  title      = {{Open Source Particle Tracking Velocimetry}},
+  year       = {2014},
+  bdsk-url-1 = {http://www.openptv.net/},
+  owner      = {ron},
+  timestamp  = {2018.02.28},
+  url        = {http://www.openptv.net/},
 }
 
 @Comment{jabref-meta: databaseType:bibtex;}
