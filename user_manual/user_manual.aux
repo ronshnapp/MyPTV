@@ -29,20 +29,20 @@
 \@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces (a) A schematics of a 3D-PTV experiment. (b) A schematic description of the 3d model, the pin-hole camera model.\relax }}{1}{figure.caption.2}}
 \@writefile{lof}{\contentsline {subfigure}{\numberline{(a)}{\ignorespaces {}}}{1}{subfigure.1.1}}
 \@writefile{lof}{\contentsline {subfigure}{\numberline{(b)}{\ignorespaces {}}}{1}{subfigure.1.2}}
-\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Basic steps in the analysis of PTV raw data into particl trajectories and scientific output. The first five steps are handled by MyPYV. \relax }}{1}{figure.caption.3}}
-\newlabel{fig:steps}{{2}{1}{Basic steps in the analysis of PTV raw data into particl trajectories and scientific output. The first five steps are handled by MyPYV. \relax }{figure.caption.3}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Basic steps in the analysis of PTV raw data into particle trajectories and scientific output. The first five steps are handled by MyPYV. \relax }}{1}{figure.caption.3}}
+\newlabel{fig:steps}{{2}{1}{Basic steps in the analysis of PTV raw data into particle trajectories and scientific output. The first five steps are handled by MyPYV. \relax }{figure.caption.3}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {1.2}3D model}{2}{subsection.1.2}}
 \newlabel{eq:3dmodel}{{1}{2}{3D model}{equation.1.1}{}}
 \@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Description of mathematical notation. \relax }}{2}{table.caption.4}}
 \newlabel{tab1:mathdesc}{{1}{2}{Description of mathematical notation. \relax }{table.caption.4}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {1.3}MyPTV usage and structure}{2}{subsection.1.3}}
 \@writefile{toc}{\contentsline {section}{\numberline {2}The Workflow}{3}{section.2}}
-\newlabel{sec:worflow}{{2}{3}{The Workflow}{section.2}{}}
+\newlabel{sec:workflow}{{2}{3}{The Workflow}{section.2}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Preparation of an experiment folder}{3}{subsection.2.1}}
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {2.1.1}The \texttt  {workflow.py} script}{3}{subsubsection.2.1.1}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.1.2}The \texttt  {params\char `_file.yml} file}{3}{subsubsection.2.1.2}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.1.2}The \texttt  {params\_file.yml} file}{3}{subsubsection.2.1.2}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Calibration}{3}{subsection.2.2}}
-\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces The \texttt  {params\char `_file.yml} parameters for the calibration step. All paths to files are relative to the \texttt  {workflow.py} script.\relax }}{4}{table.caption.6}}
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces The \texttt  {params\_file.yml} parameters for the calibration step. All paths to files are relative to the \texttt  {workflow.py} script.\relax }}{4}{table.caption.6}}
 \@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Format of the target file, which lists the lab-space coordinates of the calibration target as tab-separated values. The order at which points are given is not relevant. \relax }}{4}{figure.caption.5}}
 \newlabel{fig:target_file}{{3}{4}{Format of the target file, which lists the lab-space coordinates of the calibration target as tab-separated values. The order at which points are given is not relevant. \relax }{figure.caption.5}{}}
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {2.2.1}Initial calibraiton}{4}{subsubsection.2.2.1}}
@@ -55,61 +55,61 @@
 \newlabel{fig:cal_img}{{5}{6}{An example of a calibration image. The points on the target have known lab space coordinates. Not also that the points are distributed over several plains (3 different $z$ values in this case). \relax }{figure.caption.8}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces An example plot of a calibration error estimation. The red crosses represent the known positions of the calibration points given in the target file, and the black circles mark the positions of the stereo-matched segmented calibration points. In this case, the root mean square of the static calibration error was 84$\mu m$. \relax }}{6}{figure.caption.9}}
 \newlabel{fig:cal_err}{{6}{6}{An example plot of a calibration error estimation. The red crosses represent the known positions of the calibration points given in the target file, and the black circles mark the positions of the stereo-matched segmented calibration points. In this case, the root mean square of the static calibration error was 84$\mu m$. \relax }{figure.caption.9}{}}
-\citation{Luthi2005}
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.3}segmentation}{7}{subsection.2.3}}
 \newlabel{sec:workflow_segment}{{2.3}{7}{segmentation}{subsection.2.3}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces The \texttt  {params\char `_file.yml} parameters for the segmentation step. All paths to files are relative to the \texttt  {workflow.py} script.\relax }}{7}{table.caption.10}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.4}matching}{7}{subsection.2.4}}
-\newlabel{sec:workflow_match}{{2.4}{7}{matching}{subsection.2.4}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.5}tracking}{7}{subsection.2.5}}
-\newlabel{sec:workflow_track}{{2.5}{7}{tracking}{subsection.2.5}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.6}smoothing}{7}{subsection.2.6}}
-\newlabel{sec:workflow_smooth}{{2.6}{7}{smoothing}{subsection.2.6}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces The \texttt  {params\_file.yml} parameters for the segmentation step. All paths to files are relative to the \texttt  {workflow.py} script.\relax }}{7}{table.caption.10}}
+\citation{Luthi2005}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.4}matching}{8}{subsection.2.4}}
+\newlabel{sec:workflow_match}{{2.4}{8}{matching}{subsection.2.4}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces The \texttt  {params\_file.yml} parameters for the matching step. All paths to files are relative to the \texttt  {workflow.py} script.\relax }}{8}{table.caption.11}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.5}tracking}{8}{subsection.2.5}}
+\newlabel{sec:workflow_track}{{2.5}{8}{tracking}{subsection.2.5}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces The \texttt  {params\_file.yml} parameters for the tracking step. All paths to files are relative to the \texttt  {workflow.py} script.\relax }}{8}{table.caption.12}}
 \citation{Xu2008}
-\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces The \texttt  {params\char `_file.yml} parameters for the matching step. All paths to files are relative to the \texttt  {workflow.py} script.\relax }}{8}{table.caption.11}}
-\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces The \texttt  {params\char `_file.yml} parameters for the tracking step. All paths to files are relative to the \texttt  {workflow.py} script.\relax }}{8}{table.caption.12}}
-\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces The \texttt  {params\char `_file.yml} parameters for the smoothing step. All paths to files are relative to the \texttt  {workflow.py} script.\relax }}{8}{table.caption.13}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.6}smoothing}{9}{subsection.2.6}}
+\newlabel{sec:workflow_smooth}{{2.6}{9}{smoothing}{subsection.2.6}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces The \texttt  {params\_file.yml} parameters for the smoothing step. All paths to files are relative to the \texttt  {workflow.py} script.\relax }}{9}{table.caption.13}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.7}stitching}{9}{subsection.2.7}}
 \newlabel{sec:workflow_stitch}{{2.7}{9}{stitching}{subsection.2.7}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces The \texttt  {params\char `_file.yml} parameters for the smoothing step. All paths to files are relative to the \texttt  {workflow.py} script.\relax }}{9}{table.caption.14}}
-\@writefile{toc}{\contentsline {section}{\numberline {3}Imaging module - \texttt  {imaging\char `_mod.py}}{10}{section.3}}
-\newlabel{sec:image_mod}{{3}{10}{Imaging module - \texttt {imaging\char `_mod.py}}{section.3}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces The \texttt  {params\_file.yml} parameters for the smoothing step. All paths to files are relative to the \texttt  {workflow.py} script.\relax }}{9}{table.caption.14}}
+\@writefile{toc}{\contentsline {section}{\numberline {3}Imaging module - \texttt  {imaging\_mod.py}}{10}{section.3}}
+\newlabel{sec:image_mod}{{3}{10}{Imaging module - \texttt {imaging\_mod.py}}{section.3}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.1}The \texttt  {camera} object}{10}{subsection.3.1}}
 \newlabel{sec:camera}{{3.1}{10}{The \texttt {camera} object}{subsection.3.1}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces The structure of a camera file. The files are simple text files where each row corresponds to a specific paramter and the values in each row are separated by a whitespace. \relax }}{10}{figure.caption.15}}
-\newlabel{fig:camfiles}{{7}{10}{The structure of a camera file. The files are simple text files where each row corresponds to a specific paramter and the values in each row are separated by a whitespace. \relax }{figure.caption.15}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces The structure of a camera file. The files are simple text files where each row corresponds to a specific parameter and the values in each row are separated by a white space. \relax }}{10}{figure.caption.15}}
+\newlabel{fig:camfiles}{{7}{10}{The structure of a camera file. The files are simple text files where each row corresponds to a specific parameter and the values in each row are separated by a white space. \relax }{figure.caption.15}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.2}The \texttt  {imsys} object}{10}{subsection.3.2}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}The \texttt  {Cal\char `_image\char `_coord} object}{11}{subsection.3.3}}
-\newlabel{sec:calpointreader}{{3.3}{11}{The \texttt {Cal\char `_image\char `_coord} object}{subsection.3.3}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {4}Camera calibration - \texttt  {calibrate\char `_mod.py}}{11}{section.4}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}The \texttt  {Cal\_image\_coord} object}{11}{subsection.3.3}}
+\newlabel{sec:calpointreader}{{3.3}{11}{The \texttt {Cal\_image\_coord} object}{subsection.3.3}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4}Camera calibration - \texttt  {calibrate\_mod.py}}{11}{section.4}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.1}The \texttt  {calibrate} object}{11}{subsection.4.1}}
-\@writefile{toc}{\contentsline {section}{\numberline {5}Particle segmentation - \texttt  {segmentation\char `_mod.py}}{11}{section.5}}
+\@writefile{toc}{\contentsline {section}{\numberline {5}Particle segmentation - \texttt  {segmentation\_mod.py}}{11}{section.5}}
 \citation{Bourgoin2020}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}The \texttt  {particle\char `_segmentation} object}{12}{subsection.5.1}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}The \texttt  {loop\char `_segmentation} object}{12}{subsection.5.2}}
-\@writefile{toc}{\contentsline {section}{\numberline {6}Particle matching - \texttt  {particle\char `_matching\char `_mod.py}}{12}{section.6}}
-\newlabel{sec:matching}{{6}{12}{Particle matching - \texttt {particle\char `_matching\char `_mod.py}}{section.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}The \texttt  {particle\_segmentation} object}{12}{subsection.5.1}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}The \texttt  {loop\_segmentation} object}{12}{subsection.5.2}}
+\@writefile{toc}{\contentsline {section}{\numberline {6}Particle matching - \texttt  {particle\_matching\_mod.py}}{12}{section.6}}
+\newlabel{sec:matching}{{6}{12}{Particle matching - \texttt {particle\_matching\_mod.py}}{section.6}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces An example of a text file holding the segmentation resuls and the description of the different columns. \relax }}{13}{figure.caption.16}}
 \newlabel{fig:blobfile}{{8}{13}{An example of a text file holding the segmentation resuls and the description of the different columns. \relax }{figure.caption.16}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.1}The \texttt  {match\char `_blob\char `_files} object}{13}{subsection.6.1}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.1}The \texttt  {match\_blob\_files} object}{13}{subsection.6.1}}
 \citation{Ouellette2006}
 \@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces An example of a text file holding the triangulated particles' resuls and the description of the different columns. In this example there were three cameras. \relax }}{14}{figure.caption.17}}
 \newlabel{fig:particlefile}{{9}{14}{An example of a text file holding the triangulated particles' resuls and the description of the different columns. In this example there were three cameras. \relax }{figure.caption.17}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {6.2}The \texttt  {matching} object}{14}{subsection.6.2}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.3}The \texttt  {matching\char `_using\char `_time} object}{14}{subsection.6.3}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.4}The \texttt  {initiate\char `_time\char `_matching} object}{14}{subsection.6.4}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.3}The \texttt  {matching\_using\_time} object}{14}{subsection.6.3}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.4}The \texttt  {initiate\_time\_matching} object}{14}{subsection.6.4}}
 \citation{Ouellette2006}
 \citation{Luthi2005,Shnapp2019}
-\@writefile{toc}{\contentsline {section}{\numberline {7}Tracking in 3D - \texttt  {tracking\char `_mod.py}}{15}{section.7}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {7.1}The \texttt  {tracker\char `_four\char `_frames} object}{15}{subsection.7.1}}
-\newlabel{sec:four_frames}{{7.1}{15}{The \texttt {tracker\char `_four\char `_frames} object}{subsection.7.1}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {7.2}The \texttt  {tracker\char `_two\char `_frames} object}{15}{subsection.7.2}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {7.3}The \texttt  {tracker\char `_nearest\char `_neighbour} object}{15}{subsection.7.3}}
-\@writefile{toc}{\contentsline {section}{\numberline {8}Trajectory smoothing - \texttt  {traj\char `_smoothing\char `_mod.py}}{15}{section.8}}
+\@writefile{toc}{\contentsline {section}{\numberline {7}Tracking in 3D - \texttt  {tracking\_mod.py}}{15}{section.7}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.1}The \texttt  {tracker\_four\_frames} object}{15}{subsection.7.1}}
+\newlabel{sec:four_frames}{{7.1}{15}{The \texttt {tracker\_four\_frames} object}{subsection.7.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.2}The \texttt  {tracker\_two\_frames} object}{15}{subsection.7.2}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.3}The \texttt  {tracker\_nearest\_neighbour} object}{15}{subsection.7.3}}
+\@writefile{toc}{\contentsline {section}{\numberline {8}Trajectory smoothing - \texttt  {traj\_smoothing\_mod.py}}{15}{section.8}}
 \@writefile{lof}{\contentsline {figure}{\numberline {10}{\ignorespaces Example of a trajectory file and the column definitions. \relax }}{16}{figure.caption.18}}
 \newlabel{fig:trajfile}{{10}{16}{Example of a trajectory file and the column definitions. \relax }{figure.caption.18}{}}
 \citation{Xu2008}
-\@writefile{toc}{\contentsline {subsection}{\numberline {8.1}The \texttt  {smooth\char `_trajectories} object}{17}{subsection.8.1}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.1}The \texttt  {smooth\_trajectories} object}{17}{subsection.8.1}}
 \@writefile{lof}{\contentsline {figure}{\numberline {11}{\ignorespaces Example file holding the results of smoothed trajectories, and the description for each column. Note also the unsmoothed samples at the bottom of the file. \relax }}{17}{figure.caption.19}}
 \newlabel{fig:smoothedfile}{{11}{17}{Example file holding the results of smoothed trajectories, and the description for each column. Note also the unsmoothed samples at the bottom of the file. \relax }{figure.caption.19}{}}
 \bibdata{bib_myPTV}
@@ -121,6 +121,6 @@
 \bibcite{Shnapp2019}{6}
 \bibcite{Xu2008}{7}
 \bibstyle{unsrt}
-\@writefile{toc}{\contentsline {section}{\numberline {9}Trajectory stitching - \texttt  {traj\char `_stitching\char `_mod.py}}{18}{section.9}}
-\newlabel{sec:stitching}{{9}{18}{Trajectory stitching - \texttt {traj\char `_stitching\char `_mod.py}}{section.9}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {9.1}The \texttt  {traj\char `_stitching} object}{18}{subsection.9.1}}
+\@writefile{toc}{\contentsline {section}{\numberline {9}Trajectory stitching - \texttt  {traj\_stitching\_mod.py}}{18}{section.9}}
+\newlabel{sec:stitching}{{9}{18}{Trajectory stitching - \texttt {traj\_stitching\_mod.py}}{section.9}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.1}The \texttt  {traj\_stitching} object}{18}{subsection.9.1}}

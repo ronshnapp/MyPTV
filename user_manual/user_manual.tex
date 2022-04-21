@@ -424,12 +424,12 @@ Once all the data files are ready in the experiment folder, we use the workflow 
 \subsection{segmentation}\label{sec:workflow_segment}
 
 
-In this step we extract the particle coordinates in the images and save the coordinates in dedicated files. Use the \texttt{workflow.py} script with the \texttt{segmentation} command to start the process. 
+In this step we extract the particles' image-space coordinates in the images and save the coordinates in dedicated files. Use the \texttt{workflow.py} script with the \texttt{segmentation} command to start the process. 
 
 \begin{enumerate}
-	\item The segmentation is run first on a single image by specifying \texttt{Number\_of\_images: 1}. To view the results, use \texttt{plot\_result: True}, and make sure the results are not saved by using \texttt{save\_name: None}.
+	\item We perform the segmentation first on a single image by specifying \texttt{Number\char`_of\char`_images: 1}, and giving an image name with \texttt{single\char`_image\char`_name}. We then tune the segmentation parameters (e.g. \texttt{ROI}, \texttt{threshold}, \texttt{blur\char`_sigma}, etc.) to obtain optimal results (optionally repeat over several more images to ensure the results are satisfactory). To view the results, use \texttt{plot\char`_result: True}, and make sure the results are not saved by using \texttt{save\char`_name: None}. 
 	
-	\item Once the parameters are set for the first image, set \texttt{Number\_of\_images: None} to loop over all the images in the folder, and save the results by setting \texttt{save\_name: /file/name/to/use}
+	\item Once the parameters are determined, we set \texttt{Number\char`_of\char`_images: None}, and run the segmentation workflow again. This will then loop over all the images in the given folder (under \texttt{images\char`_folder}), and save the results in a text file by setting \texttt{save\char`_name: /file/name/to/use}
 \end{enumerate}
 
 
@@ -441,34 +441,42 @@ In this step we extract the particle coordinates in the images and save the coor
 		Parameter & Description\\
 		\hline
 		
-		\texttt{Number\_of\_images} & Number of images over which to do the segmentation \\
-		\texttt{images\_folder} & path to the folder containing the images\\
+		\texttt{Number\char`_of\char`_images} & Number of images over which to do the segmentation. If it is 1, segmentation is done only on the image with the name given in \texttt{single\char`_image\char`_name}. If this is an integer, segmentation is performed on the first N images found in the directory \texttt{images\char`_folder}. If this is \texttt{None}, segmentation is performed over all the images in the directory \texttt{images\char`_folder} \\[.3em]
 		
-		\texttt{image\_extension} & extension of the images; for example, .tif\\
+		\texttt{images\char`_folder} & path to the folder containing the images\\[.3em]
 		
-		\texttt{mask} & if this is 1.0, no mask is used; if this is set to a path to a file, the file will be used as a mask for the segmentation \\
+		\texttt{single\char`_image\char`_name} & If \texttt{Number\char`_of\char`_images} is 1, the segmentation will be done on the image whose name is given here. If \texttt{Number\char`_of\char`_images} is any other value, this parameter is not used. \\[.3em]
 		
-		\texttt{ROI} & region of interest; specify by indicating the xmin, xmax, ymin, ymax coordinates \\
+		\texttt{image\char`_extension} & extension of the images; for example, .tif\\[.3em]
 		
-		\texttt{plot\_result} & if \texttt{False} will not plot the results; if \texttt{True} the results will be plotted \\
+
+		\texttt{plot\_result} & if \texttt{False} will not plot the results; if \texttt{True} the results will be plotted but only if number of images is 1 \\[.3em]
 		
-		\texttt{threshold} & the brightness value for which a point is considered a particle after a local threshold is performed \\
+		\texttt{mask} & if this is 1.0, no mask is used; if this is set to a path to a file, the file will be used as a mask for the segmentation \\[.3em]
+
 		
-		\texttt{blur\_sigma} & the standard deviation of a Gaussian blur filter \\
+		\texttt{ROI} & region of interest; specify by indicating the xmin, xmax, ymin, ymax coordinates \\[.3em]
+		
+		\texttt{threshold} & the brightness value for which a point is considered a particle after a local mean subtraction is performed \\[.3em]
+		
+		\texttt{blur\_sigma} & the standard deviation of a Gaussian blur filter \\[.3em]
 		 
-		\texttt{local\_filter} & the size of a local mean subtraction filter \\
+		\texttt{local\_filter} & the size of a local mean subtraction filter \\[.3em]
 		
-		\texttt{min\_xsize} & minimum particle size (pixels) in $x$ direction \\
+		\texttt{min\_xsize} & minimum particle size (pixels) in $x$ direction \\[.3em]
 		
-		\texttt{min\_ysize} & minimum particle size (pixels) in $y$ direction \\
+		\texttt{min\_ysize} & minimum particle size (pixels) in $y$ direction \\[.3em]
 		
-		\texttt{min\_area} & minimum particle area (pixels$^2$)\\
+		\texttt{min\_area} & minimum particle area (pixels$^2$)\\[.3em]
 		
-		\texttt{max\_xsize} & maximum particle size (pixels) in $x$ direction \\
+		\texttt{max\_xsize} & maximum particle size (pixels) in $x$ direction \\[.3em]
 		
-		\texttt{max\_ysize} & maximum particle size (pixels) in $y$ direction \\
+		\texttt{max\_ysize} & maximum particle size (pixels) in $y$ direction \\[.3em]
 		
-		\texttt{max\_area} & maximum particle area (pixels$^2$) \\
+		\texttt{max\_area} & maximum particle area (pixels$^2$) \\[.3em]
+
+		\texttt{plot\_result} & if \texttt{False} will not plot the results; if \texttt{True} the results will be plotted \\[.3em]
+
 		
 		\texttt{save\_name} & if \texttt{None} the results will not be saved in a file; if \texttt{path/to/file} will save the results in the given file name \\
 		

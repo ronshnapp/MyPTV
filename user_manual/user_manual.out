@@ -5,7 +5,7 @@
 \BOOKMARK [1][-]{section.2}{The Workflow}{}% 5
 \BOOKMARK [2][-]{subsection.2.1}{Preparation of an experiment folder}{section.2}% 6
 \BOOKMARK [3][-]{subsubsection.2.1.1}{The workflow.py script}{subsection.2.1}% 7
-\BOOKMARK [3][-]{subsubsection.2.1.2}{The params`file.yml file}{subsection.2.1}% 8
+\BOOKMARK [3][-]{subsubsection.2.1.2}{The params\137file.yml file}{subsection.2.1}% 8
 \BOOKMARK [2][-]{subsection.2.2}{Calibration}{section.2}% 9
 \BOOKMARK [3][-]{subsubsection.2.2.1}{Initial calibraiton}{subsection.2.2}% 10
 \BOOKMARK [3][-]{subsubsection.2.2.2}{Segmenting the calibration images and matching the target file}{subsection.2.2}% 11
@@ -15,25 +15,25 @@
 \BOOKMARK [2][-]{subsection.2.5}{tracking}{section.2}% 15
 \BOOKMARK [2][-]{subsection.2.6}{smoothing}{section.2}% 16
 \BOOKMARK [2][-]{subsection.2.7}{stitching}{section.2}% 17
-\BOOKMARK [1][-]{section.3}{Imaging module - imaging`mod.py}{}% 18
+\BOOKMARK [1][-]{section.3}{Imaging module - imaging\137mod.py}{}% 18
 \BOOKMARK [2][-]{subsection.3.1}{The camera object}{section.3}% 19
 \BOOKMARK [2][-]{subsection.3.2}{The imsys object}{section.3}% 20
-\BOOKMARK [2][-]{subsection.3.3}{The Cal`image`coord object}{section.3}% 21
-\BOOKMARK [1][-]{section.4}{Camera calibration - calibrate`mod.py}{}% 22
+\BOOKMARK [2][-]{subsection.3.3}{The Cal\137image\137coord object}{section.3}% 21
+\BOOKMARK [1][-]{section.4}{Camera calibration - calibrate\137mod.py}{}% 22
 \BOOKMARK [2][-]{subsection.4.1}{The calibrate object}{section.4}% 23
-\BOOKMARK [1][-]{section.5}{Particle segmentation - segmentation`mod.py}{}% 24
-\BOOKMARK [2][-]{subsection.5.1}{The particle`segmentation object}{section.5}% 25
-\BOOKMARK [2][-]{subsection.5.2}{The loop`segmentation object}{section.5}% 26
-\BOOKMARK [1][-]{section.6}{Particle matching - particle`matching`mod.py}{}% 27
-\BOOKMARK [2][-]{subsection.6.1}{The match`blob`files object}{section.6}% 28
+\BOOKMARK [1][-]{section.5}{Particle segmentation - segmentation\137mod.py}{}% 24
+\BOOKMARK [2][-]{subsection.5.1}{The particle\137segmentation object}{section.5}% 25
+\BOOKMARK [2][-]{subsection.5.2}{The loop\137segmentation object}{section.5}% 26
+\BOOKMARK [1][-]{section.6}{Particle matching - particle\137matching\137mod.py}{}% 27
+\BOOKMARK [2][-]{subsection.6.1}{The match\137blob\137files object}{section.6}% 28
 \BOOKMARK [2][-]{subsection.6.2}{The matching object}{section.6}% 29
-\BOOKMARK [2][-]{subsection.6.3}{The matching`using`time object}{section.6}% 30
-\BOOKMARK [2][-]{subsection.6.4}{The initiate`time`matching object}{section.6}% 31
-\BOOKMARK [1][-]{section.7}{Tracking in 3D - tracking`mod.py}{}% 32
-\BOOKMARK [2][-]{subsection.7.1}{The tracker`four`frames object}{section.7}% 33
-\BOOKMARK [2][-]{subsection.7.2}{The tracker`two`frames object}{section.7}% 34
-\BOOKMARK [2][-]{subsection.7.3}{The tracker`nearest`neighbour object}{section.7}% 35
-\BOOKMARK [1][-]{section.8}{Trajectory smoothing - traj`smoothing`mod.py}{}% 36
-\BOOKMARK [2][-]{subsection.8.1}{The smooth`trajectories object}{section.8}% 37
-\BOOKMARK [1][-]{section.9}{Trajectory stitching - traj`stitching`mod.py}{}% 38
-\BOOKMARK [2][-]{subsection.9.1}{The traj`stitching object}{section.9}% 39
+\BOOKMARK [2][-]{subsection.6.3}{The matching\137using\137time object}{section.6}% 30
+\BOOKMARK [2][-]{subsection.6.4}{The initiate\137time\137matching object}{section.6}% 31
+\BOOKMARK [1][-]{section.7}{Tracking in 3D - tracking\137mod.py}{}% 32
+\BOOKMARK [2][-]{subsection.7.1}{The tracker\137four\137frames object}{section.7}% 33
+\BOOKMARK [2][-]{subsection.7.2}{The tracker\137two\137frames object}{section.7}% 34
+\BOOKMARK [2][-]{subsection.7.3}{The tracker\137nearest\137neighbour object}{section.7}% 35
+\BOOKMARK [1][-]{section.8}{Trajectory smoothing - traj\137smoothing\137mod.py}{}% 36
+\BOOKMARK [2][-]{subsection.8.1}{The smooth\137trajectories object}{section.8}% 37
+\BOOKMARK [1][-]{section.9}{Trajectory stitching - traj\137stitching\137mod.py}{}% 38
+\BOOKMARK [2][-]{subsection.9.1}{The traj\137stitching object}{section.9}% 39
