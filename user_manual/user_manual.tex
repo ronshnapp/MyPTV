@@ -427,9 +427,9 @@ Once all the data files are ready in the experiment folder, we use the workflow 
 In this step we extract the particles' image-space coordinates in the images and save the coordinates in dedicated files. Use the \texttt{workflow.py} script with the \texttt{segmentation} command to start the process. 
 
 \begin{enumerate}
-	\item We perform the segmentation first on a single image by specifying \texttt{Number\char`_of\char`_images: 1}, and giving an image name with \texttt{single\char`_image\char`_name}. We then tune the segmentation parameters (e.g. \texttt{ROI}, \texttt{threshold}, \texttt{blur\char`_sigma}, etc.) to obtain optimal results (optionally repeat over several more images to ensure the results are satisfactory). To view the results, use \texttt{plot\char`_result: True}, and make sure the results are not saved by using \texttt{save\char`_name: None}. 
+	\item We perform the segmentation first on a single image by specifying \texttt{Number\_of\_images: 1}, and giving an image name with \texttt{single\_image\_name}. We then tune the segmentation parameters (e.g. \texttt{ROI}, \texttt{threshold}, \texttt{blur\_sigma}, etc.) to obtain optimal results (optionally repeat over several more images to ensure the results are satisfactory). To view the results, use \texttt{plot\_result: True}, and make sure the results are not saved by using \texttt{save\_name: None}. 
 	
-	\item Once the parameters are determined, we set \texttt{Number\char`_of\char`_images: None}, and run the segmentation workflow again. This will then loop over all the images in the given folder (under \texttt{images\char`_folder}), and save the results in a text file by setting \texttt{save\char`_name: /file/name/to/use}
+	\item Once the parameters are determined, we set \texttt{Number\_of\_images: None}, and run the segmentation workflow again. This will then loop over all the images in the given folder (under \texttt{images\_folder}), and save the results in a text file by setting \texttt{save\_name: /file/name/to/use}
 \end{enumerate}
 
 
