@@ -132,12 +132,12 @@ class match_blob_files(object):
         print('')
         
         for e,tm in enumerate(frames):
-            print('', end='\r')
-            print(' frame: %d'%tm, end='\r')
             
             # set up a blobs dictionary with camera names as key
             pd = self.get_particles_dic(tm)
-            
+            nb = sum([len(pd[k]) for k in pd.keys()]) /len(pd.keys())
+            print('', end='\r')
+            print(' frame: %d ; %.1f blobs per cam'%(tm, nb), end='\r')
             
             # for iterations after the first run, use the time
             # augmented matching
@@ -340,39 +340,23 @@ class matching(object):
             j = int((y_ - self.y[0] - self.voxel_size/2)/self.voxel_size +1)
             k = int((z_ - self.z[0] - self.voxel_size/2)/self.voxel_size +1)
             ray_voxels.add(((i, j, k), ray[2]))
+            
+            #--------------------------------------------------------------
+            # An attempt to fix voxel aliasing that did not improve results 
+            # di = x_ - self.x[i]
+            # dj = y_ - self.y[j]
+            # i_ = i + int(di / abs(di))
+            # j_ = j + int(dj / abs(dj))
+            # ray_voxels.add(((i_, j, k), ray[2]))
+            # ray_voxels.add(((i, j_, k), ray[2]))
+            # ray_voxels.add(((i_, j_, k), ray[2]))
+            #--------------------------------------------------------------
+            
             a += da
         
         self.traversed_voxels += list(ray_voxels)
 
 
-# =============================================================================
-#         Older methods used for legacy:
-#
-#         for k in range(len(self.z)):
-#             z_ = self.z[k]
-#             a = (z_ - O[2])/r_[2]
-#             x_, y_ = O[0] + r_[0]*a, O[1] + r_[1]*a
-#             if x_>self.RIO[0][1] or x_<self.RIO[0][0]: continue
-#             if y_>self.RIO[1][1] or y_<self.RIO[1][0]: continue
-#             i = int((x_ - self.x[0] - self.voxel_size/2)/self.voxel_size +1)
-#             j = int((y_ - self.y[0] - self.voxel_size/2)/self.voxel_size +1)
-#             
-#             self.traversed_voxels.append( [(i, j, k), ray[2]] )
-# =============================================================================
-            
-# =============================================================================
-#             i0, i1 = max([0,i-1]), min([self.Nx-1,i+1])+1
-#             j0, j1 = max([0,j-1]), min([self.Ny-1,j+1])+1
-#             #k0, k1 = max([0,k-1]), min([self.Nz-1,k+1])+1
-#             
-#             
-#             for i_ in range(i0,i1):
-#                 for j_ in range(j0,j1):
-#                     self.traversed_voxels.append( [(i_,j_,k), ray[2]] )
-#                     #for k_ in range(k0,k1):
-#                     #    self.traversed_voxels.append( [(i_,j_,k_), ray[2]] )
-# =============================================================================
-        
     
     
     def get_voxel_dictionary(self):
@@ -446,8 +430,14 @@ class matching(object):
             for j in range(i+1, n):
                 Oj, rj = dc[cams[j]]
                 D, x_ij = line_dist(Oi, ri, Oj, rj)
-                d.append(D)
-                x.append(x_ij)
+                #d.append(D)
+                #x.append(x_ij)
+                
+                if D<4*self.max_err:
+                    d.append(D)
+                    x.append(x_ij)
+                else:
+                    return x_ij, cams, 1e9
         
         return sum(x)/1.0/len(x), cams, sum(d)/1.0/len(x)
 
