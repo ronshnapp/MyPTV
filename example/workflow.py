@@ -50,8 +50,8 @@ class workflow(object):
             
         elif action != None:
             
-            allowd_actions = ['calibration', 'match_target_file', 
-                              'segmentation', 'matching',
+            allowd_actions = ['calibration', 'calibration_point_gui', 
+                              'match_target_file', 'segmentation', 'matching',
                               'tracking', 'smoothing', 'stitching']
             
             msg1 = 'The given action is unknown.'
@@ -61,7 +61,10 @@ class workflow(object):
             
             elif action == 'calibration':
                 self.calibration_sequence()
-                
+            
+            elif action == 'calibration_point_gui':
+                self.calibration_point_gui()
+            
             elif action == 'match_target_file':
                 self.match_target_file()
                 
@@ -196,7 +199,8 @@ class workflow(object):
         from myptv.imaging_mod import camera
         from myptv.calibrate_mod import calibrate
         from os import listdir
-        from matplotlib.pyplot import subplots, show, imread, imshow
+        from os.path import isfile
+        from matplotlib.pyplot import subplots, show, imread
         
         # fetch parameters from the file
         cam_name = self.get_param('calibration', 'camera_name')
@@ -207,12 +211,24 @@ class workflow(object):
         
         
         # checking that a camera file in the working directory
-        ls = listdir('.')
+        ls = listdir('.')                
         
         # if the file is found, start calibration sequence
         if cam_name in ls:
             print('Starting calibration sequence.')
-            cam = camera(cam_name, res, cal_points_fname = blob_file)
+            
+            try:
+                cam = camera(cam_name, res, cal_points_fname = blob_file)
+            except:
+                print('\n','Calibration point file (%s) not found!'%blob_file)
+                print('\n','Would you like to start the calibration point gui?')
+                user = input('1=yes,  else=no : ')
+                if user == '1':
+                    self.calibration_point_gui()  
+                else:
+                    print('quitting...')
+                return 
+            
             cam.load('.')
             print('camera data loaded successfully.')
             cal = calibrate(cam, cam.lab_points, cam.image_points)
@@ -257,7 +273,6 @@ class workflow(object):
                     cam.save('.')
                     
             
-        
         # if not, generate an empty file camera file
         else:
             print('')
@@ -269,6 +284,23 @@ class workflow(object):
             cam.save('.')
             print('\n', 'Done.')
     
+    
+    
+    
+    def calibration_point_gui(self):
+        '''
+        This will start the calibration segmentation point gui.
+        '''
+        from myptv.cal_point_gui import cal_point_gui
+        
+        # fetch parameters from the file
+        blob_file = self.get_param('calibration', 'calibration_points_file')
+        cal_image = self.get_param('calibration', 'calibration_image')
+        res = self.get_param('calibration', 'resolution').split(',')
+        res = (float(res[0]), float(res[1]))
+        
+        print('\n', 'Starting calibration point segmentation GUI', '\n')
+        gui = cal_point_gui(cal_image, blob_file)
     
     
     
