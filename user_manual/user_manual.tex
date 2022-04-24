@@ -2,7 +2,7 @@
 
 
 \usepackage[T1]{fontenc}
-\usepackage[utf8]{inputenc}
+% \usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
 \usepackage[english]{isodate}
 \usepackage[parfill]{parskip}
@@ -11,8 +11,9 @@
 \graphicspath{{./figs/}}
 \usepackage{amsmath}
 \usepackage{amssymb}
-\usepackage{cite}
+%\usepackage{cite}
 \usepackage{array}
+\usepackage{natbib}
 
 
 \usepackage{xcolor}
@@ -91,10 +92,10 @@
 \subsection{3D-PTV principles}
 
 
-The 3D-PTV method is used to measure trajectories of particles in 3D space. It utilities the principles of stereoscopic vision in order to reconstruct 3D positions of particles from images taken from several angles. A scheme of a typical 3D-PTV experiment using a four camera system is shown in Fig.~\ref{fig:3dptv_exp}. The "work horse" behind the 3D-PTV method is the co-linearity condition, the 3D model. In principle, if we know what is the position and what is the orientation of the camera in 3D space ($O'$ and $\theta$ in Fig.~\ref{fig:3dmodel}), we can use the pin-hole camera model to relate the image space coordinates of a particle ($\eta,\, \zeta$ in Fig.~\ref{fig:3dmodel}) to the ray of light connecting the imaging center and the particle. Then, if we have more than one camera, the particle will be located at the intersection of the two rays. Detailed information is given in \cite{Virant1997, Mass1993}.  
+The 3D-PTV method is used to measure the trajectories of particles in 3D space. It utilizes the principles of stereoscopic vision to reconstruct 3D positions of particles from images taken from several angles. A scheme of a typical 3D-PTV experiment using a four camera system is shown in Fig.~\ref{fig:3dptv_exp}. The "work horse" behind the 3D-PTV method is the co-linearity condition, the 3D model. In principle, if we know what is the position and what is the orientation of the camera in 3D space ($O'$ and $\theta$ in Fig.~\ref{fig:3dmodel}), we can use the pin-hole camera model to relate the image space coordinates of a particle ($\eta,\, \zeta$ in Fig.~\ref{fig:3dmodel}) to the ray of light connecting the imaging center and the particle. Then, if we have more than one camera, the particle will be located at the intersection of the two rays. Detailed information is given in \cite{Virant1997, Maas1993}.  
 
 
-\begin{figure}[h!]
+\begin{figure}[!ht]
 	\centering
 	\subfloat[]{\label{fig:3dptv_exp}
 		\includegraphics[width=6.5cm]{3D_PTV_acquisition.pdf}}
@@ -166,7 +167,7 @@ where $[E]$ is a $3\times5$ matrix that holds the correction coefficients; the l
 
 
 
-\begin{table}[h]
+\begin{table}[!ht]
 	\centering
 	\caption{Description of mathematical notation. \label{tab1:mathdesc}}
 	\begin{tabular}{p{5em} p{30em}}
@@ -281,7 +282,7 @@ Camera calibration consists of several steps in which we determine the external 
 Importantly, since the goal is finding the cameras' positions, once a calibration image was taken in an experiment it is critical that the cameras are not moved. Also, the calibration target needs to be in the same medium in which the experiment will be performed to ensure that any refraction is corrected by the error terms (e.g. if you are using a tank of water, place the calibration target inside the tank of water). 
 
 
-A schematic block diageam for the calibration process of each camera is given in Fig.~\ref{fig:calibsteps}. The calibration is divided into two sub-processes: 1) initial calibration, in which we use only 6 calibration points to obtain an approximate calibration estimation, and, 2) final calibration, in which we use all the calibration points on the calibration target to improve the accuracy of the initial calibration. The various steps of the process are performed in MyPTV through the workflow script, and detailed instructions are given below. 
+A schematic block diagram for the calibration process of each camera is given in Fig.~\ref{fig:calibsteps}. The calibration is divided into two sub-processes: 1) initial calibration, in which we use only 6 calibration points to obtain an approximate calibration estimation, and, 2) final calibration, in which we use all the calibration points on the calibration target to improve the accuracy of the initial calibration. The various steps of the process are performed in MyPTV through the workflow script, and detailed instructions are given below. 
 
 
 \begin{figure}
@@ -330,12 +331,12 @@ As in any step of MyPTV, we first make sure that the \texttt{params\_file.yaml} 
 For the initial calibration, follow these steps:
 
 \begin{enumerate}
-	\item \textit{Generate a camer file:} The camera file holds the camera parameters (see Fig.~\ref{fig:camfiles}). An empty camera file can be generated automatically by the workflow script when we start the calibration squence in a directory that doesn't havea  camera file in it (by running \texttt{python workflow.py params\_file.yml calibration} in the command line).
+	\item \textit{Generate the camera file:} The camera file holds the camera parameters (see Fig.~\ref{fig:camfiles}). An empty camera file can be generated automatically by the workflow script when we start the calibration sequence in a directory that doesn't havea  camera file in it (by running \texttt{python workflow.py params\_file.yml calibration} in the command line).
 	
-	\item \textit{Enter an initial guess:} Open the camera file just gnerated and insert an initial guess for the camrea's position ($\vec{O}$ in the first line, and $\vec{\theta}$ in the second line). See Fig.~\ref{fig:cam_pos_example} for a reference on how camera translations and orientations work. 
+	\item \textit{Enter an initial guess:} Open the camera file just generated and insert an initial guess for the camera's position ($\vec{O}$ in the first line, and $\vec{\theta}$ in the second line). See Fig.~\ref{fig:cam_pos_example} for a reference on how camera translations and orientations work. 
 	
-	\item \textit{Segment 6 calibration points:} Choose six points of the calibration target and prepare a file that lets MyPTV know their coordiantes in image space and in lab space (see Fig.~\ref{fig:calpointfile} for the format). The name of the file should be inserted under \texttt{calibration\_points\_file} in the \texttt{params\_file.yml}. \\
-	The calibration points file can be generated easilly using a dedicated user interface (GUI). To run the GUI, enter \texttt{python workflow.py params\_file calibration\_point\_gui} in the command line. Alternatively, if MyPTV can't find the \texttt{calibration\_points\_file}, the GUI will start automatically. Instruction are given in Fig.~\ref{fig:Cal_point_GUI}. Note, for best performance, it is best to have some asymmetry in the points chosen (e.g. see the blue crosses in Fig.~\ref{fig:Cal_point_GUI}).
+	\item \textit{Segment 6 calibration points:} Choose six points of the calibration target and prepare a file that lets MyPTV know their coordinates in image space and in lab space (see Fig.~\ref{fig:calpointfile} for the format). The name of the file should be inserted under \texttt{calibration\_points\_file} in the \texttt{params\_file.yml}. \\
+	The calibration points file can be generated easily using a dedicated user interface (GUI). To run the GUI, enter \texttt{python workflow.py params\_file calibration\_point\_gui} in the command line. Alternatively, if MyPTV can't find the \texttt{calibration\_points\_file}, the GUI will start automatically. Instruction are given in Fig.~\ref{fig:Cal_point_GUI}. Note, for best performance, it is best to have some asymmetry in the points chosen (e.g. see the blue crosses in Fig.~\ref{fig:Cal_point_GUI}).
 	
 	\item \textit{Calibrate using 6 points:} We now calibrate the camera (i.e. improve the initial guess), using the calibration sequence. To start the sequence enter \texttt{python workflow.py params\_file.yml calibration} in the command line. Then, the following actions can be chosen by the user:
 	\begin{verbatim}
@@ -346,7 +347,7 @@ For the initial calibration, follow these steps:
 	8 - save the current calibration results
 	9 - quit
 	\end{verbatim} 
-	To calibrate, use options 1 and 2 in iterations and observe the calibration error decreasing (error is given as RMS deviation in pixel units). Once the error had converged to a low level, lower than 1.0 and prefferably lower than 0.5, save the results (using 8).
+	To calibrate, use options 1 and 2 in iterations and observe the calibration error decreasing (error is given as RMS deviation in pixel units). Once the error had converged to a low level, lower than 1.0 and preferably lower than 0.5, save the results (using 8).
 \end{enumerate}
 
 This concludes the initial calibration step.
@@ -356,15 +357,15 @@ This concludes the initial calibration step.
 
 
 
-\begin{figure}[h]
+\begin{figure}[!ht]
 	\centering
 	\includegraphics[width=\textwidth]{Cam_pos_examples.pdf}
-	\caption{Two examples for camera setups. The (x, y, z) system represents the lab space, and the (x', y', z') represents the camera's system of reference. In (a) the camera's position is roughly $\vec{O} = (0,0,1)$, and an appropriate rotation vector could be $\vec{\theta} = (0,\pi,0)$. In (b) the camera's position might be $\vec{O} = (1,1,1)$, and the orientation vector might approximately be $\vec{\theta} = (-\frac{1}{2}\pi,-\frac{3}{4}\pi,0)$. Rules of thumb in trying to guess $\vec{\theta}$ are: 1) ask yourself how should one rotate the lab's frame of reference so that it alighns with the camera's frame of reference; 2) we first rotate around the x axis, then around y and then around z; 3) in many cases the origin of the images is on the top left corner, so a half a turn rotation around the z axis is often needed. \label{fig:cam_pos_example}}
+	\caption{Two examples for camera setups. The (x, y, z) system represents the lab space, and the (x', y', z') represents the camera's system of reference. In (a) the camera's position is roughly $\vec{O} = (0,0,1)$, and an appropriate rotation vector could be $\vec{\theta} = (0,\pi,0)$. In (b) the camera's position might be $\vec{O} = (1,1,1)$, and the orientation vector might approximately be $\vec{\theta} = (-\frac{1}{2}\pi,-\frac{3}{4}\pi,0)$. Rules of thumb in trying to guess $\vec{\theta}$ are: 1) ask yourself how should one rotate the lab's frame of reference so that it aligns with the camera's frame of reference; 2) we first rotate around the x axis, then around y and then around z; 3) in many cases the origin of the images is on the top left corner, so a half a turn rotation around the z axis is often needed. \label{fig:cam_pos_example}}
 \end{figure}
 
 
 
-\begin{figure}[h]
+\begin{figure}[!ht]
 	\centering
 	\includegraphics[width=\textwidth]{Cal_point_GUI.pdf}
 	\caption{The calibration point segmentation GUI. 1 - the calibration image, with points to be segmented. 2 and 3 - scroll bars to explore the image. When the image is clicked a red cross apears (7) and its coordinates in image space are pronted in 4; to mark a calibration point click on it. 5 - to specify the lab space coordinates of the point, enter them in the correct tabs. 6 - once 'mark point' is clicked, the cross becomes blue (8), which means that the point's data was registered in the memory. to remove points from the register click 'Forget last point'. To save the points in the register click 'Save points' (the file name is the one given in \texttt{calibration\_points\_file}). To zoom in use the +/- buttons. To move the red cross more accurately, use Shift-Arrowkey. \label{fig:Cal_point_GUI}}
@@ -383,7 +384,7 @@ For the final calibration, follow these steps:
 	
 	\item \textit{Segment the calibration points:} To obtain the image space coordinates of all the calibration points we use the segmentation operation of the workflow script. To do so: 1) insert the name of the calibration image under the \texttt{Segmentation -> single\_image\_name} tab; 2) run the segmentation command - \texttt{python workflow.py params\_file.yml segmentation}. If the results are not satisfactory, change the segmentation parameters and re-run the segmentation command until you get it; then save the results (the file name used is the one under the \texttt{segmented\_points\_file} field in the \texttt{params\_file}). See also Sec.~\ref{sec:workflow_segment} for more details on the segmentation process.  
 	
-	\item \textit{Match points to target file:} Here we let MyPTV know which of the segmented points corresponds to which point in the target file. To do this, we used the command \texttt{python workflow.py params\_file.yml match\_target\_file}. This will generate a figure, highlighting the target file and the segmented results overladi by one another. Make sure that the two data match each other (see Fig.~\ref{fig:match_target_file}. If the results are good, save them by quitting the figure and entering 1 when prompted. If the match is not good, then the initial calibration was not good enough; enter 2 when prompted, and return to Sec.~\ref{sec:init_calibration} to improve the initial calibration.
+	\item \textit{Match points to target file:} Here we let MyPTV know which of the segmented points corresponds to which point in the target file. To do this, we used the command \texttt{python workflow.py params\_file.yml match\_target\_file}. This will generate a figure, highlighting the target file and the segmented results  by one another. Make sure that the two data match each other (see Fig.~\ref{fig:match_target_file}. If the results are good, save them by quitting the figure and entering 1 when prompted. If the match is not good, then the initial calibration was not good enough; enter 2 when prompted, and return to Sec.~\ref{sec:init_calibration} to improve the initial calibration.
 	
 	\item \textit{Calibrate using all points:} Now that we have segmented the necessary data, we return to the calibration sequence in the workflow to finish the calibration. Therefore, run \texttt{python workflow.py params\_file.yml calibration} in the command line. Then, the following actions can be chosen:
 	\begin{verbatim}
@@ -394,13 +395,13 @@ For the final calibration, follow these steps:
 	8 - save the current calibration results
 	9 - quit
 	\end{verbatim} 
-	To calibrate, use options 1 and 2 in iterations and observe the calibration error decreasing (error is given as RMS deviation in pixel units). Once the error had converged to a low level, lower than 1.0 and prefferably lower than 0.5, save the results (using 8).
+	To calibrate, use options 1 and 2 in iterations and observe the calibration error decreasing (error is given as RMS deviation in pixel units). Once the error had converged to a low level, lower than 1.0 and preferably lower than 0.5, save the results (using 8).
 \end{enumerate}
 
 Congratulations, this step completes the calibration process. 
 
 
-\begin{figure}[h]
+\begin{figure}[!ht]
 	\centering
 	\includegraphics[width=10cm]{target_file.pdf}
 	\caption{Format of the target file, which lists the lab-space coordinates of the calibration target as tab-separated values. The order at which points are given is not relevant. \label{fig:target_file}}
@@ -419,7 +420,7 @@ Congratulations, this step completes the calibration process.
 \begin{figure}
 	\centering
 	\includegraphics[width=8cm]{match_target_file.jpeg}
-	\caption{The results of matching a target file points (blue circles) and the segmented blobs (red crosses). Here, we know that the match is correct because each cross overlays a circle. In location where circles are not overlaid by a cross, the segmentation did not recognize a calibration target; having such missing points may slightly reduce the quiality of the calibration but it is not critical for the target file matching. \label{fig:match_target_file}}
+	\caption{The results of matching a target file points (blue circles) and the segmented blobs (red crosses). Here, we know that the match is correct because each cross overlays a circle. In location where circles are not overlaid by a cross, the segmentation did not recognize a calibration target; having such missing points may slightly reduce the quality of the calibration but it is not critical for the target file matching. \label{fig:match_target_file}}
 \end{figure}
 
 
@@ -530,7 +531,7 @@ In this step we extract the particles' image-space coordinates in the images and
 \end{enumerate}
 
 
-\begin{table}[h]
+\begin{table}[!ht]
 	\centering
 	\caption{The \texttt{params\_file.yml} parameters for the segmentation step. All paths to files are relative to the \texttt{workflow.py} script.}
 	\begin{tabular}{l m{10cm}}
@@ -591,7 +592,7 @@ In this step we extract the particles' image-space coordinates in the images and
 In the matching step, particles images in the various images are used to stereo-locate (triangulate) the 3D positions of particles in the lab-space coordinates. As before, run first only on several images to find optimal parameter values, and only then iterate over all frames by setting \texttt{N\_frames: None} and save the results. 
 
 
-\begin{table}[h!]
+\begin{table}[!ht]
 	\centering
 	\caption{The \texttt{params\_file.yml} parameters for the matching step. All paths to files are relative to the \texttt{workflow.py} script.}
 	\begin{tabular}{l m{10cm}}
@@ -632,7 +633,7 @@ The tracking step is used to link particle in the lab space coordinates in time,
 
 
 
-\begin{table}[h!]
+\begin{table}[!ht]
 	\centering
 	\caption{The \texttt{params\_file.yml} parameters for the tracking step. All paths to files are relative to the \texttt{workflow.py} script.}
 	\begin{tabular}{l m{10cm}}
@@ -666,7 +667,7 @@ The smoothing step is used to smooth trajectories in time and to calculate the v
 
 
 
-\begin{table}[h!]
+\begin{table}[!ht]
 	\centering
 	\caption{The \texttt{params\_file.yml} parameters for the smoothing step. All paths to files are relative to the \texttt{workflow.py} script.}
 	\begin{tabular}{l m{10cm}}
@@ -695,7 +696,7 @@ The smoothing step is used to smooth trajectories in time and to calculate the v
 This step is used to re-track trajectories once velocities are known and to "stitch" broken trajectories following the algorithm of Ref.~\cite{Xu2008}.
 
 
-\begin{table}[h!]
+\begin{table}[!ht]
 	\centering
 	\caption{The \texttt{params\_file.yml} parameters for the smoothing step. All paths to files are relative to the \texttt{workflow.py} script.}
 	\begin{tabular}{l m{10cm}}
@@ -732,7 +733,7 @@ This step is used to re-track trajectories once velocities are known and to "sti
 \section{Imaging module - \texttt{imaging\_mod.py}}\label{sec:image_mod}
 
 
-The imaging module is used to handle the translation from 2D image space coordinates to lab spcae coordinates and vice-versa through the 3D model. 
+The imaging module is used to handle the translation from 2D image space coordinates to lab space coordinates and vice versa through the 3D model. 
 
 
 
@@ -741,13 +742,13 @@ The imaging module is used to handle the translation from 2D image space coordin
 An object that stores the camera external and internal parameters and handles the projections to and from image space and lab space. Inputs are:
 
 \begin{enumerate}
-	\item \texttt{name} - string, name for the camera. This is the name used when saveing and loading the camera parameters.
+	\item \texttt{name} - string, name for the camera. This is the name used when saving and loading the camera parameters.
 	\item \texttt{resolution} - tuple (2), two integers for the camera number of pixels
 	\item \texttt{cal\_points\_fname} - string (optional), path to a file with calibration coordinates for the camera. The format fro the calibration point file is given in Section~\ref{sec:calpointreader} (see Fig.~\ref{fig:calpointfile}).
 \end{enumerate}
 
 
-The important functionalities are:
+The important functionality options are:
 
 
 \begin{enumerate}
@@ -764,7 +765,7 @@ The important functionalities are:
 
 After calibration we can save the camera parameters on the hard disc. The camera files have the structure shown in Fig.~\ref{fig:camfiles}.
 
-\begin{figure}[h]
+\begin{figure}[!ht]
 	\centering
 	\includegraphics[width=\textwidth]{camera_files.pdf}
 	\caption{The structure of a camera file. The files are simple text files where each row corresponds to a specific parameter and the values in each row are separated by a white space. \label{fig:camfiles}}
@@ -863,7 +864,7 @@ This module handles the image analysis part of MyPTV, taking in raw camera image
 
 \subsection{The \texttt{particle\_segmentation} object} 
 
-Used to segment particles in a given image. This class is used internally to iterate over frames in a single folder by the \texttt{loop\_segmentation} class. However, it is usefull to check the segmentation parameters manually using this \texttt{particle\_segmentation} over several images in order to tune the particle searching. The inputs are:
+Used to segment particles in a given image. This class is used internally to iterate over frames in a single folder by the \texttt{loop\_segmentation} class. However, it is  to check the segmentation parameters manually using this \texttt{particle\_segmentation} over several images in order to tune the particle searching. The inputs are:
 %
 \begin{enumerate}
 	\item \texttt{image} - the image for segmentation
@@ -880,7 +881,7 @@ The important funcitonalities are:
 \begin{enumerate}
 	\item \texttt{get\_blobs} - Will return a list of blob centers, their box size and their area.
 	
-	\item \texttt{plot\_blobs()} - Uses matplotlib to plot the results of the segmentation. A very usefull functionality in the testing of segmentation parameters!
+	\item \texttt{plot\_blobs()} - Uses matplotlib to plot the results of the segmentation. A very useful functionality in the testing of segmentation parameters!
 	
 	\item \texttt{save\_results(fname)} - Will save the segmented particles in a text file. The file is arranged in six columns with the following attributes: (x center position, y center position, x size, y size, area, image number), see Fig.~\ref{fig:blobfile}.
 \end{enumerate}
@@ -904,7 +905,7 @@ important functionalities are:
 	\item \texttt{save\_results(fname)} - Will save the segmented particles in a text file. The file is arranged in six columns with the following attributes: (x center position, y center position, x size, y size, area, image number), see Fig.~\ref{fig:blobfile}.
 \end{enumerate}
 
-\begin{figure}[h!]
+\begin{figure}[!ht]
 	\centering
 	\includegraphics[width=10cm]{blob_file.pdf}
 	\caption{An example of a text file holding the segmentation resuls and the description of the different columns. \label{fig:blobfile}} 
@@ -949,14 +950,14 @@ This is the object that we use to get triangulated particles results from the se
 The important functionalities are:
 %
 \begin{enumerate}
-	\item \texttt{get\_particles()} - Use this to match blobs into particlesin 3D.
+	\item \texttt{get\_particles()} - Use this to match blobs into particles in 3D.
 	\item \texttt{save\_results(fname)} - Save the results in a text file. The format has 4 + number of cameras columns separated by tabs:
 	(x, y, z, [N columns corresponding to the blob number in each camera] , frame number, see Fig.~\ref{fig:particlefile}).
 \end{enumerate}
 
 
 
-\begin{figure}[h!]
+\begin{figure}[!ht]
 	\centering
 	\includegraphics[width=12cm]{particle_file.pdf}
 	\caption{An example of a text file holding the triangulated particles' resuls and the description of the different columns. In this example there were three cameras. \label{fig:particlefile}} 
@@ -1070,7 +1071,7 @@ The inputs are:
 	\item \texttt{polyorder} - The order of the polynomial used in the fitting. 
 \end{enumerate}
 
-\begin{figure}[h!]
+\begin{figure}[!ht]
 	\centering
 	\includegraphics[width=12cm]{smoothed_trajfile.pdf}
 	\caption{Example file holding the results of smoothed trajectories, and the description for each column. Note also the unsmoothed samples at the bottom of the file. \label{fig:smoothedfile}}
