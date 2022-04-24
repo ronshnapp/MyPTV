@@ -11,11 +11,11 @@
 \BOOKMARK [3][-]{subsubsection.2.2.2}{Initial calibraiton}{subsection.2.2}% 11
 \BOOKMARK [3][-]{subsubsection.2.2.3}{Final calibraiton}{subsection.2.2}% 12
 \BOOKMARK [3][-]{subsubsection.2.2.4}{Important notes}{subsection.2.2}% 13
-\BOOKMARK [2][-]{subsection.2.3}{segmentation}{section.2}% 14
-\BOOKMARK [2][-]{subsection.2.4}{matching}{section.2}% 15
-\BOOKMARK [2][-]{subsection.2.5}{tracking}{section.2}% 16
-\BOOKMARK [2][-]{subsection.2.6}{smoothing}{section.2}% 17
-\BOOKMARK [2][-]{subsection.2.7}{stitching}{section.2}% 18
+\BOOKMARK [2][-]{subsection.2.3}{Segmentation}{section.2}% 14
+\BOOKMARK [2][-]{subsection.2.4}{Matching}{section.2}% 15
+\BOOKMARK [2][-]{subsection.2.5}{Tracking}{section.2}% 16
+\BOOKMARK [2][-]{subsection.2.6}{Smoothing}{section.2}% 17
+\BOOKMARK [2][-]{subsection.2.7}{Stitching}{section.2}% 18
 \BOOKMARK [1][-]{section.3}{Imaging module - imaging\137mod.py}{}% 19
 \BOOKMARK [2][-]{subsection.3.1}{The camera object}{section.3}% 20
 \BOOKMARK [2][-]{subsection.3.2}{The imsys object}{section.3}% 21

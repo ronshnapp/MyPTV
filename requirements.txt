@@ -18,5 +18,6 @@ PyWavelets
 scikit-image
 scipy
 six
+tk
 tifffile
 pyyaml

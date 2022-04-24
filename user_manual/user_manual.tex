@@ -56,7 +56,7 @@
 
 \begin{minipage}{10cm}
 	{\small 
-	Vesrion: 0.2 \\
+	Vesrion: 0.2.2 \\
 	Last updated: \today \\
 	Github repository: \url{https://github.com/ronshnapp/MyPTV} \\
 	Contac: ronshnapp@gmail.com}
@@ -518,7 +518,7 @@ Congratulations, this step completes the calibration process.
 
 
 
-\subsection{segmentation}\label{sec:workflow_segment}
+\subsection{Segmentation}\label{sec:workflow_segment}
 
 
 In this step we extract the particles' image-space coordinates in the images and save the coordinates in dedicated files. Use the \texttt{workflow.py} script with the \texttt{segmentation} command to start the process. 
@@ -586,7 +586,7 @@ In this step we extract the particles' image-space coordinates in the images and
 
 
 
-\subsection{matching}\label{sec:workflow_match}
+\subsection{Matching}\label{sec:workflow_match}
 
 In the matching step, particles images in the various images are used to stereo-locate (triangulate) the 3D positions of particles in the lab-space coordinates. As before, run first only on several images to find optimal parameter values, and only then iterate over all frames by setting \texttt{N\_frames: None} and save the results. 
 
@@ -625,7 +625,7 @@ In the matching step, particles images in the various images are used to stereo-
 
 
 
-\subsection{tracking}\label{sec:workflow_track}
+\subsection{Tracking}\label{sec:workflow_track}
 
 The tracking step is used to link particle in the lab space coordinates in time, thus forming the 3D trajectories.
 
@@ -659,7 +659,7 @@ The tracking step is used to link particle in the lab space coordinates in time,
 
 
 
-\subsection{smoothing}\label{sec:workflow_smooth}
+\subsection{Smoothing}\label{sec:workflow_smooth}
 
 
 The smoothing step is used to smooth trajectories in time and to calculate the velocity and acceleration of particles. This is done by fitting polynomials over sliding windows of the trajectory where velocities and acceleration are calculated through a direct differentiation of the polynomial (see~\cite{Luthi2005}).
@@ -690,7 +690,7 @@ The smoothing step is used to smooth trajectories in time and to calculate the v
     
 
 
-\subsection{stitching}\label{sec:workflow_stitch}
+\subsection{Stitching}\label{sec:workflow_stitch}
 
 This step is used to re-track trajectories once velocities are known and to "stitch" broken trajectories following the algorithm of Ref.~\cite{Xu2008}.
 
