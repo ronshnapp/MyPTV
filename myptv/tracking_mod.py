@@ -63,7 +63,7 @@ class tracker_four_frames(object):
         self.traj_ids = []
         self.traj_lengths = {}
         self.N_four_frames = 0
-        self.N_nearest_neaighbour = 0
+        self.N_nearest_neighbour = 0
     
     
     def track_all_frames(self, frames=None):
@@ -96,7 +96,7 @@ class tracker_four_frames(object):
         NT = len(self.traj_ids)
         print('found %d trajectories (avg. length = %.1f)'%(NT, N_links/NT))
         print('four frame links: %d'%self.N_four_frames)
-        print('nearest neighbour links: %d'%self.N_nearest_neaighbour)
+        print('nearest neighbour links: %d'%self.N_nearest_neighbour)
     
     
     def track_single_frame(self, frame_num):
@@ -147,7 +147,7 @@ class tracker_four_frames(object):
                     self.particles[frame_num][i][0] = id_
                     self.particles[frame_num+1][nn_val[1]][0] = id_
                     self.traj_lengths[id_] = 2
-                    self.N_nearest_neaighbour += 1
+                    self.N_nearest_neighbour += 1
                     
         return None
         
@@ -325,7 +325,7 @@ class tracker_two_frames(object):
         self.traj_ids = []
         self.traj_lengths = {}
         self.N_three_frames = 0
-        self.N_nearest_neaighbour = 0
+        self.N_nearest_neighbour = 0
     
     
     def track_all_frames(self):
@@ -340,7 +340,7 @@ class tracker_two_frames(object):
         NT = len(self.traj_ids)
         print('found %d trajectories (avg. length = %.1f)'%(NT, N_links/NT))
         print('three frame links: %d'%self.N_three_frames)
-        print('nearest neighbour links: %d'%self.N_nearest_neaighbour)
+        print('nearest neighbour links: %d'%self.N_nearest_neighbour)
     
     
     def track_single_frame(self, frame_num):
@@ -389,7 +389,7 @@ class tracker_two_frames(object):
                     self.particles[frame_num][i][0] = id_
                     self.particles[frame_num+1][nn_val[1]][0] = id_
                     self.traj_lengths[id_] = 2
-                    self.N_nearest_neaighbour += 1
+                    self.N_nearest_neighbour += 1
                     
         return None
         

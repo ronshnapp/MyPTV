@@ -666,7 +666,7 @@ class matching_using_time(object):
 class initiate_time_matching(object):
     '''
     A class used in the time matching algorithm to initiate the first
-    frame. This class will search for blobs that have a nearest neighbours in 
+    frame. This class will search for blobs that have a nearest neighbour in 
     the next frame lower than a given threshold and will first stereo-match
     only these particles.
     '''
@@ -687,7 +687,7 @@ class initiate_time_matching(object):
                          each of the cameras at the second frame, t=0+dt.
                          
         max_distance - The maximum alowable distance between blobs to be 
-                       considered neighbours. This is in image space 
+                       considered neighbour. This is in image space 
                        coordinates (how many pixels blobs move in the 2D
                        images?).
         
