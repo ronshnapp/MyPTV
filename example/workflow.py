@@ -3,13 +3,13 @@
 Created on Sun 20 March 2022
 
 
-This script containes a class designed to make using MyPTV a bit easier
+This script contains a class designed to make using MyPTV a bit easier
 for users. 
 
 1) We use a single text file to hold all the parameters used in MyPTV.
 
-2) We havea class that reads the text file and performs the given task:
-    segmentaiton, matching, tracking, smoothing and stitching.
+2) We have a class that reads the text file and performs the given task:
+    segmentation, matching, tracking, smoothing and stitching.
 
 """
 
@@ -36,7 +36,7 @@ class workflow(object):
                      parameters to be used.
         
         action - string; the name of the PTV action to be performed. Accepted
-                 values are: 'segmentaiton', 'matching', 'tracking',
+                 values are: 'segmentation', 'matching', 'tracking',
                  'smoothing', and 'stitching'.
         '''
         
@@ -50,13 +50,13 @@ class workflow(object):
             
         elif action != None:
             
-            allowd_actions = ['calibration', 'calibration_point_gui', 
+            allowed_actions = ['calibration', 'calibration_point_gui', 
                               'match_target_file', 'segmentation', 'matching',
                               'tracking', 'smoothing', 'stitching']
             
             msg1 = 'The given action is unknown.'
-            msg2 = 'allowed actions are:'+str(allowd_actions)
-            if action not in allowd_actions:
+            msg2 = 'allowed actions are:'+str(allowed_actions)
+            if action not in allowed_actions:
                 raise ValueError(msg1+'\n'+msg2)
             
             elif action == 'calibration':
@@ -173,7 +173,7 @@ class workflow(object):
         print("and the red x's are close to each other." ,'\n')
         
         print("To confirm and save the calibration point file, enter '1'")
-        print("If there are errors, enter '2' and improve the initial calibraiton.")
+        print("If there are errors, enter '2' and improve the initial calibration.")
         user = input()
         
         if user == '1':
@@ -194,7 +194,7 @@ class workflow(object):
     
     def calibration_sequence(self):
         '''
-        Starts a suquence to guide users through the calibration process.
+        Starts a sequence to guide users through the calibration process.
         '''
         from myptv.imaging_mod import camera
         from myptv.calibrate_mod import calibrate
@@ -242,7 +242,7 @@ class workflow(object):
                 print("enter '2' for internal correction ('fine') calibration")
                 print("enter '3' to show current camera external parameters")
                 print("enter '4' to plot the calibration points' projection")
-                print("enter '8' to save teh results")
+                print("enter '8' to save the results")
                 print("enter '9' to quit")
                 user = input('')
                 
@@ -537,7 +537,7 @@ class workflow(object):
         tr = array(t4f.return_connected_particles())
         untracked = len(tr[tr[:,0]==-1])
         tot = len(tr)
-        print('untracked fract.:', untracked/tot)
+        print('untracked fraction:', untracked/tot)
         print('tracked per frame:', (tot-untracked)/len(set(tr[:,-1])))
 
         # save the results
@@ -556,7 +556,7 @@ class workflow(object):
         from numpy import loadtxt
         from myptv.traj_smoothing_mod import smooth_trajectories
         
-        # fethching the smoothing parameters
+        # fetching the smoothing parameters
         trajectory_file = self.get_param('smoothing', 'trajectory_file')
         window = self.get_param('smoothing', 'window_size')
         polyorder = self.get_param('smoothing', 'polynom_order')
@@ -565,7 +565,7 @@ class workflow(object):
         traj_list = loadtxt(trajectory_file)
         
         
-        # smoothing the trajecotries     
+        # smoothing the trajectories     
         print('Starting to smooth trajectories.')
         sm = smooth_trajectories(traj_list, window, polyorder)
         sm.smooth()
@@ -587,7 +587,7 @@ class workflow(object):
         from numpy import loadtxt
         from myptv.traj_stitching_mod import traj_stitching
         
-        # fethching the stitching parameters
+        # fetchhing the stitching parameters
         trajectory_file = self.get_param('stitching', 'trajectory_file')
         Ts = self.get_param('stitching', 'max_time_separation')
         dm = self.get_param('stitching', 'max_distance')
