@@ -616,8 +616,17 @@ class tracker_nearest_neighbour(object):
         
         
         
+        
+        
+# =============================================================================
+#                        score optimizing tracker
+# =============================================================================
+        
+        
+        
+        
 
-class cost_minimizing_tracker():
+class score_optimizing_tracker():
     '''
     This class implements a tracker that uses cost function minimization.
     First, for each particle we obtain candidate links in the next frame. The
@@ -672,7 +681,7 @@ class cost_minimizing_tracker():
             self.particles[tm] = []
             p_ = data[data[:,-1]==tm]
             for i in range(p_.shape[0]):
-                p = array(list(p_[i,[0,1,2,-1]]))
+                p = array([-1]+ list(p_[i,[0,1,2,-1]]))
                 self.particles[tm].append(p)
         
         # a dictionary of KDtrees based on the frame, so we dont have to make
@@ -694,6 +703,23 @@ class cost_minimizing_tracker():
         
         
         
+    def track_frames(self):
+        '''
+        This function performs all the tracking steps, and sets up the 
+        connected particles results as self.results
+        '''
+        self.get_all_candidate_links()
+        self.make_candidate_chains()
+        self.sort_chains(score=None)
+        self.prune_trajectories()
+        
+        self.results = []
+        for i in range(len(self.trajs)):
+            self.trajs[i][:,0] = i
+            for j in range(len(self.trajs[i])):
+                self.results.append(self.trajs[i][j,:])
+                
+        
     def get_all_candidate_links(self):
         '''
         A function that fills self.candidate_links withh all possible 
@@ -702,7 +728,11 @@ class cost_minimizing_tracker():
         for k in self.particles.keys():
             for i in range(len(self.particles[k])):
                 self.get_neighbouring_candidates(self.particles[k][i], i)
-            
+                
+        for k in self.particles.keys():
+            for i in range(len(self.particles[k])):
+                self.get_velocity_projected_candidates(self.particles[k][i], i)
+        
         
         
         
@@ -727,19 +757,69 @@ class cost_minimizing_tracker():
             tree = self.trees[frm+1]
         
         else:
-            particles_ip1 = array(self.particles[frm+1])[:,:3]
+            particles_ip1 = array(self.particles[frm+1])[:,1:4]
             tree = KDTree(particles_ip1)
             self.trees[frm+1] = tree
-            
-        # add the candidate links to the dictionary
+        
+        # make sure there is an entry for our frame in self.candidate_links 
         if frm not in self.candidate_links.keys():
-            self.candidate_links[frm] = []
-        candidate_indexes = tree.query_ball_point(particle[:3], self.d_max)
+            self.candidate_links[frm] = set([])
+        
+        # add the candidate links to the dictionary
+        candidate_indexes = tree.query_ball_point(particle[1:4], self.d_max)
         for ci in candidate_indexes:
-            self.candidate_links[frm].append( (p_index, ci, frm) )
+            self.candidate_links[frm].add( (p_index, ci, frm) )
             
         return
         
+    
+    
+    def get_velocity_projected_candidates(self, particle, p_index):
+        '''
+        This function searcher linking candidates of given trajectories
+        in regions that are close to the projection of the paritcle into
+        the next frame, assuming the particle has a constant velocity.
+        Specifically, if x(i) is the position at frame i, that we are looking
+        for neighbours of the point 
+        x(i+1) = x(i) + x(i)-x(i-1) = 2x(i) - x(i-1)
+        
+        We project here the particle using all possible past links that the 
+        particle allready has (self.candidate_links[frame i-1]).
+        '''
+        frm = particle[-1]
+        
+        frames = self.particles.keys()
+        # if there's no next frame, of previous frame, quit
+        if frm+1 not in frames or frm-1 not in frames:
+            return 
+        
+        # make sure there is an entry for our frame in self.candidate_links 
+        if frm not in self.candidate_links.keys():
+            self.candidate_links[frm] = set([])
+        
+        # get the KDTree for future frame 
+        if frm + 1 in self.trees.keys():
+            tree = self.trees[frm+1]
+        
+        else:
+            particles_ip1 = array(self.particles[frm+1])[:,1:4]
+            tree = KDTree(particles_ip1)
+            self.trees[frm+1] = tree
+        
+       
+        # obtain past candidates
+        past_links = [cand for cand in self.candidate_links[frm-1] 
+                      if cand[1]==p_index]
+        past_particles = [self.particles[frm-1][l[0]] for l in past_links]
+        
+        # for each past particle, project and get the projection's future 
+        # neighbours
+        for p in past_particles:
+            projection = 2*particle[1:4] - p[1:4]
+            candidate_indexes = tree.query_ball_point(projection, self.d_max)
+            for ci in candidate_indexes:
+                self.candidate_links[frm].add( (p_index, ci, frm) )
+    
     
     
     def make_candidate_chains(self):
@@ -754,7 +834,8 @@ class cost_minimizing_tracker():
             for link in self.candidate_links[k]:
                 if link not in self.used_links:
                     self.connect_chain([link])
-        
+                    
+        print('found %d candidate trajectories'%(len(self.linked_chains)))
         
         
     def get_next_frame_connections(self, link):
@@ -779,7 +860,7 @@ class cost_minimizing_tracker():
     def connect_chain(self, chain):
         '''
         A chain is a list of links. Given an initial chain, this will make all
-        possible chains that branch from it.
+        possible chains that branch from it recursively.
         '''
         
         next_links = self.get_next_frame_connections(chain[-1])
@@ -798,9 +879,85 @@ class cost_minimizing_tracker():
                 self.connect_chain(new_chain)
         
         return
+    
+    
+    
+    def trajectory_from_link_chain(self, chain):
+        '''
+        Given a link chain, this returns the sequence of particles that match
+        it - a trajectory.
+        '''
+        return array( [self.particles[l[-1]][l[0]] for l in chain] )
+        
+    
+    
+    def default_score(self, traj):
+        '''
+        Given a trjectory (a suequence of particles) this returns a positive 
+        number, score. Higher score trajectories are given priority in the 
+        pruning.
+        '''
+        score_length = len(traj)
+        
+        if len(traj)>4:
+            # velocity
+            V = traj[1:, 1:4] - traj[:-1, 1:4]
             
-
-
+            # acceleration
+            dV = V[1:,1:4] - V[:-1,1:4]
+            
+            score_acceleration = 1.0 / np.mean(dV)
+        
+        else:
+            score_acceleration = 0.0
+        
+        return score_length + score_acceleration/100
+        
+            
+        
+    def sort_chains(self, score = None):
+        '''
+        Will sort the self.linked_chains based on the score function.
+        
+        input - 
+        score - if this is None, we use the defaul score function 
+                (self.default_score). Otherwise, this should be a function 
+                that takes in a trajectory and returns a positive number.
+        '''
+        if score is None:
+            score = self.default_score
+            
+        key = lambda tpl: score(tpl[1])
+        zipped = [(chain, self.trajectory_from_link_chain(chain))
+                  for chain in self.linked_chains]
+        zipped = sorted(zipped, key = key, reverse=True)
+        
+        self.linked_chains = [z[0] for z in zipped]
+        self.traj_candidates = [z[1] for z in zipped]
+        
+    
+    
+    def prune_trajectories(self):
+        self.used_particles = []
+        self.trajs = []
+        dumped_candidates = 0
+        for i in range(len(self.traj_candidates)):
+            used_test = False
+            for j in range(len(self.traj_candidates[i])):
+                if self.linked_chains[i][j] in self.used_particles:
+                    used_test = True
+                    continue
+            
+            if used_test == False:
+                self.trajs.append(self.traj_candidates[i])
+                for j in range(len(self.traj_candidates[i])):
+                    self.used_particles.append(self.linked_chains[i][j])
+            else:
+                dumped_candidates += 1
+                
+        print('pruned %d trajectories'%(len(self.trajs)))
+        
+        
 
 
 
@@ -808,9 +965,32 @@ class cost_minimizing_tracker():
 
 if __name__ == '__main__':
     import numpy as np
-    fname = '/home/ron/particles_20frames'
-    cmt = cost_minimizing_tracker(fname, d_max=1.0)
-    cmt.get_all_candidate_links()
-    cmt.make_candidate_chains()
+    import matplotlib.pyplot as plt
+    fname = '/home/ron/particles_100frames'
+    sot = score_optimizing_tracker(fname, d_max=1.0)
+    sot.track_frames()
     
-        
+    score_list = [sot.default_score(tr) for tr in sot.trajs]
+    print(np.mean(score_list))
+    
+    tl = array(sorted([len(tr) for tr in sot.trajs], reverse=True))
+    print('average length: ',np.mean(tl))
+    print('trajs longer than 10: ', len(tl[tl>=10]))
+    
+    fig, ax = plt.subplots()
+    ax.hist(tl, bins=range(101), alpha=0.5)
+    
+    from mpl_toolkits import mplot3d
+    fig = plt.figure()
+    ax = fig.add_subplot(projection='3d')
+    for tr in cmt.trajs[:300]:
+        ax.plot(tr[:,1], tr[:,3], tr[:,2], 'k-')
+     
+    
+    
+    #t4f = tracker_four_frames(fname, d_max = 1.5, dv_max=0.5)
+    #t4f.track_all_frames()
+    #tl = array(sorted([t4f.traj_lengths[k]-1 for k in t4f.traj_lengths.keys()],
+    #            reverse=True))
+
+    #ax.hist(tl, bins=range(101), alpha=0.5)
