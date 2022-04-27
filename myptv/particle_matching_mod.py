@@ -13,11 +13,11 @@ We are using two matching algorithms in conjunction:
 1) the Ray Traversal algorithm reported 
 by Bourgion and Huisman, 2020 (https://arxiv.org/pdf/2003.12135.pdf).
 
-2) a novel alrorithm which prioratises the matching of blobs who are trackable 
+2) a novel algorithm which prioritizes the matching of blobs who are trackable 
    in the 2D images.
    
 The two algorithms are stitched to work together in the match_blob_files()
-class, first running the trackalble blobs search and then the Ray Traversal
+class, first running the trackable blobs search and then the Ray Traversal
 algorithm.
 
 """
@@ -57,7 +57,7 @@ class match_blob_files(object):
                      
         max_blob_dist - the largest distance for which blobs are concidered 
                         neighbours in the image space coordinates (namely, the
-                        highest pemissible particle displacement in pixels).
+                        highest permissible particle displacement in pixels).
                      
         max_err - maximum acceptable uncertainty in particle position. If None,
                   (defult), than no bound is used.
@@ -91,7 +91,7 @@ class match_blob_files(object):
         
     def get_particles_dic(self, frame):
         '''
-        returns a particles dicionary (with camera names as keys and blob
+        returns a particles dictionary (with camera names as keys and blob
         values) for particles in the given frame.
         '''
         pd = {}
@@ -162,7 +162,7 @@ class match_blob_files(object):
                                              self.max_blob_dist, self.RIO, 
                                              self.voxel_size, 
                                              max_err = self.max_err)
-                itm.choose_blobs_with_neghbours()
+                itm.choose_blobs_with_neighbours()
                 itm.match_blobs_with_neighbours()
                 for p in itm.matched_particles:
                     self.particles.append(p + [tm])
@@ -195,7 +195,7 @@ class match_blob_files(object):
     
     def save_results(self, fname):
         '''will save the list of particles obtained'''
-        prticles_to_save = []
+        particles_to_save = []
         Ncams = len(self.imsys.cameras)
         
         for p in self.particles:
@@ -210,13 +210,13 @@ class match_blob_files(object):
                     p_.append(-1)
             p_.append(p[4])
             p_.append(p[5])
-            prticles_to_save.append(p_)
+            particles_to_save.append(p_)
             
         fmt = ['%.3f', '%.3f', '%.3f']
         for i in range(Ncams):
             fmt.append('%d')
         fmt = fmt + ['%.3f', '%.3f']
-        savetxt(fname, prticles_to_save, fmt=fmt, delimiter='\t')
+        savetxt(fname, particles_to_save, fmt=fmt, delimiter='\t')
         
             
                 
@@ -231,7 +231,7 @@ class match_blob_files(object):
 
 
 class matching(object):
-    '''A class for matching particles in images taken simultaniously
+    '''A class for matching particles in images taken simultaneously
     from different cameras.
     
     The relevant functions for use are: 
@@ -360,7 +360,7 @@ class matching(object):
     
     
     def get_voxel_dictionary(self):
-        '''This generates a dicionary who's keys are voxel indexes and
+        '''This generates a dictionary who's keys are voxel indexes and
         who's values are the rays that passed through this voxel.'''
 
         self.traversed_voxels = []
@@ -463,7 +463,7 @@ class matching(object):
         2) the RMS of distance between the crossing point and the epipolar 
         lines is smaller
         in this order. Thus, we choose the combinations of rays with highest
-        number of camera participating and with the smallest RNS triangulaiton 
+        number of camera participating and with the smallest RNS triangulation 
         error.
         '''
         matched_particles = []
@@ -583,14 +583,14 @@ class matching_using_time(object):
            
         2) we triangulate the blobs
         
-        3) if the trangulation error is lower than the threshold max_err,
+        3) if the triangulation error is lower than the threshold max_err,
            we add the particle to a list self.matched particles.
         '''
         
         triangulated_particles = []
         for p in self.prev_used_blobs:
             
-            # first, find the nearest neighboring blobs
+            # first, find the nearest neighbouring blobs
             p_blobs = p[3]
             nearest_blobs_num = {}
             nearest_blobs_coords = {}
@@ -666,7 +666,7 @@ class matching_using_time(object):
 class initiate_time_matching(object):
     '''
     A class used in the time matching algorithm to initiate the first
-    frame. This class will search for blobs that have a nearest neighbours in 
+    frame. This class will search for blobs that have a nearest neighbour in 
     the next frame lower than a given threshold and will first stereo-match
     only these particles.
     '''
@@ -687,7 +687,7 @@ class initiate_time_matching(object):
                          each of the cameras at the second frame, t=0+dt.
                          
         max_distance - The maximum alowable distance between blobs to be 
-                       considered neighbours. This is in image space 
+                       considered neighbour. This is in image space 
                        coordinates (how many pixels blobs move in the 2D
                        images?).
         
@@ -716,7 +716,7 @@ class initiate_time_matching(object):
     
     def has_neighbour(self, blob, cam):
         '''
-        Return True if the given blos has a neares neighbour and False if not.
+        Return True if the given blob has a nearest neighbour and False if not.
         '''
         x,y = blob
         dist, dump = self.trees[cam].query((x, y))
@@ -728,7 +728,7 @@ class initiate_time_matching(object):
     
     
     
-    def choose_blobs_with_neghbours(self):
+    def choose_blobs_with_neighbours(self):
         '''
         Will go over the blobs in particles_dic_0; if a blob has valid
         neighbours in particles_dic_1, it is added to a new

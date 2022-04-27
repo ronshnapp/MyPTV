@@ -6,7 +6,7 @@ Created on Sat March 19 2022
 
 
 Implementation of a method for smoothing trajectories.
-The method uses polynomial fitting after Luti et al 2005.
+The method uses polynomial fitting after Luethi et al 2005.
 
 """
 
@@ -23,11 +23,11 @@ class smooth_trajectories(object):
     A class used to smooth trajectories in a list of trajectories. 
     Due to the smoothing we also calculate the velocity and acceleration
     of the trajectories.
-    The input trajecotry list structure is the same as the files produced by
+    The input trajectory list structure is the same as the files produced by
     the classes in tracking_mod.py.
     
     Note - only trajectories whose length is larger than the window size
-    will be smoothed and saved. Shorter trajectories are svaed with zero
+    will be smoothed and saved. Shorter trajectories are saved with zero
     velocity and accelerations.
     '''
     
@@ -140,9 +140,9 @@ class smooth_trajectories(object):
 
 def smooth_traj_poly(traj, window, polyorder):
     '''
-    will smooth the particle position using a mooving polynomial, where
+    will smooth the particle position using a moving polynomial, where
     the velocities and accelerations are calculated by
-    differentiating the polynomial coeficcients analytically.
+    differentiating the polynomial coefficients analytically.
     
     input - 
     traj - a nested list (or numpy array), with shapes (3,N), N being

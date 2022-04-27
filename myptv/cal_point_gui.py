@@ -69,7 +69,7 @@ class cal_point_gui(object):
         self.canvas.grid(row=0,column=1, sticky='ewns', padx=(5), pady=5)
         #self.canvas.focus()
         
-        # add scrolbars to the image
+        # add scrollbars to the image
         self.hbar=Scrollbar(frame,orient='horizontal')
         self.hbar.grid(row=1,column=1, sticky='ew')
         self.hbar.config(command=self.canvas.xview)

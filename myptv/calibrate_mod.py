@@ -19,8 +19,8 @@ class calibrate(object):
     This object is used to calibrate cameras against a given list
     of lab and camera point coordinates. 
     The main problem is to minimize the distance between the projected
-    lab coordinates and the given image coordinates. The minimalization 
-    procedure uses scipy's minimize method (through searchCalibration()).
+    lab coordinates and the given image coordinates. The minimization 
+    procedure uses scipy minimize method (through searchCalibration()).
     '''
     
     def __init__(self, camera, lab_coords, img_coords):
@@ -34,7 +34,7 @@ class calibrate(object):
         
     def mean_squared_err(self, correction=True):
         '''
-        This calculaes the mean squared distance between the 
+        This calculates the mean squared distance between the 
         projection and the given coordinates  (in units of pixel).
         
         (in the calibration we want to minimize this D)
@@ -49,7 +49,7 @@ class calibrate(object):
     
     def searchCalibration(self, maxiter=5000, fix_f=True):
         '''
-        using scipy's minimize function to obtain calibration
+        using scipy minimize function to obtain calibration
         parameters for the camera.
         '''
         from scipy.optimize import minimize

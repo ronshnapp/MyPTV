@@ -938,7 +938,7 @@ This is the object that we use to get triangulated particles results from the se
 	
 	\item \texttt{voxel\_size} - the side length of voxel cubes used in the ray traversal algorithm. Given in lab space coordinates (e.g. mm). Note - a too large voxel size will result in high computational times due a high number of candidates, while a too small voxel size might lead to erroneous intersection of rays, leading to matching errors. Thus, this parameter should be optimized.
 	
-	\item \texttt{max\_blob\_dist} - the largest distance for which blobs are considered neighbors in the image space coordinates (namely, the largest permissible blob displacement in pixels).
+	\item \texttt{max\_blob\_dist} - the largest distance for which blobs are considered neighbours in the image space coordinates (namely, the largest permissible blob displacement in pixels).
 	
 	\item \texttt{max\_err=None} - Maximum acceptable uncertainty in particle position. If None, (defult), than no bound is used.
 	
@@ -974,7 +974,7 @@ This object is the "engine" used to match particles using the Ray Traversal algo
 
 \subsection{The \texttt{matching\_using\_time} object}
 
-This object performs the matching of blobs using the 2D tracking heuristic. In principle, it is given a list of blobs that were successfully used to form 3D particles in the previous frame. Then, for each of the given blobs it searches for nearest neighbors in the current frame, and stereo-matches those blobs that were found (using the \texttt{.triangulate\_candidates()} method). 
+This object performs the matching of blobs using the 2D tracking heuristic. In principle, it is given a list of blobs that were successfully used to form 3D particles in the previous frame. Then, for each of the given blobs it searches for nearest neighbours in the current frame, and stereo-matches those blobs that were found (using the \texttt{.triangulate\_candidates()} method). 
 
 
 
@@ -982,7 +982,7 @@ This object performs the matching of blobs using the 2D tracking heuristic. In p
 
 \subsection{The \texttt{initiate\_time\_matching} object}
 
-This object is used to initiate the time searching algorithm on the first frame. It goes over the blobs at the first frame and searches for blobs that have nearest neighbors at the second frame. Those that have neighbors are used in a first run of the Ray Traversal algorithm, thus they are given priority in the search.
+This object is used to initiate the time searching algorithm on the first frame. It goes over the blobs at the first frame and searches for blobs that have nearest neighbours at the second frame. Those that have neighbours are used in a first run of the Ray Traversal algorithm, thus they are given priority in the search.
 
 
 
@@ -998,7 +998,7 @@ This object is used to initiate the time searching algorithm on the first frame.
 
 \section{Tracking in 3D - \texttt{tracking\_mod.py}}
 
-This is the module that is used to track particles in 3D. There are currently three tracking methods implemented, nearest neighbor, two-frame, and four-frame, see Ref.~\cite{Ouellette2006}. Users are welcome to choose their preferred method and use it.
+This is the module that is used to track particles in 3D. There are currently three tracking methods implemented, nearest neighbour, two-frame, and four-frame, see Ref.~\cite{Ouellette2006}. Users are welcome to choose their preferred method and use it.
 
 
 
@@ -1009,7 +1009,7 @@ An object used to perform tracking through the 4-frame best estimate method \cit
 \begin{enumerate}
 	\item \texttt{fname} - a string name of a particle file (e.g. Fig.~\ref{fig:particlefile}
 	\item \texttt{mean\_flow=0.0} - either zero (default) of a numpy array of the mean flow vector, in units of the calibrations spatial units per frame (e.g. mm per frame). The mean flow is assumed not to change in space and time.
-	\item \texttt{d\_max\_=1e10} - maximum allowable translation between two frames for the nearest neighbor search, after subtracting the mean flow. 
+	\item \texttt{d\_max\_=1e10} - maximum allowable translation between two frames for the nearest neighbour search, after subtracting the mean flow. 
 	\item \texttt{dv\_max\_=1e10} - maximum allowable change in velocity for the two-frame velocity projection search. The radius around the projection is therefore dv\_max/dt (where dt = 1 frame$^{-1}$)
 \end{enumerate}
 
@@ -1041,7 +1041,7 @@ An object used for tracking through the 2-frame method. The description is the s
 
 \subsection{The \texttt{tracker\_nearest\_neighbour} object}
 
-An object used for tracking through the nearest neighbor method. The description is the same as in Section~\ref{sec:four_frames}
+An object used for tracking through the nearest neighbour method. The description is the same as in Section~\ref{sec:four_frames}
 
 
 

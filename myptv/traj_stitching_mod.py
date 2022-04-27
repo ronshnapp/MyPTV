@@ -32,7 +32,7 @@ class traj_stitching(object):
     def __init__(self, traj_list, Ts, dm):
         '''
         inputs -
-        traj_list - list, holding the trajectories. The algorihm relies
+        traj_list - list, holding the trajectories. The algorithm relies
                     on the trajectories' velocity, so we input here
                     the results of smoothed trajectories. Use the same
                     format as the one saved in 
@@ -46,7 +46,7 @@ class traj_stitching(object):
         self.dm = dm
 
         # ===============================================================
-        # for now we will not be using acceleratino data in the stitching
+        # for now we will not be using acceleration data in the stitching
         # but the framework is prepared through the parameter wa. For now
         # it is zero, so acceleration is not used.
         self.wa = 0.0
@@ -77,7 +77,7 @@ class traj_stitching(object):
             x_i(t_js) = x_i(t_ie) + u_i(t_ie) * (t_js - t_ie)
             u_i(t_js) = u_i(t_ie)  (+ possible future acceleration term)
             
-        Then, we calculae the distance between particle j and the projection
+        Then, we calculate the distance between particle j and the projection
         of particle i at the start time of particle j
             dij = [ (x_i(t_js) - x_j(t_js))^2 + (u_i(t_js) - u_j(t_js))^2 ]^0.5
         
@@ -216,11 +216,11 @@ class traj_stitching(object):
                               for tm_ in tm_interp]
             for k in range(3):
                 x_ = list(x_i[:,k]) + list(x_j[:,k])
-                poly_coefs = fit_polynomial(tm_fitting, x_, 3)
+                poly_coeffs = fit_polynomial(tm_fitting, x_, 3)
                 for e, tm_ in enumerate(tm_interp):
                     # interpolate position
                     tm_vect = [tm_**3, tm_**2, tm_, 1.0]
-                    x_interp = dot(poly_coefs, tm_vect)
+                    x_interp = dot(poly_coeffs, tm_vect)
                     interp_samples_j[e][1+k] = x_interp
                                        
             # add the interpolated samples to the traj_list

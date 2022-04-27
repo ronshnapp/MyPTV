@@ -14,7 +14,7 @@ the transformation from camera space coordinates to lab coordinates.
 For the 3D-model we use a pin-hole camera model. Each camera has an
 imaging center (O) and an orientation vector (theta), that describe 
 its location and rotation in 3D space. Each point in image space, whose 
-coordiantes are (eta, zeta), is related to a ray going from the imaging 
+coordinates are (eta, zeta), is related to a ray going from the imaging 
 center, and has a direction vector b. The vector b can be calculated as:
     
     (1)    b = [eta, zeta, f] * [R]
@@ -26,7 +26,7 @@ focal length of the camera optical system.
 Equation (1) is a linear model. It might fit in ideal cases with no
 image distortion or multimedia problems, however in realistic cases
 it might not be sufficiently accurate. To overcome this difficulty,
-we add a correction term, redifining (1) as:
+we add a correction term, redefining (1) as:
     
     (2)    b = ([eta, zeta, f] + e) * [R]
     

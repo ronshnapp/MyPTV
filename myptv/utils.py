@@ -90,7 +90,7 @@ def fit_polynomial(x, y, n):
         p_n(x) = an*x^n + ... + a0
         
     This function solves the least squares equation minimize  
-    the coefficients an ... a0 that minimize the resudials to 
+    the coefficients an ... a0 that minimize the residuals to 
     the data points (x_i, y_i):  
         R = sum_i | p_n(x_i) - y_i |^2
         
@@ -198,7 +198,7 @@ class match_calibration_blobs_and_points(object):
         ax.plot(self.blobs[:,1], self.blobs[:,0], 'rx') 
         
         ax.plot([],[],'ob', label='target points')
-        ax.plot([],[],'rx', label='segmented plobs')
+        ax.plot([],[],'rx', label='segmented blobs')
         ax.legend()
         return fig, ax
     
