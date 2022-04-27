@@ -16,6 +16,9 @@ from scipy.spatial import KDTree
 
 
 
+
+
+
 class tracker_four_frames(object):
     '''Implementation of a 4-frame 3D particle tracking algorithm using
     the so-called best estimate method in 
@@ -604,3 +607,210 @@ class tracker_nearest_neighbour(object):
         fmt = ['%d', '%.3f', '%.3f', '%.3f', '%.3f']
         savetxt(fname ,self.return_connected_particles(),
                 delimiter='\t', fmt=fmt)
+        
+        
+        
+        
+        
+        
+        
+        
+        
+
+class cost_minimizing_tracker():
+    '''
+    This class implements a tracker that uses cost function minimization.
+    First, for each particle we obtain candidate links in the next frame. The
+    candidates are gathered based on possible criteria:
+        
+        1) if there are no previous links, we take all neighbouring particles.
+        
+        Possibly to be implemented in the future- 
+        2) if there are previous links, we project the particle using the 
+           velocities and take particles near the projection.
+           
+    Second, we list all the possible trajectories that can be generated from
+    the candidate links.
+    Third we sort the trajectories based on the cost function score they get
+    and prune the trajectory list with the constraint that each particale can
+    only be connected once in the future and once in the past.
+    '''
+    
+    
+    
+    def __init__(self, fname, mean_flow = 0.0, d_max=1e10, dv_max=1e10):
+        '''
+        fname - string, path of the particles containing file to which tracking
+                should be performed.
+                
+        mean_flow - a numpy array of the mean flow vector, in units of the 
+        calibrations spatial units per frame (e.g. mm per frame). The mean 
+        flow is assumed not to change in space and time.
+        
+        d_max - maximum allowable translation between two frames for the 
+                nearest neighbour search, after subtracting the mean flow. 
+                
+        dv_max - maximum allowable change in velocity for the two-frame 
+                 velocity projection search. The radius around the projection
+                 is therefore dv_max/dt (where dt = 1 frame^{-1})
+        '''
+        self.fname = fname
+        self.U = mean_flow
+        self.d_max = d_max
+        self.dv_max = dv_max
+        
+        
+        data = loadtxt(self.fname)
+        self.times = list(set(data[:,-1]))
+        
+        
+        # particles is a dictionary where keys are frame numbers and values
+        # are lists of particles in these frames.
+        self.particles = {}
+        
+        for tm in self.times:
+            self.particles[tm] = []
+            p_ = data[data[:,-1]==tm]
+            for i in range(p_.shape[0]):
+                p = array(list(p_[i,[0,1,2,-1]]))
+                self.particles[tm].append(p)
+        
+        # a dictionary of KDtrees based on the frame, so we dont have to make
+        # then every time again.
+        self.trees = {}
+        
+        
+        # candidate links is a dictionary that holds all the candidate links
+        # that form trajectories. A link makes an admissible connection
+        # between a particle at frame i, and a particle at frame i+1. A 
+        # candidate is denoted as a tuple:
+        #    (particle index at frame i, particle index at i+1, frame i)
+        # The keys of the dictionary are the frame numbers of frame i (the 
+        # that of the first particle in the link).
+        self.candidate_links = {}  
+        
+        # This is a list of chains of links (nested list), like domino tiles 
+        self.linked_chains = []
+        
+        
+        
+    def get_all_candidate_links(self):
+        '''
+        A function that fills self.candidate_links withh all possible 
+        candidate links.
+        '''
+        for k in self.particles.keys():
+            for i in range(len(self.particles[k])):
+                self.get_neighbouring_candidates(self.particles[k][i], i)
+            
+        
+        
+        
+    def get_neighbouring_candidates(self, particle, p_index):
+        '''
+        For a particle in frame i, P, this returns all particles in the frame
+        i+1 whose distance to P is smallser than self.d_max. The links are 
+        added to the self.candidate_links
+        
+        particle is the particle's recods, p_ind is the index of the particle
+        in it's frame.'
+        '''
+        
+        frm = particle[-1]
+        
+        # if there's no next frame, return
+        if frm + 1 not in self.particles.keys():
+            return 
+        
+        # get the KDTree either from memory or generate a new one
+        if frm + 1 in self.trees.keys():
+            tree = self.trees[frm+1]
+        
+        else:
+            particles_ip1 = array(self.particles[frm+1])[:,:3]
+            tree = KDTree(particles_ip1)
+            self.trees[frm+1] = tree
+            
+        # add the candidate links to the dictionary
+        if frm not in self.candidate_links.keys():
+            self.candidate_links[frm] = []
+        candidate_indexes = tree.query_ball_point(particle[:3], self.d_max)
+        for ci in candidate_indexes:
+            self.candidate_links[frm].append( (p_index, ci, frm) )
+            
+        return
+        
+    
+    
+    def make_candidate_chains(self):
+        '''
+        This function will generate a new list, self.trajectories, which holds
+        all the possible trjectories (or "chains") that can be constructed 
+        for the candidate_list. Trajectories are lists of trajectory indexes
+        that can be connected to each other.
+        '''
+        self.used_links = set([])
+        for k in self.candidate_links.keys():
+            for link in self.candidate_links[k]:
+                if link not in self.used_links:
+                    self.connect_chain([link])
+        
+        
+        
+    def get_next_frame_connections(self, link):
+        '''
+        given a link and its frame number, this returns the links in the next
+        frame to which it is connected.
+        '''
+        frm = link[-1]
+        ip1_links = []
+        try:
+            for link_ip1 in self.candidate_links[frm+1]:
+                if link_ip1[0] == link[1]: 
+                    ip1_links.append(link_ip1)
+        
+        except:
+            pass
+            
+        return ip1_links
+    
+    
+    
+    def connect_chain(self, chain):
+        '''
+        A chain is a list of links. Given an initial chain, this will make all
+        possible chains that branch from it.
+        '''
+        
+        next_links = self.get_next_frame_connections(chain[-1])
+        
+        # no links branch from the chain, so simply return the chain
+        if len(next_links) == 0:
+            self.linked_chains.append(chain)
+            return 
+        
+        # for each link that branches from the chain, continue recursively to
+        # make chains
+        else:
+            for link in next_links:
+                self.used_links.add(link)
+                new_chain = chain + [link]
+                self.connect_chain(new_chain)
+        
+        return
+            
+
+
+
+
+
+
+
+if __name__ == '__main__':
+    import numpy as np
+    fname = '/home/ron/particles_20frames'
+    cmt = cost_minimizing_tracker(fname, d_max=1.0)
+    cmt.get_all_candidate_links()
+    cmt.make_candidate_chains()
+    
+        
