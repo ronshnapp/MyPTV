@@ -960,7 +960,7 @@ The important functionalities are:
 \begin{figure}[!ht]
 	\centering
 	\includegraphics[width=12cm]{particle_file.pdf}
-	\caption{An example of a text file holding the triangulated particles' resuls and the description of the different columns. In this example there were three cameras. \label{fig:particlefile}} 
+	\caption{An example of a text file holding the triangulated particles' resuls and the description of the different columns. In this example there were three cameras. The blob number columns give the index of the blobs corresponding to any particle at the this specific frame number; a value of -1 in one of the rows means that no blob was used to stereo-match the particle in this row for this particular camera. \label{fig:particlefile}} 
 \end{figure}
 
 
@@ -1028,7 +1028,7 @@ The important functionality is:
 \begin{figure}
 	\centering
 	\includegraphics[width=10cm]{trajectory_files.pdf}
-	\caption{Example of a trajectory file and the column definitions. \label{fig:trajfile}}
+	\caption{Example of a trajectory file and the column definitions. For Trajectory id being a non-negative integer, rows with the same Trajectory id correspond to the same trajectory; rows with Trajectory id being -1 are samples that could not be linked with the given tracking parameters.  \label{fig:trajfile}}
 \end{figure}
 
 
