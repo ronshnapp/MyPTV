@@ -61,9 +61,10 @@ class smooth_trajectories(object):
             # for unconnected samples, put zero velocity and acceleration:
             if tr[0] == -1: 
                 new_tr = [tr[0], tr[1], tr[2], tr[3], 
-                          0.0, 0.0, 0.0, 0.0, 0.0, 0.0, tr[4]]
+                          0.0, 0.0, 0.0, 0.0, 0.0, 0.0, tr[-1]]
                 zero_length_trajs.append(new_tr)
             
+            # from the samples, make a trajectory dictionary
             if tr[0] in traj_dic.keys():
                 traj_dic[tr[0]].append(tr)
             else:
@@ -83,7 +84,7 @@ class smooth_trajectories(object):
                 for i in range(len(traj_dic[tr_num])):
                     tr = traj_dic[tr_num][i]
                     new_tr = [tr[0], tr[1], tr[2], tr[3], 
-                              0.0, 0.0, 0.0, 0.0, 0.0, 0.0, tr[4]]
+                              0.0, 0.0, 0.0, 0.0, 0.0, 0.0, tr[-1]]
                     short_trajs.append(new_tr)
                 continue
             
@@ -114,6 +115,7 @@ class smooth_trajectories(object):
             smoothed_traj_list += new_traj
             count+=1
             
+        print('')
         print('smoothed samples: %d'%(len(smoothed_traj_list)))
         print('too short to smooth: %d'%(len(short_trajs)))
         print('single samples: %d'%(len(zero_length_trajs)))

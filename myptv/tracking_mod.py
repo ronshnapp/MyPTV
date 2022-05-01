@@ -52,7 +52,8 @@ class tracker_four_frames(object):
             self.particles[tm] = []
             p_ = data[data[:,-1]==tm]
             for i in range(p_.shape[0]):
-                p = array([-1] + list(p_[i,[0,1,2,-1]]))
+                #p = array([-1] + list(p_[i,[0,1,2,-1]]))
+                p = array([-1] + list(p_[i,:]))
                 self.particles[tm].append(p)
         
         for k in self.particles.keys():
@@ -271,9 +272,14 @@ class tracker_four_frames(object):
         '''
         Will save the results after tracking is done.
         '''
-        fmt = ['%d', '%.3f', '%.3f', '%.3f', '%.3f']
-        savetxt(fname ,self.return_connected_particles(),
+        data_to_save = self.return_connected_particles()
+        fmt = ['%d', '%.3f', '%.3f', '%.3f']
+        for i in range(len(data_to_save[0])-6):
+            fmt.append('%d')
+        fmt += ['%.3f', '%.3f']
+        savetxt(fname , data_to_save,
                 delimiter='\t', fmt=fmt)
+        
 
 
 
@@ -496,7 +502,8 @@ class tracker_nearest_neighbour(object):
             self.particles[tm] = []
             p_ = data[data[:,-1]==tm]
             for i in range(p_.shape[0]):
-                p = array([-1] + list(p_[i,[0,1,2,-1]]))
+                #p = array([-1] + list(p_[i,[0,1,2,-1]]))
+                p = array([-1] + list(p_[i,:]))
                 self.particles[tm].append(p)
     
         for k in self.particles.keys():
@@ -601,6 +608,10 @@ class tracker_nearest_neighbour(object):
         '''
         Will save the results after tracking is done.
         '''
-        fmt = ['%d', '%.3f', '%.3f', '%.3f', '%.3f']
-        savetxt(fname ,self.return_connected_particles(),
+        data_to_save = self.return_connected_particles()
+        fmt = ['%d', '%.3f', '%.3f', '%.3f']
+        for i in range(len(data_to_save[0])-6):
+            fmt.append('%d')
+        fmt += ['%.3f', '%.3f']
+        savetxt(fname , data_to_save,
                 delimiter='\t', fmt=fmt)
