@@ -39,11 +39,12 @@ class match_blob_files(object):
     
     
     def __init__(self, blob_fnames, img_system, RIO, voxel_size, max_blob_dist,
-                 max_err=1e9, reverse_eta_zeta = False):
+                 blobs=None, max_err=1e9, reverse_eta_zeta = False):
         '''
         blob_fname - a list of the file names containing the segmented blob
                      data. The list has to be sorted according the order of
-                     cameras in the img_system.
+                     cameras in the img_system. Note that this input is used
+                     only if the input blobs is None (which is hte default).
                      
         img_system - an instance of the img_system class with the calibrated
                      cameras.
@@ -59,6 +60,11 @@ class match_blob_files(object):
                         neighbours in the image space coordinates (namely, the
                         highest pemissible particle displacement in pixels).
                      
+        blobs - An alternative way to input the blobs. If None, this input
+                is ignored, and the blobs are taken from blob_fname. Otherwise,
+                blobs can be input here directely through a nested list. Each
+                sub-list holds all the blobs segmented at a certain camera.
+                        
         max_err - maximum acceptable uncertainty in particle position. If None,
                   (defult), than no bound is used.
                      
@@ -69,11 +75,20 @@ class match_blob_files(object):
                            are transposed (as happens, e.g., if using 
                            matplotlib.pyplot.imshow).
         '''
-        self.blobs = []
-        for fn in blob_fnames:
-            #self.blobs.append(loadtxt(fn))
-            self.blobs.append(array(read_csv(fn, sep='\t', header=None)))
-                     
+        
+        if blobs is None:
+            self.blobs = []
+            for fn in blob_fnames:
+                #self.blobs.append(loadtxt(fn))
+                self.blobs.append(array(read_csv(fn, sep='\t', header=None)))
+                
+        elif type(blobs)==list:
+            self.blobs = blobs
+            
+        else: 
+            raise ValueError('input blobs must be either None or a list')
+
+                 
         self.imsys = img_system
         self.RIO = RIO
         self.voxel_size = voxel_size
@@ -219,7 +234,26 @@ class match_blob_files(object):
         savetxt(fname, prticles_to_save, fmt=fmt, delimiter='\t')
         
             
-                
+    def return_particles(self):
+        '''will return the list of particles obtained'''
+        particles_to_return = []
+        Ncams = len(self.imsys.cameras)
+        
+        for p in self.particles:
+            rd = dict(p[3])
+            
+            p_ = [p[0], p[1], p[2]]
+            
+            for i in range(Ncams):
+                if i in list(rd.keys()):
+                    p_.append(rd[i][0])
+                else:
+                    p_.append(-1)
+            p_.append(p[4])
+            p_.append(p[5])
+            particles_to_return.append(p_)
+        
+        return particles_to_return
 
 
 

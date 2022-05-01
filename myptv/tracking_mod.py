@@ -9,7 +9,8 @@ Contains classes for tracking particles to form trajectories.
 
 """
 
-from numpy import loadtxt, array, savetxt
+from numpy import loadtxt, array, savetxt, mean
+from numpy import append as NPappend
 from scipy.spatial import KDTree
 
 
@@ -25,7 +26,8 @@ class tracker_four_frames(object):
     https://doi.org/10.1007/s00348-005-0068-7.
     '''
     
-    def __init__(self, fname, mean_flow = 0.0, d_max=1e10, dv_max=1e10):
+    def __init__(self, fname, mean_flow = 0.0, d_max=1e10, dv_max=1e10,
+                 particles = None):
         '''
         fname - string, path of the particles containing file to which tracking
                 should be performed.
@@ -40,6 +42,10 @@ class tracker_four_frames(object):
         dv_max - maximum allowable change in velocity for the two-frame 
                  velocity projection search. The radius around the projection
                  is therefore dv_max/dt (where dt = 1 frame^{-1})
+                 
+        particles - If this is None, the particles data is taken from fname.
+                    Otherwise, if this is a list of trajectories, they are 
+                    used instead and the fname variable is ignored.
         '''
         self.fname = fname
         self.U = mean_flow
@@ -48,7 +54,17 @@ class tracker_four_frames(object):
         
         self.particles = {}
         
-        data = loadtxt(self.fname)
+        
+        if particles is None:
+            data = loadtxt(self.fname)
+        
+        elif type(particles)==list:
+            data = array(particles)
+        
+        else:
+            raise ValueError('particle can only be None or a list of particles')
+        
+        
         self.times = list(set(data[:,-1]))
         
         for tm in self.times:
@@ -647,7 +663,8 @@ class score_optimizing_tracker():
     
     
     
-    def __init__(self, fname, mean_flow = 0.0, d_max=1e10, dv_max=1e10):
+    def __init__(self, fname, mean_flow = 0.0, d_max=1e10, dv_max=1e10,
+                 particles = None):
         '''
         fname - string, path of the particles containing file to which tracking
                 should be performed.
@@ -662,6 +679,10 @@ class score_optimizing_tracker():
         dv_max - maximum allowable change in velocity for the two-frame 
                  velocity projection search. The radius around the projection
                  is therefore dv_max/dt (where dt = 1 frame^{-1})
+                 
+        particles - If this is None, the particles data is taken from fname.
+                    Otherwise, if this is a list of trajectories, they are 
+                    used instead and the fname variable is ignored.
         '''
         self.fname = fname
         self.U = mean_flow
@@ -669,9 +690,17 @@ class score_optimizing_tracker():
         self.dv_max = dv_max
         
         
-        data = loadtxt(self.fname)
-        self.times = list(set(data[:,-1]))
+            
+        if particles is None:
+            data = loadtxt(self.fname)
         
+        elif type(particles)==list:
+            data = array(particles)
+        
+        else:
+            raise ValueError('particle can only be None or a list of particles')
+        
+        self.times = list(set(data[:,-1]))
         
         # particles is a dictionary where keys are frame numbers and values
         # are lists of particles in these frames.
@@ -681,13 +710,13 @@ class score_optimizing_tracker():
             self.particles[tm] = []
             p_ = data[data[:,-1]==tm]
             for i in range(p_.shape[0]):
-                p = array([-1]+ list(p_[i,[0,1,2,-1]]))
+                #p = array([-1]+ list(p_[i,[0,1,2,-1]]))
+                p = NPappend([-1], p_[i,:])
                 self.particles[tm].append(p)
-        
+                    
         # a dictionary of KDtrees based on the frame, so we dont have to make
         # then every time again.
         self.trees = {}
-        
         
         # candidate links is a dictionary that holds all the candidate links
         # that form trajectories. A link makes an admissible connection
@@ -906,7 +935,7 @@ class score_optimizing_tracker():
             # acceleration
             dV = V[1:,1:4] - V[:-1,1:4]
             
-            score_acceleration = 1.0 / np.mean(dV)
+            score_acceleration = 1.0 / mean(dV)
         
         else:
             score_acceleration = 0.0
