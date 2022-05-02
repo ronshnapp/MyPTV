@@ -9,8 +9,8 @@ calibration module for the cameras
 
 """
 
-from numpy import mean, sum, hstack, array
-
+from numpy import mean, sum, hstack, array, loadtxt
+from pandas import read_csv
 
 
 
@@ -182,11 +182,117 @@ class calibrate(object):
                 
         self.plot_proj()
         
-    
+        
         
 
+
+
+
+
+
+
+class calibrate_with_particles(object):
+    '''
+    A class used to refine the calibration using particles data. In short,
+    after the primary clibration is done, matching and tracking can be used
+    to obtain trajectories from the experimental data. Here, we can leverage
+    the trajectories obtained to minimize further the calibration error.
+    The assumption is that longer trajectories are considered more reliable 
+    as compared to shorter trajectories, so we use only "long" trajectories 
+    in this process.
+    '''
+    
+    def __init__(self, traj_filename, camera, cam_number, blobs_fname, 
+                 min_traj_len = 15, max_point_number = 400):
+        '''
+        input -
+        
+        traj_filename - the name of the file containing the trajectories from
+                        which the calibration points are taken.
+        
+        camera - an instance of the camera we wish to try and re-calibrate
+        
+        cam_number - int, >= 1; the number (index) of the camera to be
+                     calibrated. For example, if this is 1 then it takes
+                     the blobs from the 4th column of the trajectory file.
+        
+        blobs_fname - The name of the file that contains the segmented 
+                      particles' data.
+        
+        min_traj_len - only trajectories longer then this number will be used
+                       in the calibration
+                       
+        max_point_number - the maximum number of points that shall be taken
+                           to re-calibrate the camera. Note that too many 
+                           points might lead to long calculation times.
+        '''
+        
+        self.traj_fname = traj_filename
+        self.camera = camera
+        self.cam_number = cam_number
+        self.blobs_fname = blobs_fname
+        self.min_traj_len = min_traj_len
+        self.max_point_number = max_point_number
+        
+        # gathering points from trajectory file and matching them to blobs
+        self.fetch_points()
         
         
+    def fetch_points(self):
+        '''
+        This will fetch the calibration points from the trajectory file
+        '''
+        print('fetching data from trajectories and blobs file...')
+        
+        # load the trajectories and sort them in a dictionary according to id
+        fltr = lambda k,g: k!=-1 and len(g)>=self.min_traj_len
+        tr_data = read_csv(self.traj_fname, delimiter='\t', header=None)
+        self.trajs = dict([(k,array(g)) for k, g in tr_data.groupby(by=0) 
+                                                                if fltr(k,g)])
+
+        # load blobs an arrange in lists according to their frame
+        blob_data = read_csv(self.blobs_fname, delimiter='\t', header=None)
+        self.blobs = dict([(k,array(g)) for k, g in blob_data.groupby(by=5)])
+
+        # the index of the blobs column in the trajectories file
+        ind = self.cam_number + 3
+        
+        skip = int(self.min_traj_len/4)
+        
+        # extract the data from blobs and trajs dictionaries
+        all_valid_points = []
+        for k in self.trajs.keys():
+            if len(self.trajs[k])>=self.min_traj_len:
+                for p in self.trajs[k][::skip]:     # <--- taking only once some 
+                    blob_num = int(p[ind])     #      data points in each traj
+                    if blob_num==-1:continue
+                    frame = p[-1]
+                    err = p[-2]
+                    blob_coords = self.blobs[frame][blob_num][:2]
+                    
+                    point = p[1:4]
+                    
+                    #self.cal_points.append((point, blob_coords[::-1]))
+                    all_valid_points.append( (err,(point, blob_coords[::-1])) )
+        
+        
+        
+        # sort the points according to their triangulation error
+        #all_valid_points = sorted(all_valid_points, key=lambda x: x[0])
+        
+        # get the best N points into a final list
+        self.cal_points = [p[1] 
+                           for p in all_valid_points[:self.max_point_number]]
+
+        
+
+    def get_calibrate_instance(self):
+        
+        # initiating a calibrate object using this data
+        self.cal = calibrate(self.camera, 
+                             [p[0] for p in self.cal_points], 
+                             [p[1] for p in self.cal_points])
+        return self.cal
         
         
         

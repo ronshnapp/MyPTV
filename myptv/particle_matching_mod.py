@@ -154,19 +154,24 @@ class match_blob_files(object):
                 pd = mut.return_updated_particle_dict()
                 
                 
-            # for the first iteration, initiate search using the neighbouring
-            # blobs paradigm
-            if e==0 and len(frames)>1:
-                pd1 = self.get_particles_dic(frames[e+1])
-                itm = initiate_time_matching(self.imsys, pd, pd1, 
-                                             self.max_blob_dist, self.RIO, 
-                                             self.voxel_size, 
-                                             max_err = self.max_err)
-                itm.choose_blobs_with_neighbours()
-                itm.match_blobs_with_neighbours()
-                for p in itm.matched_particles:
-                    self.particles.append(p + [tm])
-                pd = itm.return_updated_particle_dict()
+# =============================================================================
+#            The initiation of matching with time has a bug. For now
+#            We comment it out, and will fix this in the future.
+#
+#             # for the first iteration, initiate search using the neighbouring
+#             # blobs paradigm
+#             if e==0 and len(frames)>1:
+#                 pd1 = self.get_particles_dic(frames[e+1])
+#                 itm = initiate_time_matching(self.imsys, pd, pd1, 
+#                                              self.max_blob_dist, self.RIO, 
+#                                              self.voxel_size, 
+#                                              max_err = self.max_err)
+#                 itm.choose_blobs_with_neighbours()
+#                 itm.match_blobs_with_neighbours()
+#                 for p in itm.matched_particles:
+#                     self.particles.append(p + [tm])
+#                 pd = itm.return_updated_particle_dict()
+# =============================================================================
                                 
             # match particles using the matching object
             M = matching(self.imsys, pd, self.RIO, self.voxel_size,
@@ -313,6 +318,9 @@ class matching(object):
         Given a ray, this will add the voxel through which it
         traverses into the list self.traversed_voxels .
         '''
+        if [ray[0], ray[1]] == [-1,-1]:
+            return
+        
         cam  = self.imsys.cameras[ray[2][0]]
         O = cam.O
         r = cam.get_r(ray[0], ray[1])
@@ -651,8 +659,9 @@ class matching_using_time(object):
             for blb in p_blobs:
                 ci,(rn, xy) = blb
                 cn = self.imsys.cameras[ci].name
-                new_pd[cn].remove(list(xy))
-                
+                #new_pd[cn].remove(list(xy))
+                ind = new_pd[cn].index(list(xy))
+                new_pd[cn][ind] = [-1,-1]
         return new_pd
                 
         
@@ -775,7 +784,9 @@ class initiate_time_matching(object):
             for blb in p_blobs:
                 ci,(rn, xy) = blb
                 cn = self.imsys.cameras[ci].name
-                updated_pd[cn].remove(list(xy))
+                #updated_pd[cn].remove(list(xy))
+                ind = updated_pd[cn].index(list(xy))
+                updated_pd[cn][ind] = [-1,-1]
                 
         return updated_pd
 
