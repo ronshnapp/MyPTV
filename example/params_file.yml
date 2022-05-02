@@ -43,6 +43,15 @@
     dv_max: 1.0
     save_name: trajectories
 
+- calibration_with_particles:
+    camera_name: cam1
+    resolution: 1280, 1024
+    traj_filename: './trajectories'
+    cam_number: 1 
+    blobs_fname: 'blobs_cam1'
+    min_traj_len: 10
+    max_point_number: 200
+
 - smoothing:
     trajectory_file: trajectories
     window_size: 5
