@@ -33,7 +33,7 @@
     ROI: 0.0, 70.0, 0.0, 70.0, -25.0, 15.0
     voxel_size: 10.0
     max_blob_distance: 1.0
-    max_err: 0.2
+    max_err: 0.25
     save_name: particles
 
 - tracking:
@@ -49,7 +49,7 @@
     traj_filename: './trajectories'
     cam_number: 1 
     blobs_fname: 'blobs_cam1'
-    min_traj_len: 10
+    min_traj_len: 4
     max_point_number: 200
 
 - smoothing:

@@ -276,9 +276,13 @@ class calibrate_with_particles(object):
                     all_valid_points.append( (err,(point, blob_coords[::-1])) )
         
         
+        if len(all_valid_points)==0:
+            msg1 = 'No trajectories were found. min_traj_len may be too high.'
+            raise ValueError(msg1)
+        
         
         # sort the points according to their triangulation error
-        #all_valid_points = sorted(all_valid_points, key=lambda x: x[0])
+        all_valid_points = sorted(all_valid_points, key=lambda x: x[0])
         
         # get the best N points into a final list
         self.cal_points = [p[1] 

@@ -51,6 +51,7 @@ class workflow(object):
         elif action != None:
             
             allowed_actions = ['calibration', 'calibration_point_gui', 
+                               'calibration_with_particles',
                               'match_target_file', 'segmentation', 'matching',
                               'tracking', 'smoothing', 'stitching']
             
@@ -313,13 +314,14 @@ class workflow(object):
         '''
         from myptv.imaging_mod import camera
         from myptv.calibrate_mod import calibrate_with_particles
-        from  matplotlib.pyplot import subplots
+        from  matplotlib.pyplot import subplots, show
         
         # fetch parameters from the file
         camera_name =  self.get_param('calibration_with_particles',
                                       'camera_name')
         resolution = self.get_param('calibration_with_particles',
-                                      'resolution')
+                             'resolution').split(',')
+        resolution = (float(resolution[0]), float(resolution[1]))
         traj_filename = self.get_param('calibration_with_particles',
                                       'traj_filename')
         cam_number = self.get_param('calibration_with_particles',
@@ -377,7 +379,7 @@ class workflow(object):
             if user == '4':
                 fig, ax = subplots()
                 cal.plot_proj(ax=ax)
-                
+                show()
             if user == '8':
                 print('\n', 'Saving results')
                 cam.save('.')
