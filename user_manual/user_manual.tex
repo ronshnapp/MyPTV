@@ -649,11 +649,50 @@ The tracking step is used to link particle in the lab space coordinates in time,
 		
 		\texttt{dv\_max} & the maximum allowable change in velocity in lab space coordinates per frame (e.g. mm/frame) \\
 		
-		\texttt{save\_name} & name of the file in which the results shall be saved; if \texttt{None} the results are not saved on the hard  \\
+		\texttt{save\_name} & name of the file in which the results shall be saved; if \texttt{None} the results are not saved on the drive\\
 		
 		\hline
 	\end{tabular}
 \end{table}
+
+
+
+
+
+\subsection{Calibration with particles}\label{sec:workflow_calibration_with_particles}
+
+After some trajectories have been obtained, we can refine the calibration of cameras by using this obtained data and re-run the calibration procedure with the measured particles. For more detailes see Sec.~\ref{sec:calibrate_with_particles_obj}. To start calibration with particles enter the command \texttt{calibration\_with\_particles} in the command line following the workflow command. Once this is done, a calibration sequence is initiated that uses the trajectory data.
+
+
+
+\begin{table}[!ht]
+	\centering
+	\caption{The \texttt{params\_file.yml} parameters for the calibration with particles step.}
+	\begin{tabular}{l m{10cm}}
+		\hline
+		Parameter & Description\\
+		\hline
+		
+		\texttt{traj\_filename} & the name of the file containing the trajectories from
+		which the calibration points are taken\\[.5em]
+		
+		\texttt{camera} & an instance of the camera we wish to try and re-calibrate\\[.5em]
+		
+		\texttt{cam\_number} & int, >= 1; the number (index) of the camera to be
+		calibrated. For example, to calibrate camera2, this should be set to 2\\[.5em]
+		
+		\texttt{blobs\_fname} & The name of the file that contains the segmented 
+		particles' data\\[.5em]
+		
+		\texttt{min\_traj\_len} & Only trajectories longer then this number will be used in the calibration\\[.5em]
+		
+		\texttt{max\_point\_number} & the maximum number of points that shall be taken to re-calibrate the camera. Note that too many points (say above 1000) might lead to long calculation times\\[.5em]
+		
+		\hline
+	\end{tabular}
+\end{table}
+
+
 
 
 
@@ -675,13 +714,13 @@ The smoothing step is used to smooth trajectories in time and to calculate the v
 		Parameter & Description\\
 		\hline
 		
-		\texttt{trajectory\_file} & file name of the trajectories file, namely the results of the tracking step \\
+		\texttt{trajectory\_file} & file name of the trajectories file, namely the results of the tracking step \\[.5em]
 		
-		\texttt{window\_size} & window size of the sliding polynomial \\
+		\texttt{window\_size} & window size of the sliding polynomial \\[.5em]
 		
-		\texttt{polynom\_order} & degree of the polynomial used in the smoothing \\
+		\texttt{polynom\_order} & degree of the polynomial used in the smoothing \\[.5em]
 		
-		\texttt{save\_name} & file name to save the results; if \texttt{None} the results will not be save on the disk \\
+		\texttt{save\_name} & file name to save the results; if \texttt{None} the results will not be save on the disk \\[.5em]
 		
 		\hline
 	\end{tabular}
@@ -815,11 +854,11 @@ The input for this class is:
 \section{Camera calibration - \texttt{calibrate\_mod.py}}
 
 
-The \texttt{calibrate\_mod.py} module, with the \texttt{calibrate} object, is used to find the camera calibration parameters. We calibrate each camera by taking an image of a \textit{calibration target} - a body with markings of known coordinates in lab space - and search for the camera parameters that minimize the distance between the projection of the known points in image space and the image taken with the camera. 
+The \texttt{calibrate\_mod.py} module, with the \texttt{calibrate} object, is used to find the camera calibration parameters. We calibrate each camera by taking an image of a \textit{calibration target} - a body with markings of known coordinates in lab space - and search for the camera parameters that minimize the distance between the projection of the known points in image space and the image taken with the camera. In addition to that, after a calibration is made and trajectories have been obtained, the calibration might be refined by using the \texttt{calibrate\_with\_particles} object; this is particularly helpfull in cases where some of the cameras slightly moved in between the taking the calibration images and the recording of the tracer particles.
 
 
 
-\subsection{The \texttt{calibrate} object}
+\subsection{The \texttt{calibrate} object}\label{sec:calibrate_obj}
 
 Used to solve for the camera parameters given an input list of image space and lab space coordinates. The inputs are:
 
@@ -848,6 +887,43 @@ To find an optimal calibration solution, we might need to run each function seve
 
 
 
+
+\subsection{The \texttt{calibrate\_with\_particles} object}\label{sec:calibrate_with_particles_obj}
+
+A class used to refine the calibration using particles data. In short,
+after the primary clibration is done, matching and tracking can be used
+to obtain trajectories from the experimental data. Assuming that this resulted in trajectories that were successfully measured, we can leverage
+the trajectories obtained to minimize further the calibration error. The refinement is done by assuming that the positions of particles along the resolved trajectories are "true" positions in lab-space, and thus, the blobs corresponding to these particles are used in a calibration sequence to minimize the calibration error. The assumption is that longer trajectories with low triangulation error are considered more reliable as compared to shorter trajectories, so we use only "long enough" trajectories 
+in this process.
+
+The inputs are:
+
+\begin{enumerate}
+	\item \texttt{traj\_filename} - the name of the file containing the trajectories from
+	which the calibration points are taken.
+	
+	\item \texttt{camera} - an instance of the camera we wish to try and re-calibrate
+	
+	\item \texttt{cam\_number} - int, >= 1; the number (index) of the camera to be
+	calibrated. For example, to calibrate camera2, this should be set to 2.
+	
+	\item \texttt{blobs\_fname} - The name of the file that contains the segmented 
+	particles' data.
+	
+	\item \texttt{min\_traj\_len} - Only trajectories longer then this number will be used in the calibration
+	
+	\item \texttt{max\_point\_number} - the maximum number of points that shall be taken
+	to re-calibrate the camera. Note that too many points (say above 1000) might lead to long calculation times. 
+\end{enumerate}
+
+
+The important functionalities are:
+
+\begin{enumerate}
+	
+	\item \texttt{get\_calibrate\_instance} - This function returns an instance of the \texttt{calibrate} object with the calibration points taken from the trajectory file. We then use this object to refine the calibration using the regular procedure (Sec.~\ref{sec:calibrate_obj}).
+
+\end{enumerate}
 
 
 
