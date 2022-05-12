@@ -11,7 +11,9 @@ contains a class for segmentation of circular particles
 from numpy import zeros, savetxt
 from scipy.ndimage import gaussian_filter
 from skimage.io import imread
-
+from numpy import ones
+from scipy.signal import convolve2d
+from scipy.ndimage.measurements import label, find_objects
 
 
 class particle_segmentation(object):
@@ -36,14 +38,12 @@ class particle_segmentation(object):
     def local_filter(self, image):
         '''returns a new image where the local mean neighbourhood of
         each pixel is subtracted.'''
-        from numpy import ones
-        from scipy.signal import convolve2d
         w = self.loc_filter
         window = ones((w, w)) / w**2
         local_mean = convolve2d(image, window, mode='same')
         new_im = image - local_mean
         new_im[new_im<0] = 0
-        new_im = new_im.astype('int')
+        new_im = new_im.astype('uint8')
         return new_im
         
         
@@ -53,57 +53,46 @@ class particle_segmentation(object):
         filter, and look for regions brighter than a global threshold 
         level.'''
         
+        # apply a Gussian blur
         if self.sigma is not None:
             blured = gaussian_filter(self.im, self.sigma)
         else:
             blured = self.im
             
+        # apply local mean subtraction
         if self.loc_filter is not None:
             filtered = self.local_filter(blured)
-            
         else:
             filtered = blured
-            
+        
+        # find local maxima and generate a binary image
         global_filt = filtered>self.th
-            
         bin_image = 1.0 * global_filt * self.mask
+        
         return bin_image 
+            
+        
+        # find local maxima and generate a binary image
+        #from scipy.ndimage import grey_dilation
+        #dilated = grey_dilation(filtered, size=self.p_size, mode='constant')
+        #bin_image = (filtered==dilated) * (filtered>self.th) * self.mask
+        
+        #return bin_image
     
 
     
     def blob_labeling(self, image):
         '''Will label connected areas (blobs) in a binary image and return
-        these blobs coordinates. The values of image are 0 for background and
+        their coordinates. The values of image are 0 for background and
         1 for foreground
         
         output - linked: a nested list of connected pixel indexes
         '''
+        # use scipy to label the blobs
+        self.labeled = label(image)[0]
+        locations = find_objects(self.labeled)
         
-        nrow, ncol = image.shape
-        
-        labeled = zeros((nrow, ncol))
-        linked = []
-        
-        for i in range(1, nrow-1):
-            for j in range(1, ncol-1):
-                
-                if image[i,j]==1 and labeled[i,j]==0:                    
-                    linked.append([(i,j)])
-                    labeled[i,j] = 1
-                    que = [(i,j)]
-                    
-                    for pixel in que:
-                        mn0, mx0 = max([0,pixel[0]-1]), min([nrow, pixel[0]+2])
-                        mn1, mx1 = max([0,pixel[1]-1]), min([ncol, pixel[1]+2])
-                        for i2 in range(mn0, mx0):
-                            for j2 in range(mn1, mx1):
-                                if i2==i and j2==j:continue
-                                if image[i2,j2]==1 and labeled[i2,j2]==0:
-                                    que.append((i2,j2))
-                                    linked[-1].append((i2,j2))
-                                    labeled[i2,j2]=1
-                        
-        return linked
+        return locations
     
     
     
@@ -124,30 +113,19 @@ class particle_segmentation(object):
         
         blobs = []
         
-        for i in range(len(self.blob_pixels)):
-            
-            X = 0.0
-            Y = 0.0
-            tot = 0.0
-            
-            for x,y in self.blob_pixels[i]:
-                
-                if tot == 0.0:
-                    xmin, xmax = x, x
-                    ymin, ymax = y, y
-                else:
-                    if x<xmin: xmin=x
-                    if x>xmax: xmax=x
-                    if y<ymin: ymin=y
-                    if y>ymax: ymax=y
-                
-                bxy = self.im[x,y]
-                X += x*bxy
-                Y += y*bxy
-                tot += bxy
-            center = [round(X/tot, ndigits=2), round(Y/tot, ndigits=2)]
-            box_size = [xmax-xmin+1, ymax-ymin+1]
-            area = len(self.blob_pixels[i])
+        from numpy import meshgrid
+        from numpy import sum as npsum
+        
+        stamp_y, stamp_x = meshgrid(range(self.im.shape[1]), 
+                                    range(self.im.shape[0]))
+        for loc in self.blob_pixels:
+            mask = 1.0*(self.labeled[loc]>0)
+            tot = npsum(self.im[loc] * mask)
+            X = npsum(stamp_x[loc] * self.im[loc] * mask) / tot
+            Y = npsum(stamp_y[loc] * self.im[loc] * mask) / tot
+            center = [round(X, ndigits=2), round(Y, ndigits=2)]
+            area = npsum(mask)
+            box_size = list(mask.shape)
             blobs.append( [center, box_size, area])
             
         self.blobs = blobs
@@ -217,8 +195,9 @@ class loop_segmentation(object):
     '''A class for looping over images in a library to segment particles
     and save the results in a file.'''
     
-    def __init__(self, dir_name, extension='.tif', N_img = None,
-                 sigma=1.0, threshold=10, mask=1.0, local_filter = 15,
+    def __init__(self, dir_name, extension='.tif',
+                 N_img = None, sigma=1.0, threshold=10, mask=1.0,
+                 local_filter = 15,
                  min_xsize=None, max_xsize=None,
                  min_ysize=None, max_ysize=None,
                  min_area=None, max_area=None):
@@ -271,7 +250,8 @@ class loop_segmentation(object):
             print('', end='\r')
             print(' frame: %d'%i, end='\r')
             im = imread(os.path.join(self.dir_name, self.image_files[i]))
-            ps = particle_segmentation(im, sigma=self.sigma, 
+            ps = particle_segmentation(im,
+                                       sigma=self.sigma, 
                                        threshold=self.th,
                                        local_filter=self.loc_filter,
                                        mask=self.mask,
