@@ -406,20 +406,27 @@ class workflow(object):
         local_filter = self.get_param('segmentation', 'local_filter')
         max_xsize = self.get_param('segmentation', 'max_xsize')
         max_ysize = self.get_param('segmentation', 'max_ysize')
-        max_area = self.get_param('segmentation', 'max_area')
+        max_mass = self.get_param('segmentation', 'max_mass')
         min_xsize = self.get_param('segmentation', 'min_xsize')
         min_ysize = self.get_param('segmentation', 'min_ysize')
-        min_area = self.get_param('segmentation', 'min_area')
+        min_mass = self.get_param('segmentation', 'min_mass')
         mask = self.get_param('segmentation', 'mask')
         plot_res = self.get_param('segmentation', 'plot_result')
         save_name = self.get_param('segmentation', 'save_name')
         ROI = self.get_param('segmentation', 'ROI')
         single_img_name = self.get_param('segmentation', 'single_image_name')
-        
+        method = self.get_param('segmentation', 'method')
+        particle_size = self.get_param('segmentation', 'particle_size')
         
         # reading preprepared mask
         if type(mask)==str:
             mask = imread(mask)
+        
+        if method not in ['dilation', 'labeling']:
+            raise ValueError('Method can be only "dilation" or "labeling"')
+        
+        if method=='dilation' and type(particle_size) != int:
+            raise ValueError('In dilation, particle_size can only be integer')
         
         # get the shape of the images
         allfiles = os.listdir(dirname)
@@ -440,6 +447,7 @@ class workflow(object):
         # segmenting the image if there are more than 1 frames
         if N_img is None or N_img>1:
             loopSegment = loop_segmentation(dirname, 
+                                            particle_size,
                                             extension=ext,
                                             N_img=N_img, 
                                             sigma=sigma, 
@@ -447,11 +455,12 @@ class workflow(object):
                                             local_filter=local_filter, 
                                             max_xsize=max_xsize, 
                                             max_ysize=max_ysize,
-                                            max_area=max_area,
+                                            max_mass=max_mass,
                                             min_xsize=min_xsize, 
                                             min_ysize=min_ysize,
-                                            min_area=min_area,
-                                            mask=mask)
+                                            min_mass=min_mass,
+                                            mask=mask,
+                                            method=method)
         
             loopSegment.segment_folder_images()
             
@@ -474,16 +483,18 @@ class workflow(object):
             
             print('\n','segmenting image: %s'%single_img_name)
             particleSegment = particle_segmentation(image0, 
+                                                    particle_size,
                                                     sigma=sigma, 
                                                     threshold=threshold, 
                                                     local_filter=local_filter, 
                                                     max_xsize=max_xsize, 
                                                     max_ysize=max_ysize,
-                                                    max_area=max_area,
+                                                    max_mass=max_mass,
                                                     min_xsize=min_xsize, 
                                                     min_ysize=min_ysize,
-                                                    min_area=min_area,
-                                                    mask=mask)
+                                                    min_mass=min_mass,
+                                                    mask=mask,
+                                                    method=method)
             particleSegment.get_blobs()
             particleSegment.apply_blobs_size_filter()
             

@@ -26,7 +26,7 @@ class particle_segmentation(object):
                  local_filter = 15,
                  min_xsize=None, max_xsize=None,
                  min_ysize=None, max_ysize=None,
-                 min_area=None, max_area=None,
+                 min_mass=None, max_mass=None,
                  method='dilation'):
         '''
         inputs - 
@@ -71,7 +71,7 @@ class particle_segmentation(object):
         self.th = threshold
         self.mask = mask
         self.bbox_limits = (min_xsize, max_xsize, min_ysize, max_ysize)
-        self.area_limits = (min_area, max_area)
+        self.mass_limits = (min_mass, max_mass)
         self.loc_filter = local_filter
         
         if method not in ['dilation', 'labeling']:
@@ -313,11 +313,11 @@ class particle_segmentation(object):
             fltr = lambda b: b[1][1] < self.bbox_limits[3]
             self.blobs = list(filter(fltr, self.blobs))
             
-        if self.area_limits[0] is not None:
-            fltr = lambda b: b[2] > self.area_limits[0]
+        if self.mass_limits[0] is not None:
+            fltr = lambda b: b[2] > self.mass_limits[0]
         
-        if self.area_limits[1] is not None:
-            fltr = lambda b: b[2] < self.area_limits[1]
+        if self.mass_limits[1] is not None:
+            fltr = lambda b: b[2] < self.mass_limits[1]
             
             
     def plot_blobs(self, vmin=None, vmax=None):
@@ -362,7 +362,7 @@ class loop_segmentation(object):
                  local_filter = 15,
                  min_xsize=None, max_xsize=None,
                  min_ysize=None, max_ysize=None,
-                 min_area=None, max_area=None,
+                 min_mass=None, max_mass=None,
                  method='dilation'):
         '''
         dir_name - string with the name of the directory that holds the 
@@ -384,7 +384,7 @@ class loop_segmentation(object):
         self.th = threshold
         self.mask = mask
         self.bbox_limits = (min_xsize, max_xsize, min_ysize, max_ysize)
-        self.area_limits = (min_area, max_area)
+        self.mass_limits = (min_mass, max_mass)
         self.loc_filter = local_filter
         self.method = method
     
@@ -425,8 +425,8 @@ class loop_segmentation(object):
                                        min_xsize=self.bbox_limits[0],
                                        max_ysize=self.bbox_limits[3],
                                        min_ysize=self.bbox_limits[2],
-                                       min_area=self.area_limits[0],
-                                       max_area=self.area_limits[1],
+                                       min_mass=self.mass_limits[0],
+                                       max_mass=self.mass_limits[1],
                                        method = self.method)
             ps.get_blobs()
             ps.apply_blobs_size_filter()

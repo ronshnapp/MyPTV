@@ -15,14 +15,16 @@
     ROI: 227, 1050, 156, 932
     plot_result: True
     threshold: 14.0
-    blur_sigma: 0.4 
-    local_filter: 20
-    min_xsize: 3.0
-    min_ysize: 3.0
-    min_area: 3.0
+    particle_size: 5
+    blur_sigma: None 
+    local_filter: None
+    min_xsize: 2.0
+    min_ysize: 2.0
+    min_mass: 20.0
     max_xsize: 10.0
     max_ysize: 10.0
-    max_area: 20.0
+    max_mass: None
+    method: dilation
     save_name: None
 
 - matching:
