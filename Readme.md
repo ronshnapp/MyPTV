@@ -1,5 +1,5 @@
 April 13, 2022
-Version: 0.3.0
+Version: 0.4.0
 
 # MyPTV
 
