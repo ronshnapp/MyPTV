@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2021.5.25)  3 MAY 2022 01:09
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2021.5.25)  15 MAY 2022 16:47
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -213,23 +213,6 @@ Package: natbib 2010/09/13 8.31b (PWD, AO)
 LaTeX Info: Redefining \cite on input line 694.
 \c@NAT@ctr=\count113
 )
-(/usr/share/texlive/texmf-dist/tex/latex/xcolor/xcolor.sty
-Package: xcolor 2016/05/11 v2.12 LaTeX color extensions (UK)
-
-(/usr/share/texlive/texmf-dist/tex/latex/graphics-cfg/color.cfg
-File: color.cfg 2016/01/02 v1.6 sample color configuration
-)
-Package xcolor Info: Driver file: pdftex.def on input line 225.
-Package xcolor Info: Model `cmy' substituted by `cmy0' on input line 1348.
-Package xcolor Info: Model `hsb' substituted by `rgb' on input line 1352.
-Package xcolor Info: Model `RGB' extended on input line 1364.
-Package xcolor Info: Model `HTML' substituted by `rgb' on input line 1366.
-Package xcolor Info: Model `Hsb' substituted by `hsb' on input line 1367.
-Package xcolor Info: Model `tHsb' substituted by `hsb' on input line 1368.
-Package xcolor Info: Model `HSB' substituted by `hsb' on input line 1369.
-Package xcolor Info: Model `Gray' substituted by `gray' on input line 1370.
-Package xcolor Info: Model `wave' substituted by `hsb' on input line 1371.
-)
 (/usr/share/texlive/texmf-dist/tex/latex/subfig/subfig.sty
 Package: subfig 2005/06/28 ver: 1.3 subfig package
 
@@ -257,6 +240,23 @@ Package caption3 Info: TeX engine: e-TeX on input line 67.
 \c@lotdepth=\count120
 \sf@top=\skip53
 \sf@bottom=\skip54
+)
+(/usr/share/texlive/texmf-dist/tex/latex/xcolor/xcolor.sty
+Package: xcolor 2016/05/11 v2.12 LaTeX color extensions (UK)
+
+(/usr/share/texlive/texmf-dist/tex/latex/graphics-cfg/color.cfg
+File: color.cfg 2016/01/02 v1.6 sample color configuration
+)
+Package xcolor Info: Driver file: pdftex.def on input line 225.
+Package xcolor Info: Model `cmy' substituted by `cmy0' on input line 1348.
+Package xcolor Info: Model `hsb' substituted by `rgb' on input line 1352.
+Package xcolor Info: Model `RGB' extended on input line 1364.
+Package xcolor Info: Model `HTML' substituted by `rgb' on input line 1366.
+Package xcolor Info: Model `Hsb' substituted by `hsb' on input line 1367.
+Package xcolor Info: Model `tHsb' substituted by `hsb' on input line 1368.
+Package xcolor Info: Model `HSB' substituted by `hsb' on input line 1369.
+Package xcolor Info: Model `Gray' substituted by `gray' on input line 1370.
+Package xcolor Info: Model `wave' substituted by `hsb' on input line 1371.
 )
 (/usr/share/texlive/texmf-dist/tex/latex/caption/caption.sty
 Package: caption 2016/02/21 v3.3-144 Customizing captions (AR)
@@ -371,25 +371,25 @@ Package uniquecounter Info: New unique counter `rerunfilecheck' on input line 2
 )
 \Hy@SectionHShift=\skip55
 )
-Package hyperref Info: Option `colorlinks' set `true' on input line 29.
+Package hyperref Info: Option `colorlinks' set `true' on input line 33.
 
 (./user_manual.aux)
 \openout1 = `user_manual.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 41.
-LaTeX Font Info:    ... okay on input line 41.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 41.
-LaTeX Font Info:    ... okay on input line 41.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 41.
-LaTeX Font Info:    ... okay on input line 41.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 41.
-LaTeX Font Info:    ... okay on input line 41.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 41.
-LaTeX Font Info:    ... okay on input line 41.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 41.
-LaTeX Font Info:    ... okay on input line 41.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 41.
-LaTeX Font Info:    ... okay on input line 41.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 45.
+LaTeX Font Info:    ... okay on input line 45.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 45.
+LaTeX Font Info:    ... okay on input line 45.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 45.
+LaTeX Font Info:    ... okay on input line 45.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 45.
+LaTeX Font Info:    ... okay on input line 45.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 45.
+LaTeX Font Info:    ... okay on input line 45.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 45.
+LaTeX Font Info:    ... okay on input line 45.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 45.
+LaTeX Font Info:    ... okay on input line 45.
 
 isodate: babel.sty has been loaded
 *geometry* driver: auto-detecting
@@ -461,7 +461,7 @@ Package caption Info: subfig package v1.3 is loaded.
 Package caption Info: hyperref package is loaded.
 Package caption Info: End \AtBeginDocument code.
 \AtBeginShipoutBox=\box29
-Package hyperref Info: Link coloring ON on input line 41.
+Package hyperref Info: Link coloring ON on input line 45.
 
 (/usr/share/texlive/texmf-dist/tex/latex/hyperref/nameref.sty
 Package: nameref 2016/05/21 v2.44 Cross-referencing by name of section
@@ -471,20 +471,20 @@ Package: gettitlestring 2016/05/16 v1.5 Cleanup title references (HO)
 )
 \c@section@level=\count138
 )
-LaTeX Info: Redefining \ref on input line 41.
-LaTeX Info: Redefining \pageref on input line 41.
-LaTeX Info: Redefining \nameref on input line 41.
+LaTeX Info: Redefining \ref on input line 45.
+LaTeX Info: Redefining \pageref on input line 45.
+LaTeX Info: Redefining \nameref on input line 45.
 
 (./user_manual.out) (./user_manual.out)
 \@outlinefile=\write3
 \openout3 = `user_manual.out'.
 
-LaTeX Font Info:    Try loading font information for U+msa on input line 48.
+LaTeX Font Info:    Try loading font information for U+msa on input line 52.
 
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Try loading font information for U+msb on input line 48.
+LaTeX Font Info:    Try loading font information for U+msb on input line 52.
 
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
@@ -492,9 +492,9 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 <./figs/traj_image.jpg, id=172, 559.8516pt x 465.4188pt>
 File: ./figs/traj_image.jpg Graphic file (type jpg)
 <use ./figs/traj_image.jpg>
-Package pdftex.def Info: ./figs/traj_image.jpg  used on input line 53.
+Package pdftex.def Info: ./figs/traj_image.jpg  used on input line 57.
 (pdftex.def)             Requested size: 284.52756pt x 236.53664pt.
-LaTeX Font Info:    Try loading font information for T1+cmtt on input line 62.
+LaTeX Font Info:    Try loading font information for T1+cmtt on input line 66.
 
 (/usr/share/texlive/texmf-dist/tex/latex/base/t1cmtt.fd
 File: t1cmtt.fd 2014/09/29 v2.5h Standard LaTeX font definitions
@@ -513,24 +513,24 @@ LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <10> not available
 <./figs/3D_PTV_acquisition.pdf, id=240, 285.7208pt x 142.99469pt>
 File: ./figs/3D_PTV_acquisition.pdf Graphic file (type pdf)
 <use ./figs/3D_PTV_acquisition.pdf>
-Package pdftex.def Info: ./figs/3D_PTV_acquisition.pdf  used on input line 101.
+Package pdftex.def Info: ./figs/3D_PTV_acquisition.pdf  used on input line 105.
 
 (pdftex.def)             Requested size: 184.9429pt x 92.55705pt.
 <./figs/pinhole_model.pdf, id=241, 305.83075pt x 132.51534pt>
 File: ./figs/pinhole_model.pdf Graphic file (type pdf)
 <use ./figs/pinhole_model.pdf>
-Package pdftex.def Info: ./figs/pinhole_model.pdf  used on input line 105.
+Package pdftex.def Info: ./figs/pinhole_model.pdf  used on input line 109.
 (pdftex.def)             Requested size: 184.9429pt x 80.1346pt.
 <./figs/steps.pdf, id=243, 351.73837pt x 150.82877pt>
 File: ./figs/steps.pdf Graphic file (type pdf)
 <use ./figs/steps.pdf>
-Package pdftex.def Info: ./figs/steps.pdf  used on input line 118.
+Package pdftex.def Info: ./figs/steps.pdf  used on input line 122.
 (pdftex.def)             Requested size: 284.52756pt x 122.01411pt.
 pdfTeX warning (ext4): destination with the same identifier (name{page.1}) has 
 been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.134 \begin{equation}
+l.138 \begin{equation}
                        [1 <./figs/3D_PTV_acquisition.pdf> <./figs/pinhole_model
 .pdf
 
@@ -546,15 +546,15 @@ ple pdfs with page group included in a single page
 <./figs/Calibration_steps.pdf, id=312, 449.83809pt x 188.95425pt>
 File: ./figs/Calibration_steps.pdf Graphic file (type pdf)
 <use ./figs/Calibration_steps.pdf>
-Package pdftex.def Info: ./figs/Calibration_steps.pdf  used on input line 290.
+Package pdftex.def Info: ./figs/Calibration_steps.pdf  used on input line 294.
 (pdftex.def)             Requested size: 284.52756pt x 119.52042pt.
 
-Overfull \hbox (2.45674pt too wide) in paragraph at lines 305--322
+Overfull \hbox (2.45674pt too wide) in paragraph at lines 309--326
  [][] 
  []
 
 [4 <./figs/Calibration_steps.pdf>]
-Overfull \hbox (3.71152pt too wide) in paragraph at lines 341--342
+Overfull \hbox (3.71152pt too wide) in paragraph at lines 345--346
 \T1/cmr/m/n/10 the cal-i-bra-tion se-quence. To start the se-quence en-ter \T1/
 cmtt/m/n/10 python workflow.py params_file.yml
  []
@@ -562,119 +562,127 @@ cmtt/m/n/10 python workflow.py params_file.yml
 <./figs/Cam_pos_examples.pdf, id=342, 411.68683pt x 156.09958pt>
 File: ./figs/Cam_pos_examples.pdf Graphic file (type pdf)
 <use ./figs/Cam_pos_examples.pdf>
-Package pdftex.def Info: ./figs/Cam_pos_examples.pdf  used on input line 362.
+Package pdftex.def Info: ./figs/Cam_pos_examples.pdf  used on input line 366.
 (pdftex.def)             Requested size: 426.79135pt x 161.83713pt.
 <./figs/Cal_point_GUI.pdf, id=343, 403.6381pt x 289.27736pt>
 File: ./figs/Cal_point_GUI.pdf Graphic file (type pdf)
 <use ./figs/Cal_point_GUI.pdf>
-Package pdftex.def Info: ./figs/Cal_point_GUI.pdf  used on input line 370.
+Package pdftex.def Info: ./figs/Cal_point_GUI.pdf  used on input line 374.
 (pdftex.def)             Requested size: 426.79135pt x 305.87775pt.
-[5 <./figs/Cam_pos_examples.pdf>] [6 <./figs/Cal_point_GUI.pdf>]
-<./figs/target_file.pdf, id=385, 404.7084pt x 179.83281pt>
-File: ./figs/target_file.pdf Graphic file (type pdf)
-<use ./figs/target_file.pdf>
-Package pdftex.def Info: ./figs/target_file.pdf  used on input line 406.
-(pdftex.def)             Requested size: 284.52756pt x 126.43639pt.
-<./figs/cal_point_file.pdf, id=386, 354.32378pt x 277.69666pt>
+<./figs/cal_point_file.pdf, id=344, 354.32378pt x 277.69666pt>
 File: ./figs/cal_point_file.pdf Graphic file (type pdf)
 <use ./figs/cal_point_file.pdf>
-Package pdftex.def Info: ./figs/cal_point_file.pdf  used on input line 414.
+Package pdftex.def Info: ./figs/cal_point_file.pdf  used on input line 384.
 (pdftex.def)             Requested size: 284.52756pt x 223.00084pt.
-<./figs/match_target_file.jpeg, id=387, 534.0753pt x 469.0323pt>
+<./figs/target_file.pdf, id=345, 404.7084pt x 179.83281pt>
+File: ./figs/target_file.pdf Graphic file (type pdf)
+<use ./figs/target_file.pdf>
+Package pdftex.def Info: ./figs/target_file.pdf  used on input line 387.
+(pdftex.def)             Requested size: 256.0748pt x 113.79192pt.
+<./figs/match_target_file.jpeg, id=346, 534.0753pt x 469.0323pt>
 File: ./figs/match_target_file.jpeg Graphic file (type jpg)
 <use ./figs/match_target_file.jpeg>
-Package pdftex.def Info: ./figs/match_target_file.jpeg  used on input line 422.
+Package pdftex.def Info: ./figs/match_target_file.jpeg  used on input line 390.
 
-(pdftex.def)             Requested size: 227.62204pt x 199.90506pt.
-<./figs/cal_image.jpg, id=390, 351.3125pt x 306.14375pt>
+(pdftex.def)             Requested size: 170.71652pt x 149.92879pt.
+
+Overfull \hbox (6.66501pt too wide) in paragraph at lines 387--392
+ [][][][] 
+ []
+
+[5 <./figs/Cam_pos_examples.pdf>] [6 <./figs/Cal_point_GUI.pdf>] [7 <./figs/cal
+_point_file.pdf> <./figs/target_file.pdf
+
+pdfTeX warning: /usr/bin/pdflatex (file ./figs/target_file.pdf): PDF inclusion:
+ multiple pdfs with page group included in a single page
+> <./figs/match_target_file.jpeg>]
+<./figs/cal_image.jpg, id=412, 351.3125pt x 306.14375pt>
 File: ./figs/cal_image.jpg Graphic file (type jpg)
 <use ./figs/cal_image.jpg>
-Package pdftex.def Info: ./figs/cal_image.jpg  used on input line 506.
-(pdftex.def)             Requested size: 170.71652pt x 148.76915pt.
-<./figs/cal_error.pdf, id=391, 550.58505pt x 503.26839pt>
+Package pdftex.def Info: ./figs/cal_image.jpg  used on input line 508.
+(pdftex.def)             Requested size: 195.90276pt x 170.71652pt.
+<./figs/cal_error.pdf, id=413, 550.58505pt x 503.26839pt>
 File: ./figs/cal_error.pdf Graphic file (type pdf)
 <use ./figs/cal_error.pdf>
-Package pdftex.def Info: ./figs/cal_error.pdf  used on input line 513.
-(pdftex.def)             Requested size: 170.71652pt x 156.0423pt.
- [7 <./figs/target_file.pdf>] [8 <./figs/cal_point_file.pdf> <./figs/match_targ
-et_file.jpeg>]
-[9 <./figs/cal_image.jpg> <./figs/cal_error.pdf>]
-Overfull \hbox (10.33026pt too wide) in paragraph at lines 530--531
+Package pdftex.def Info: ./figs/cal_error.pdf  used on input line 512.
+(pdftex.def)             Requested size: 186.75957pt x 170.71652pt.
+ [8 <./figs/cal_image.jpg> <./figs/cal_error.pdf>]
+Overfull \hbox (10.33026pt too wide) in paragraph at lines 529--530
 \T1/cmtt/m/n/10 images_folder\T1/cmr/m/n/10 ), and save the re-sults in a text 
 file by set-ting \T1/cmtt/m/n/10 save_name: /file/name/to/use 
  []
 
-[10] [11] [12]
+[9] [10] [11] [12]
 LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <14.4> not available
-(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 772.
+(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 798.
 LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <12> not available
-(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 779.
-<./figs/camera_files.pdf, id=461, 508.10204pt x 141.02348pt>
+(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 805.
+<./figs/camera_files.pdf, id=465, 508.10204pt x 141.02348pt>
 File: ./figs/camera_files.pdf Graphic file (type pdf)
 <use ./figs/camera_files.pdf>
-Package pdftex.def Info: ./figs/camera_files.pdf  used on input line 809.
+Package pdftex.def Info: ./figs/camera_files.pdf  used on input line 835.
 (pdftex.def)             Requested size: 426.79135pt x 118.45676pt.
  [13
 
  <./figs/camera_files.pdf>]
-Overfull \hbox (1.44354pt too wide) in paragraph at lines 879--880
+Overfull \hbox (1.44354pt too wide) in paragraph at lines 905--906
 []\T1/cmtt/m/n/10 fineCalibration(maxiter=500) \T1/cmr/m/n/10 - This func-tion 
 will solve for the co-ef-fi-cients of the quadratic
  []
 
 [14] [15]
-<./figs/blob_file.pdf, id=529, 223.09995pt x 155.33533pt>
+<./figs/blob_file.pdf, id=534, 223.10614pt x 155.32921pt>
 File: ./figs/blob_file.pdf Graphic file (type pdf)
 <use ./figs/blob_file.pdf>
-Package pdftex.def Info: ./figs/blob_file.pdf  used on input line 986.
-(pdftex.def)             Requested size: 284.52756pt x 198.10797pt.
+Package pdftex.def Info: ./figs/blob_file.pdf  used on input line 1014.
+(pdftex.def)             Requested size: 284.52756pt x 198.10016pt.
  [16 <./figs/blob_file.pdf>]
-<./figs/particle_file.pdf, id=554, 390.14703pt x 291.52518pt>
+<./figs/particle_file.pdf, id=567, 390.14703pt x 291.52518pt>
 File: ./figs/particle_file.pdf Graphic file (type pdf)
 <use ./figs/particle_file.pdf>
-Package pdftex.def Info: ./figs/particle_file.pdf  used on input line 1038.
+Package pdftex.def Info: ./figs/particle_file.pdf  used on input line 1066.
 (pdftex.def)             Requested size: 341.43306pt x 255.13727pt.
 
-Overfull \hbox (18.38263pt too wide) in paragraph at lines 1047--1048
+Overfull \hbox (18.38263pt too wide) in paragraph at lines 1075--1076
 \T1/cmr/m/n/10 we run the rel-e-vant func-tions: \T1/cmtt/m/n/10 get_voxel_dict
 ionary() $\OMS/cmsy/m/n/10 !$ \T1/cmtt/m/n/10 list_candidates() $\OMS/cmsy/m/n/
 10 !$ \T1/cmtt/m/n/10 get_particles()\T1/cmr/m/n/10 ,
  []
 
 [17] [18 <./figs/particle_file.pdf>]
-<./figs/trajectory_files.pdf, id=591, 470.98941pt x 297.17282pt>
+<./figs/trajectory_files.pdf, id=603, 470.98941pt x 297.17282pt>
 File: ./figs/trajectory_files.pdf Graphic file (type pdf)
 <use ./figs/trajectory_files.pdf>
-Package pdftex.def Info: ./figs/trajectory_files.pdf  used on input line 1106.
+Package pdftex.def Info: ./figs/trajectory_files.pdf  used on input line 1134.
 (pdftex.def)             Requested size: 284.52756pt x 179.52937pt.
  [19 <./figs/trajectory_files.pdf>]
-<./figs/smoothed_trajfile.pdf, id=615, 514.2885pt x 471.065pt>
+<./figs/smoothed_trajfile.pdf, id=628, 514.2885pt x 471.065pt>
 File: ./figs/smoothed_trajfile.pdf Graphic file (type pdf)
 <use ./figs/smoothed_trajfile.pdf>
-Package pdftex.def Info: ./figs/smoothed_trajfile.pdf  used on input line 1152.
+Package pdftex.def Info: ./figs/smoothed_trajfile.pdf  used on input line 1180.
 
 (pdftex.def)             Requested size: 341.43306pt x 312.73677pt.
 
 [20 <./figs/smoothed_trajfile.pdf>] (./user_manual.bbl)
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 1204.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 1232.
  [21]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 1204.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 1232.
  (./user_manual.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 1204.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 1204.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 1232.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 1232.
 
 Package rerunfilecheck Info: File `user_manual.out' has not changed.
 (rerunfilecheck)             Checksum: 9A4D44832F094F173A1E46A2FCDB15BC;3167.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 1204.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 1232.
  ) 
 Here is how much of TeX's memory you used:
- 9703 strings out of 494847
- 141149 string characters out of 6179080
- 252552 words of memory out of 5000000
- 12690 multiletter control sequences out of 15000+600000
+ 9715 strings out of 494847
+ 141323 string characters out of 6179080
+ 259839 words of memory out of 5000000
+ 12697 multiletter control sequences out of 15000+600000
  20386 words of font info for 60 fonts, out of 8000000 for 9000
  59 hyphenation exceptions out of 8191
- 36i,13n,49p,1104b,421s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 36i,13n,49p,1104b,540s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/usr/share/texmf/fonts/enc/dvips/cm-super/cm-super-t1.enc}</usr/share/texliv
 e/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></usr/share/texlive/texm
 f-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/share/texlive/texmf-dist
@@ -693,10 +701,10 @@ fb></usr/share/texmf/fonts/type1/public/cm-super/sfrm1728.pfb></usr/share/texmf
 cm-super/sftt0900.pfb></usr/share/texmf/fonts/type1/public/cm-super/sftt1000.pf
 b></usr/share/texmf/fonts/type1/public/cm-super/sftt1200.pfb></usr/share/texmf/
 fonts/type1/public/cm-super/sftt1440.pfb>
-Output written on user_manual.pdf (23 pages, 2922686 bytes).
+Output written on user_manual.pdf (23 pages, 2939128 bytes).
 PDF statistics:
- 754 PDF objects out of 1000 (max. 8388607)
- 652 compressed objects within 7 object streams
- 175 named destinations out of 1000 (max. 500000)
+ 769 PDF objects out of 1000 (max. 8388607)
+ 665 compressed objects within 7 object streams
+ 181 named destinations out of 1000 (max. 500000)
  422 words of extra memory for PDF output out of 10000 (max. 10000000)
 

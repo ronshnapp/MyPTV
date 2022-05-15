@@ -14,9 +14,13 @@
 %\usepackage{cite}
 \usepackage{array}
 \usepackage{natbib}
+\usepackage[caption=false]{subfig}
 
 
 \usepackage{xcolor}
+
+\definecolor{bcolor}{rgb}{0.95,0.95,1.0}
+
 \usepackage[caption=false]{subfig}
 \usepackage{caption}
 %\usepackage{orcidlink}
@@ -57,7 +61,7 @@
 
 \begin{minipage}{10cm}
 	{\small 
-	Vesrion: 0.3.0 \\
+	Vesrion: 0.4.0 \\
 	Last updated: \today \\
 	Github repository: \url{https://github.com/ronshnapp/MyPTV} \\
 	Contac: ronshnapp@gmail.com}
@@ -372,6 +376,22 @@ This concludes the initial calibration step.
 \end{figure}
 
 
+\begin{figure}[!ht]
+	\centering
+	%
+	\subfloat[]{ \label{fig:calpointfile}
+		\includegraphics[width=10cm]{cal_point_file.pdf}
+	}\\
+	%
+	\subfloat[]{\label{fig:target_file}
+		\includegraphics[width=9cm]{target_file.pdf}}
+	%
+	\subfloat[]{\label{fig:match_target_file}
+		\includegraphics[width=6.0cm]{match_target_file.jpeg}}
+	%
+	\caption{(a) Format of the target file, which lists the lab-space coordinates of the calibration target as tab-separated values. The order at which points are given is not relevant. (b) An example of a text file holding the calibration point data. (c) The results of matching a target file points (blue circles) and the segmented blobs (red crosses). Here, we know that the match is correct because each cross overlays a circle. In location where circles are not overlaid by a cross, the segmentation did not recognize a calibration target; having such missing points may slightly reduce the quality of the calibration but it is not critical for the target file matching.}
+\end{figure}
+
 
 
 \subsubsection{Final calibraiton}
@@ -401,27 +421,7 @@ For the final calibration, follow these steps:
 Congratulations, this step completes the calibration process. 
 
 
-\begin{figure}[!ht]
-	\centering
-	\includegraphics[width=10cm]{target_file.pdf}
-	\caption{Format of the target file, which lists the lab-space coordinates of the calibration target as tab-separated values. The order at which points are given is not relevant. \label{fig:target_file}}
-\end{figure}
 
-
-
-\begin{figure}
-	\centering
-	\includegraphics[width=10cm]{cal_point_file.pdf}
-	\caption{An example of a text file holding the calibration point data. \label{fig:calpointfile}}
-\end{figure}
-
-
-
-\begin{figure}
-	\centering
-	\includegraphics[width=8cm]{match_target_file.jpeg}
-	\caption{The results of matching a target file points (blue circles) and the segmented blobs (red crosses). Here, we know that the match is correct because each cross overlays a circle. In location where circles are not overlaid by a cross, the segmentation did not recognize a calibration target; having such missing points may slightly reduce the quality of the calibration but it is not critical for the target file matching. \label{fig:match_target_file}}
-\end{figure}
 
 
 
@@ -503,17 +503,16 @@ Congratulations, this step completes the calibration process.
 
 \begin{figure}
 	\centering
-	\includegraphics[width=6cm]{cal_image.jpg}
-	\caption{An example of a calibration image. The points on the target have known lab space coordinates. Not also that the points are distributed over several plains (3 different $z$ values in this case). \label{fig:cal_img}}
+	%
+	\subfloat[]{\label{fig:cal_img}
+		\includegraphics[height=6cm]{cal_image.jpg}}
+	\hfill
+	%
+	\subfloat[]{\label{fig:cal_err}
+		\includegraphics[height=6cm]{cal_error.pdf}}
+	%
+	\caption{(a) An example of a calibration image. The points on the target have known lab space coordinates. Not also that the points are distributed over several plains (3 different $z$ values in this case). (b) An example plot of a calibration error estimation. The red crosses represent the known positions of the calibration points given in the target file, and the black circles mark the positions of the stereo-matched segmented calibration points. In this case, the root mean square of the static calibration error was 84$\mu m$.}
 \end{figure}
-
-
-\begin{figure}
-	\centering
-	\includegraphics[width=6cm]{cal_error.pdf}
-	\caption{An example plot of a calibration error estimation. The red crosses represent the known positions of the calibration points given in the target file, and the black circles mark the positions of the stereo-matched segmented calibration points. In this case, the root mean square of the static calibration error was 84$\mu m$. \label{fig:cal_err}}
-\end{figure}
-
 
 
 
@@ -522,18 +521,42 @@ Congratulations, this step completes the calibration process.
 \subsection{Segmentation}\label{sec:workflow_segment}
 
 
-In this step we extract the particles' image-space coordinates in the images and save the coordinates in dedicated files. Use the \texttt{workflow.py} script with the \texttt{segmentation} command to start the process. 
+In this step we extract the particles' image-space coordinates from the images and save the coordinates in dedicated files. Use the \texttt{workflow.py} script with the \texttt{segmentation} command to start the process:
 
 \begin{enumerate}
-	\item We perform the segmentation first on a single image by specifying \texttt{Number\_of\_images: 1}, and giving an image name with \texttt{single\_image\_name}. We then tune the segmentation parameters (e.g. \texttt{ROI}, \texttt{threshold}, \texttt{blur\_sigma}, etc.) to obtain optimal results (optionally repeat over several more images to ensure the results are satisfactory). To view the results, use \texttt{plot\_result: True}, and make sure the results are not saved by using \texttt{save\_name: None}. 
+	\item We perform the segmentation first on a single image by specifying \texttt{Number\_of\_images: 1}, and giving an image name with \texttt{single\_image\_name}. We then tune the segmentation parameters and the image processing filters used (e.g. \texttt{ROI}, \texttt{threshold}, \texttt{blur\_sigma}, \texttt{method} etc; the full list is given in Table~\ref{tab:segment_params}) to obtain optimal results; optionally repeat over several more images to ensure the results are satisfactory. To view the segmented particles over the image, use \texttt{plot\_result: True}, and make sure the results are not saved by using \texttt{save\_name: None}. 
 	
 	\item Once the parameters are determined, we set \texttt{Number\_of\_images: None}, and run the segmentation workflow again. This will then loop over all the images in the given folder (under \texttt{images\_folder}), and save the results in a text file by setting \texttt{save\_name: /file/name/to/use}
 \end{enumerate}
 
 
+\vspace{.5cm}
+
+\begin{center}
+	
+\fcolorbox{white}{bcolor}{
+	\begin{minipage}{0.95\textwidth}
+		\textbf{How segmentation is performed:} Segmentation in MyPTV is performed in one of two methods: \textit{labeling}, or \textit{dilation}. 
+		
+		\begin{enumerate}
+			\item In the labeling method, we first choose all pixels in an image whose grey value is higher than a given threshold. Then, such pixels that are touching each other are considered to be "blobs", so we group them together. For each blob, we calculate a \textit{center of mass}, being the grey value weighted average of the blob, a \textit{bounding box} size, and a \textit{mass}, being the sum of grey values of the blobs' pixels.
+			
+			\item In the dilation method, we are looking for pixels that their grey value is higher than that of all their neghbours within a box of a given size (\texttt{particle\_size}), and thet their grey value is higher than a given threshold. After that, all the neighbouring pixels inside the particle size box are considered to be a blob. We then calculate the center of mass of the blob to achieve a better estimation of its position, thus redifining the blob. This process is iterated a maxinum of 3 times untill convergence is obtained. Finally, we calculate the same blob's \textit{center of mass}, \textit{bounding box} size, \textit{mass}.
+		\end{enumerate}
+		
+		To imrove the results of segmenting over non-ideal images, MyPTV can be set to apply imae processing algorithms betfore the blob extraction: a gaussian blur filter, and local mean subtraction filter, and a mask. The first two filters mmay increase the computational time, however they may be necessary depending on the experimental conditions.
+		  
+	\end{minipage}
+}
+
+\end{center}
+
+
+
+
 \begin{table}[!ht]
 	\centering
-	\caption{The \texttt{params\_file.yml} parameters for the segmentation step. All paths to files are relative to the \texttt{workflow.py} script.}
+	\caption{The \texttt{params\_file.yml} parameters for the segmentation step. All paths to files are relative to the \texttt{workflow.py} script. \label{tab:segment_params}}
 	\begin{tabular}{l m{10cm}}
 		\hline
 		Parameter & Description\\
@@ -565,16 +588,19 @@ In this step we extract the particles' image-space coordinates in the images and
 		
 		\texttt{min\_ysize} & minimum particle size (pixels) in $y$ direction \\[.3em]
 		
-		\texttt{min\_area} & minimum particle area (pixels$^2$)\\[.3em]
+		\texttt{min\_mass} & minimum particle mass (mass is the sum of pixel grey values)\\[.3em]
 		
 		\texttt{max\_xsize} & maximum particle size (pixels) in $x$ direction \\[.3em]
 		
 		\texttt{max\_ysize} & maximum particle size (pixels) in $y$ direction \\[.3em]
 		
-		\texttt{max\_area} & maximum particle area (pixels$^2$) \\[.3em]
+		\texttt{max\_mass} & maximum particle area (mass is the sum of pixel grey values) \\[.3em]
 
-		\texttt{plot\_result} & if \texttt{False} will not plot the results; if \texttt{True} the results will be plotted \\[.3em]
-
+		\texttt{plot\_result} & if \texttt{True} the segmented particles will be plotted over the processed image (after applying blur, local mean subtraction and masking); if \texttt{False} will not plot the results \\[.3em]
+		
+		\texttt{method} & ihe name of the method used for segmenting the blobs; can be either 'labeling' or 'dilation' \\
+		
+		\texttt{particle\_size} & in the 'dilation' method, this gives the diameter of blobs in the image (an integer number of pixels); this parameter is not used when method is set to 'labeling' \\
 		
 		\texttt{save\_name} & if \texttt{None} the results will not be saved in a file; if \texttt{path/to/file} will save the results in the given file name \\
 		
@@ -948,7 +974,9 @@ Used to segment particles in a given image. This class is used internally to ite
 	\item \texttt{threshold=10} - the global filter's threshold brightness value (pixels with brightness higher than this number are considered foreground) 
 	\item \texttt{mask=1.0} - A mask matrix can be used to specify rigions of interest within the image
 	\item \texttt{local\_filter=15} - The window size (pixels) for the local filter.
-	\item a bunch of threshold pixel sizes in all directions and in area.
+	\item a bunch of threshold pixel sizes and mass in all directions and in area.
+	\item \texttt{method} - String. The name of the method used for segmentation (either 'labeling' or 'dilation', see Sec.~\ref{sec:workflow_segment}). Default is 'labeling'.
+	\item \texttt{particle\_size} - The particle size used in the dilation method.
 \end{enumerate}
 
 
