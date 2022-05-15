@@ -8,24 +8,24 @@
 
 - segmentation:
     Number_of_images: 1
-    images_folder: 'Calibration'
+    images_folder: Calibration
     single_image_name: cal2.tif
     image_extension: '.tif'
     mask: 1.0
-    ROI: 227, 1050, 156, 932
+    ROI: 227, 1050, 120, 920
     plot_result: True
-    threshold: 14.0
-    particle_size: 5
-    blur_sigma: None 
-    local_filter: None
-    min_xsize: 2.0
-    min_ysize: 2.0
+    threshold: 20
+    blur_sigma: 0.8
+    local_filter: 15
+    min_xsize: 1.0
+    min_ysize: 1.0
     min_mass: 20.0
-    max_xsize: 10.0
-    max_ysize: 10.0
+    max_xsize: 15.0
+    max_ysize: 15.0
     max_mass: None
-    method: dilation
-    save_name: None
+    method: labeling
+    particle_size: 8
+    save_name: blobs_cam1
 
 - matching:
     blob_files: blobs_cam1, blobs_cam2, blobs_cam3

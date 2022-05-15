@@ -16,6 +16,8 @@ from skimage.io import imread
 from scipy.signal import convolve2d
 from scipy.ndimage import gaussian_filter
 from scipy.ndimage.measurements import label, find_objects
+from scipy.spatial import KDTree
+
 
 
 class particle_segmentation(object):
@@ -27,7 +29,7 @@ class particle_segmentation(object):
                  min_xsize=None, max_xsize=None,
                  min_ysize=None, max_ysize=None,
                  min_mass=None, max_mass=None,
-                 method='dilation'):
+                 method='labeling'):
         '''
         inputs - 
         
@@ -267,6 +269,21 @@ class particle_segmentation(object):
                 # add final blob to final list
                 blobs.append( [coord, bbox, mass] )
                 
+                
+            # search and remove duplicates; duplicates are points that are 
+            # closer than self.particle_size/2 away. In this case, we keep the
+            # blob with lower mass, 
+            tree = KDTree([b[0] for b in blobs])
+            duplicates = tree.query_pairs(self.p_size/2)
+            to_remove = []
+            for d in duplicates:
+                if blobs[d[0]][-1] < blobs[d[1]][-1]:
+                    to_remove.append(d[1])
+                else:
+                    to_remove.append(d[0])
+            for i in sorted(to_remove, reverse=True): 
+                del blobs[i] 
+            
             self.blobs = blobs
             
             
@@ -320,16 +337,22 @@ class particle_segmentation(object):
             fltr = lambda b: b[2] < self.mass_limits[1]
             
             
+            
     def plot_blobs(self, vmin=None, vmax=None):
         import matplotlib.pyplot as plt
+        
+        if vmax is None:
+            vmax = min([self.th*2, max(self.im.ravel())])
+        
         fig, ax = plt.subplots()
-        ax.imshow(self.im, vmin=vmin, vmax=vmax)
+        ax.imshow(self.processed_im, vmin=vmin, vmax=vmax)
         
         for blb in self.blobs:
             
             ax.errorbar( [blb[0][1]], [blb[0][0]], 
                         xerr=blb[1][1]/2, yerr=blb[1][0]/2,
                         fmt='xr', lw=0.7, capsize=2)
+        
         
         
     def save_results(self, fname):
@@ -363,7 +386,7 @@ class loop_segmentation(object):
                  min_xsize=None, max_xsize=None,
                  min_ysize=None, max_ysize=None,
                  min_mass=None, max_mass=None,
-                 method='dilation'):
+                 method='labeling'):
         '''
         dir_name - string with the name of the directory that holds the 
                    images. Images should have a sequential numbers in their
