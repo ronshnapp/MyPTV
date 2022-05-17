@@ -14,7 +14,7 @@ from numpy import sum as npsum
 from skimage.io import imread
 
 from scipy.signal import convolve2d
-from scipy.ndimage import gaussian_filter
+from scipy.ndimage import gaussian_filter, median_filter
 from scipy.ndimage.measurements import label, find_objects
 from scipy.spatial import KDTree
 
@@ -24,8 +24,8 @@ class particle_segmentation(object):
     '''a class for segmenting out particles (blobs) for a given image'''
     
     
-    def __init__(self, image, particle_size, sigma=1.0, threshold=10, mask=1.0,
-                 local_filter = 15,
+    def __init__(self, image, sigma=None, threshold=10, mask=1.0,
+                 median = None, local_filter = None, particle_size=3,
                  min_xsize=None, max_xsize=None,
                  min_ysize=None, max_ysize=None,
                  min_mass=None, max_mass=None,
@@ -70,6 +70,7 @@ class particle_segmentation(object):
         self.im = image
         self.p_size = particle_size
         self.sigma = sigma
+        self.median = median
         self.th = threshold
         self.mask = mask
         self.bbox_limits = (min_xsize, max_xsize, min_ysize, max_ysize)
@@ -110,11 +111,17 @@ class particle_segmentation(object):
         else:
             blured = self.im
             
+        # apply median filter
+        if self.median is not None:
+            med = median_filter(blured, size = self.median)
+        else:
+            med = blured
+            
         # apply local mean subtraction
         if self.loc_filter is not None:
-            filtered = self.local_filter(blured)
+            filtered = self.local_filter(med)
         else:
-            filtered = blured
+            filtered = med
         
         # apply the mask
         self.processed_im = filtered * self.mask
@@ -380,9 +387,9 @@ class loop_segmentation(object):
     '''A class for looping over images in a library to segment particles
     and save the results in a file.'''
     
-    def __init__(self, dir_name, particle_size, extension='.tif',
+    def __init__(self, dir_name, extension='.tif',
                  N_img = None, sigma=1.0, threshold=10, mask=1.0,
-                 local_filter = 15,
+                 local_filter = 15, median = None, particle_size=3,
                  min_xsize=None, max_xsize=None,
                  min_ysize=None, max_ysize=None,
                  min_mass=None, max_mass=None,
@@ -404,6 +411,7 @@ class loop_segmentation(object):
         self.extension = extension
         self.N_img = N_img
         self.sigma = sigma
+        self.median = median
         self.th = threshold
         self.mask = mask
         self.bbox_limits = (min_xsize, max_xsize, min_ysize, max_ysize)
@@ -439,9 +447,9 @@ class loop_segmentation(object):
             print(' frame: %d'%i, end='\r')
             im = imread(os.path.join(self.dir_name, self.image_files[i]))
             ps = particle_segmentation(im,
-                                       self.p_size,
                                        sigma=self.sigma, 
                                        threshold=self.th,
+                                       median=self.median,
                                        local_filter=self.loc_filter,
                                        mask=self.mask,
                                        max_xsize=self.bbox_limits[1],
@@ -450,7 +458,8 @@ class loop_segmentation(object):
                                        min_ysize=self.bbox_limits[2],
                                        min_mass=self.mass_limits[0],
                                        max_mass=self.mass_limits[1],
-                                       method = self.method)
+                                       method = self.method,
+                                       particle_size=self.p_size)
             ps.get_blobs()
             ps.apply_blobs_size_filter()
             for blb in ps.blobs:

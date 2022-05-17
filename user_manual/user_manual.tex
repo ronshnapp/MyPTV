@@ -535,8 +535,13 @@ In this step we extract the particles' image-space coordinates from the images a
 \begin{center}
 	
 \fcolorbox{white}{bcolor}{
-	\begin{minipage}{0.95\textwidth}
-		\textbf{How segmentation is performed:} Segmentation in MyPTV is performed in one of two methods: \textit{labeling}, or \textit{dilation}. 
+	\begin{minipage}[c][][c]{0.95\textwidth}
+		
+		\vspace{.1cm}
+		
+		\textbf{How segmentation works:} Segmentation in MyPTV is performed in one of two methods: \textit{labeling}, or \textit{dilation}, and includes several optional image processing steps. 
+		
+		\vspace{.2cm}
 		
 		\begin{enumerate}
 			\item In the labeling method, we first choose all pixels in an image whose grey value is higher than a given threshold. Then, such pixels that are touching each other are considered to be "blobs", so we group them together. For each blob, we calculate a \textit{center of mass}, being the grey value weighted average of the blob, a \textit{bounding box} size, and a \textit{mass}, being the sum of grey values of the blobs' pixels.
@@ -544,7 +549,17 @@ In this step we extract the particles' image-space coordinates from the images a
 			\item In the dilation method, we are looking for pixels that their grey value is higher than that of all their neghbours within a box of a given size (\texttt{particle\_size}), and thet their grey value is higher than a given threshold. After that, all the neighbouring pixels inside the particle size box are considered to be a blob. We then calculate the center of mass of the blob to achieve a better estimation of its position, thus redifining the blob. This process is iterated a maxinum of 3 times untill convergence is obtained. Finally, we calculate the same blob's \textit{center of mass}, \textit{bounding box} size, \textit{mass}.
 		\end{enumerate}
 		
-		To imrove the results of segmenting over non-ideal images, MyPTV can be set to apply imae processing algorithms betfore the blob extraction: a gaussian blur filter, and local mean subtraction filter, and a mask. The first two filters mmay increase the computational time, however they may be necessary depending on the experimental conditions.
+		\vspace{.2cm}
+		
+		To imrove the results of segmenting over non-ideal images, MyPTV can be set to apply image processing before the blob extraction. The fiters that can be used are a gaussian blur filter, a median noise removal filter, local mean subtraction filter, and a mask. The first three filters may increase the computational time, however they may be necessary depending on the experimental conditions, such as uneven illumination or noisy images. Examples of the results of using several combinations of the filters on a calibration image is shown below. 
+		  
+		 \vspace{.2cm}
+		  
+	\begin{center}
+		\includegraphics[width=0.9\textwidth]{filters_effect.pdf}
+	\end{center}
+
+		 \vspace{.1cm}
 		  
 	\end{minipage}
 }
@@ -580,9 +595,11 @@ In this step we extract the particles' image-space coordinates from the images a
 		
 		\texttt{threshold} & the brightness value for which a point is considered a particle after a local mean subtraction is performed \\[.3em]
 		
-		\texttt{blur\_sigma} & the standard deviation of a Gaussian blur filter \\[.3em]
+		\texttt{median} & the intger window size of a median noise removal filter; set to \texttt{None} in order to not apply the filter \\[.3em]
+		
+		\texttt{blur\_sigma} & the float standard deviation of a Gaussian blur filter; set to \texttt{None} in order to not apply the filter \\[.3em]
 		 
-		\texttt{local\_filter} & the size of a local mean subtraction filter \\[.3em]
+		\texttt{local\_filter} & the integer widow size of a local mean subtraction filter; set to \texttt{None} in order to not apply the filter \\[.3em]
 		
 		\texttt{min\_xsize} & minimum particle size (pixels) in $x$ direction \\[.3em]
 		
@@ -966,17 +983,18 @@ This module handles the image analysis part of MyPTV, taking in raw camera image
 
 \subsection{The \texttt{particle\_segmentation} object} 
 
-Used to segment particles in a given image. This class is used internally to iterate over frames in a single folder by the \texttt{loop\_segmentation} class. However, it is  to check the segmentation parameters manually using this \texttt{particle\_segmentation} over several images in order to tune the particle searching. The inputs are:
+Used to segment particles in a given image. This class is used internally to iterate over frames in a single folder by the \texttt{loop\_segmentation} class. However, it is recommended to check the segmentation parameters manually using this \texttt{particle\_segmentation} over several images in order to tune the particle searching parameters. The inputs are:
 %
 \begin{enumerate}
 	\item \texttt{image} - the image for segmentation
-	\item \texttt{sigma=1.0} - the standard deviation of the blurring filter
-	\item \texttt{threshold=10} - the global filter's threshold brightness value (pixels with brightness higher than this number are considered foreground) 
+	\item \texttt{threshold=10} - the global filter's threshold brightness value, so pixels with brightness higher than this number are considered foreground 
 	\item \texttt{mask=1.0} - A mask matrix can be used to specify rigions of interest within the image
-	\item \texttt{local\_filter=15} - The window size (pixels) for the local filter.
+	\item \texttt{sigma=None} - If float, this is taken as the standard deviation of a Gaussian blurring filter; if it is None, no bluring is performed
+	\item \texttt{median=None} - If integer this is taken as the window size for a median noise removal filter; if None, no median filter is performed
+	\item \texttt{local\_filter=None} - Parameters for a local mean subtraction. If it's an interger it is taken as the window size; is it None, no mean subtraction is performed.
 	\item a bunch of threshold pixel sizes and mass in all directions and in area.
 	\item \texttt{method} - String. The name of the method used for segmentation (either 'labeling' or 'dilation', see Sec.~\ref{sec:workflow_segment}). Default is 'labeling'.
-	\item \texttt{particle\_size} - The particle size used in the dilation method.
+	\item \texttt{particle\_size=3} - The particle size used in the dilation method.
 \end{enumerate}
 
 
@@ -998,8 +1016,7 @@ The important funcitonalities are:
 \subsection{The \texttt{loop\_segmentation} object} 
 
 
-An object used for looping over images in a given directory to segment particles
-and save the results in a file.
+An object used for looping over images in a given directory to segment particles and save the results in a file. The inputs are nearly identical to those of \texttt{particle\_segmentation}.
 
 
 important functionalities are:

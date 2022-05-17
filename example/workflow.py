@@ -403,6 +403,7 @@ class workflow(object):
         N_img = self.get_param('segmentation', 'Number_of_images')
         sigma = self.get_param('segmentation', 'blur_sigma')
         threshold = self.get_param('segmentation', 'threshold')
+        median = self.get_param('segmentation', 'median')
         local_filter = self.get_param('segmentation', 'local_filter')
         max_xsize = self.get_param('segmentation', 'max_xsize')
         max_ysize = self.get_param('segmentation', 'max_ysize')
@@ -416,7 +417,7 @@ class workflow(object):
         ROI = self.get_param('segmentation', 'ROI')
         single_img_name = self.get_param('segmentation', 'single_image_name')
         method = self.get_param('segmentation', 'method')
-        particle_size = self.get_param('segmentation', 'particle_size')
+        p_size = self.get_param('segmentation', 'particle_size')
         
         # reading preprepared mask
         if type(mask)==str:
@@ -447,10 +448,11 @@ class workflow(object):
         # segmenting the image if there are more than 1 frames
         if N_img is None or N_img>1:
             loopSegment = loop_segmentation(dirname, 
-                                            particle_size,
+                                            particle_size=p_size,
                                             extension=ext,
                                             N_img=N_img, 
                                             sigma=sigma, 
+                                            median=median,
                                             threshold=threshold, 
                                             local_filter=local_filter, 
                                             max_xsize=max_xsize, 
@@ -483,8 +485,9 @@ class workflow(object):
             
             print('\n','segmenting image: %s'%single_img_name)
             particleSegment = particle_segmentation(image0, 
-                                                    particle_size,
+                                                    particle_size=p_size,
                                                     sigma=sigma, 
+                                                    median=median,
                                                     threshold=threshold, 
                                                     local_filter=local_filter, 
                                                     max_xsize=max_xsize, 

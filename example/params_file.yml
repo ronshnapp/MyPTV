@@ -14,18 +14,19 @@
     mask: 1.0
     ROI: 227, 1050, 120, 920
     plot_result: True
-    threshold: 20
-    blur_sigma: 0.8
-    local_filter: 15
+    threshold: 42
+    median: 5
+    blur_sigma: None
+    local_filter: None
     min_xsize: 1.0
     min_ysize: 1.0
-    min_mass: 20.0
+    min_mass: 60.0
     max_xsize: 15.0
     max_ysize: 15.0
     max_mass: None
     method: labeling
     particle_size: 8
-    save_name: blobs_cam1
+    save_name: None
 
 - matching:
     blob_files: blobs_cam1, blobs_cam2, blobs_cam3
