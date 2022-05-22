@@ -7,17 +7,17 @@
     resolution: 1280, 1024
 
 - segmentation:
-    Number_of_images: 1
-    images_folder: Calibration
-    single_image_name: cal2.tif
+    Number_of_images: None
+    images_folder: Images_cam3
+    single_image_name: 01.tif
     image_extension: '.tif'
     mask: 1.0
     ROI: 227, 1050, 120, 920
     plot_result: True
-    threshold: 42
-    median: 5
-    blur_sigma: None
-    local_filter: None
+    threshold: 5
+    median: None
+    blur_sigma: 1
+    local_filter: 10
     min_xsize: 1.0
     min_ysize: 1.0
     min_mass: 60.0
@@ -26,7 +26,7 @@
     max_mass: None
     method: labeling
     particle_size: 8
-    save_name: None
+    save_name: blobs_cam3
 
 - matching:
     blob_files: blobs_cam1, blobs_cam2, blobs_cam3
@@ -37,7 +37,15 @@
     voxel_size: 10.0
     max_blob_distance: 1.0
     max_err: 0.25
-    save_name: particles
+    save_name: None
+
+- show_particle_image:
+    particles_file_name: particles
+    frame_number: 0
+    camera_name: cam1
+    resolution: 1280, 1024
+    blob_image_name: ./Images_cam1/01.tif
+    gray_lvl_max: 120
 
 - tracking:
     particles_file_name: particles

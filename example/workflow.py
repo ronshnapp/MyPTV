@@ -52,6 +52,7 @@ class workflow(object):
             
             allowed_actions = ['calibration', 'calibration_point_gui', 
                                'calibration_with_particles',
+                               'show_particle_images',
                               'match_target_file', 'segmentation', 'matching',
                               'tracking', 'smoothing', 'stitching']
             
@@ -71,6 +72,9 @@ class workflow(object):
             
             elif action == 'match_target_file':
                 self.match_target_file()
+                
+            elif action == 'show_particle_images':
+                self.show_particle_images()
                 
             elif action == 'segmentation':
                 self.do_segmentation()
@@ -592,6 +596,45 @@ class workflow(object):
         
         print('\n', 'Finished Matching.')
             
+        
+        
+    def show_particle_images(self):
+        '''
+        Will show the images of particles on top of the blobs' images
+        '''
+        from myptv.imaging_mod import camera
+        from pandas import read_csv
+        from matplotlib.pyplot import imread, show
+        from numpy import array
+        from myptv.utils import show_particle_images
+        
+        particles_file_name = self.get_param('show_particle_image',
+                                             'particles_file_name')
+        frame = self.get_param('show_particle_image', 'frame_number')
+        cam_name = self.get_param('show_particle_image', 'camera_name')
+        blob_im_name = self.get_param('show_particle_image', 
+                                      'blob_image_name')
+        resolution = self.get_param('show_particle_image', 'resolution')
+        resolution = tuple([float(val) for val in resolution.split(',')])
+        vmax = self.get_param('show_particle_image', 'gray_lvl_max')
+        
+        # get the particles' list
+        p_all = read_csv(particles_file_name, sep='\t', header=None)
+        p_list = [g for k,g in p_all.groupby(7) if k==frame]
+        p_list = array(p_list)[0]
+        
+        # load the image
+        image = imread(blob_im_name)
+        
+        # prepare the camera instance
+        cam = camera(cam_name, resolution)
+        cam.load('./')
+        
+        # show the particles' image
+        show_particle_images(p_list, cam, image, vmax=vmax)
+        show()
+        
+        
         
         
     def do_tracking(self):

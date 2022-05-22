@@ -204,6 +204,43 @@ class match_calibration_blobs_and_points(object):
     
     
     
+    
+    
+
+def show_particle_images(particles, camera, image, vmax=None):
+    '''
+    Given a list of particles in lab-space coordinates 'particles', an
+    instance of the camera object, and an image, this function will plot
+    the projections of the given particles on the camera on top of the given 
+    image. If image is the blobs image, this plot can be used to vizualize
+    how well do the 3D particles match the 2D blobs after matching.
+    '''
+    import matplotlib.pyplot as plt
+    fig, ax = plt.subplots()
+    
+    
+    if vmax is None:
+        from numpy import median
+        vmax = median(image)
+    
+    
+    ax.imshow(image, cmap='gray', vmax=vmax)
+    
+    col_lst = ['r', 'y', 'g']
+    
+    for i in range(len(particles)):
+        blob_nums = particles[i][3:-2]
+        num_of_cams = len(blob_nums[blob_nums>=0])
+        color = col_lst[ min(num_of_cams,4)-2 ]
+        proj = camera.projection(particles[i][:3])
+        ax.plot( [proj[0]], [proj[1]], 'x'+color, ms=5, mew=1.5)
+    
+    
+    
+    
+    
+    
+    
 
 
 
