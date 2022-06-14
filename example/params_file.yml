@@ -43,6 +43,7 @@
 
 - tracking:
     particles_file_name: particles
+    frame_start: 0
     N_frames: None
     d_max: 1.0
     dv_max: 1.0

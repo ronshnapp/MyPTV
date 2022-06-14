@@ -562,6 +562,7 @@ class workflow(object):
                                max_err=max_err, 
                                reverse_eta_zeta=True)
         
+        # setting the frame range to match
         ts = int(mbf.time_lst[0])
         te = int(mbf.time_lst[-1])
         print('semented particles time range: %d -> %d'%(ts,te),'\n')
@@ -572,7 +573,6 @@ class workflow(object):
             else: 
                 raise ValueError('frame_start outside the available frame range')
         
-        # setting the frame range to match
         if N_frames is None:
             frames = range(ts, te+1)
         else:
@@ -586,6 +586,7 @@ class workflow(object):
                 
         # mathing
         print('Starting stereo-matching.')
+        print('Matching in the frame range: %d -> %d'%(frames[0], frames[-1]))
         mbf.get_particles(frames=frames)
         
         # print matching statistics
@@ -616,30 +617,42 @@ class workflow(object):
         
         # fetching parameters
         particles_fm = self.get_param('tracking', 'particles_file_name')
+        frame_start = self.get_param('tracking', 'frame_start')
         N_frames = self.get_param('tracking', 'N_frames')
         d_max = self.get_param('tracking', 'd_max')
         dv_max = self.get_param('tracking', 'dv_max')
         save_name = self.get_param('tracking', 'save_name')
         
         
-        
-        # setting the frame range to match
-        if N_frames is None:
-            frames = None
-        else:
-            try:
-                frames = range(N_frames)
-            except:
-                tp = type(frames)
-                msg = 'N_frames must be an integer of None (given %s).'%tp
-                raise TypeError(msg)
-        
-        
-        
-        # do the tracking
+        # initiate the tracker
         t4f = tracker_four_frames(particles_fm, 
                                   d_max=d_max, 
                                   dv_max=dv_max)
+        
+        #setting up the frame range
+        ts = int(t4f.times[0])
+        te = int(t4f.times[-1])
+        
+        print('available particles time range: %d -> %d'%(ts,te),'\n')
+        
+        if frame_start is not None:
+            if frame_start>=ts and frame_start <=te:
+                ts = frame_start
+            else: 
+                raise ValueError('frame_start outside the available frame range')
+        
+        if N_frames is None:
+            frames = range(ts, te)
+        else:
+            try:
+                frames = range(ts, ts+N_frames)
+            except:
+                tp = type(frames)
+                msg = 'N_frames must be an integer or None (given %s).'%tp
+                raise TypeError(msg)
+        
+        
+        # do the tracking
         t4f.track_all_frames(frames=frames)
         
         # print some statistics

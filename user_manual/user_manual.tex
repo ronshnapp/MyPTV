@@ -647,6 +647,8 @@ In the matching step, particles images in the various images are used to stereo-
 		
 		\texttt{blob\_files} & names of files that hold the segmented particles for each camera, separated by commas; for example: \texttt{blobs\_cam1, blobs\_cam2, blobs\_cam3} \\
 		
+		\texttt{frame\_start} & if \texttt{None} will start matching from the first available frame. If an integer it will start the matching from this given number. \\
+		
 		\texttt{N\_frames} & if \texttt{None} will match particles in all available frames; if an integer will match only particles in the first \texttt{N} frames. \\
 		
 		\texttt{camera\_names} & names of cameras used separated by commas; for example, \texttt{cam1, cam2, cam3} \\

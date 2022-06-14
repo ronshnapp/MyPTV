@@ -46,7 +46,7 @@ class tracker_four_frames(object):
         self.particles = {}
         
         data = loadtxt(self.fname)
-        self.times = list(set(data[:,-1]))
+        self.times = sorted(list(set(data[:,-1])))
         
         for tm in self.times:
             self.particles[tm] = []
