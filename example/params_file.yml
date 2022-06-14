@@ -7,8 +7,9 @@
     resolution: 1280, 1024
 
 - segmentation:
-    Number_of_images: 1
-    images_folder: Calibration
+    Number_of_images: None
+    image_start: 0
+    images_folder: Images_cam1
     single_image_name: cal2.tif
     image_extension: '.tif'
     mask: 1.0
@@ -26,7 +27,7 @@
     max_mass: None
     method: labeling
     particle_size: 8
-    save_name: None
+    save_name: test
 
 - matching:
     blob_files: blobs_cam1, blobs_cam2, blobs_cam3

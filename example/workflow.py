@@ -401,6 +401,7 @@ class workflow(object):
         dirname = self.get_param('segmentation', 'images_folder')
         ext = self.get_param('segmentation', 'image_extension')
         N_img = self.get_param('segmentation', 'Number_of_images')
+        image_start = self.get_param('segmentation', 'image_start')
         sigma = self.get_param('segmentation', 'blur_sigma')
         threshold = self.get_param('segmentation', 'threshold')
         median = self.get_param('segmentation', 'median')
@@ -444,12 +445,13 @@ class workflow(object):
             mask_ROI = zeros(image0.shape)
             mask_ROI[ROI[2]:ROI[3]+1, ROI[0]:ROI[1]+1] = 1
             mask = mask * mask_ROI
-        
+
         # segmenting the image if there are more than 1 frames
         if N_img is None or N_img>1:
             loopSegment = loop_segmentation(dirname, 
                                             particle_size=p_size,
                                             extension=ext,
+                                            image_start=image_start,
                                             N_img=N_img, 
                                             sigma=sigma, 
                                             median=median,
