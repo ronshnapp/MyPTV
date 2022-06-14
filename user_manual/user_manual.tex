@@ -690,6 +690,8 @@ The tracking step is used to link particle in the lab space coordinates in time,
 		
 		\texttt{particles\_file\_name} & path name of the file which holds the 3D coordinates of particles, namely the results of the matching step  \\
 		
+		\texttt{frame\_start} & if \texttt{None} will start tracking from the first available frame. If an integer it will start the tracking from this given number. \\
+		
 		\texttt{N\_frames} & if \texttt{None} will iterate over particles in all frames; if an integer will only track particles in the first \texttt{N} frames of the particles file\\
 		
 		\texttt{d\_max} & the maximum translation in lab space coordinates \\
