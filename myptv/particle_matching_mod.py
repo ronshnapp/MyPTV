@@ -85,7 +85,7 @@ class match_blob_files(object):
         for bl in self.blobs:
             for b in bl:
                 time_lst.append(b[-1])
-        self.time_lst = list(set(time_lst))
+        self.time_lst = sorted(list(set(time_lst)))
         
         
         

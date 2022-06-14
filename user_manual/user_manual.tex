@@ -61,7 +61,7 @@
 
 \begin{minipage}{10cm}
 	{\small 
-	Vesrion: 0.4.1 \\
+	Vesrion: 0.4.2 \\
 	Last updated: \today \\
 	Github repository: \url{https://github.com/ronshnapp/MyPTV} \\
 	Contac: ronshnapp@gmail.com}
@@ -576,6 +576,8 @@ In this step we extract the particles' image-space coordinates from the images a
 		\hline
 		Parameter & Description\\
 		\hline
+		
+		\texttt{image\char`_start} & The number of the image from which the loof begins. If this is \texttt{None} (default) the first image is set to 0.\\[.3em]
 		
 		\texttt{Number\char`_of\char`_images} & Number of images over which to do the segmentation. If it is 1, segmentation is done only on the image with the name given in \texttt{single\char`_image\char`_name}. If this is an integer, segmentation is performed on the first N images found in the directory \texttt{images\char`_folder}. If this is \texttt{None}, segmentation is performed over all the images in the directory \texttt{images\char`_folder} \\[.3em]
 		

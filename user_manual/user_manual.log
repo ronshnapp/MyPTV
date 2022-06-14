@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2021.5.25)  17 MAY 2022 11:28
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2021.5.25)  14 JUN 2022 17:00
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -617,73 +617,73 @@ File: ./figs/filters_effect.pdf Graphic file (type pdf)
 <use ./figs/filters_effect.pdf>
 Package pdftex.def Info: ./figs/filters_effect.pdf  used on input line 565.
 (pdftex.def)             Requested size: 364.90294pt x 247.40424pt.
-[9 <./figs/filters_effect.pdf>] [10] [11] [12]
+[9 <./figs/filters_effect.pdf>] [10] [11] [12] [13]
 LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <14.4> not available
-(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 815.
+(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 817.
 LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <12> not available
-(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 822.
-<./figs/camera_files.pdf, id=484, 508.10204pt x 141.02348pt>
+(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 824.
+<./figs/camera_files.pdf, id=488, 508.10204pt x 141.02348pt>
 File: ./figs/camera_files.pdf Graphic file (type pdf)
 <use ./figs/camera_files.pdf>
-Package pdftex.def Info: ./figs/camera_files.pdf  used on input line 852.
+Package pdftex.def Info: ./figs/camera_files.pdf  used on input line 854.
 (pdftex.def)             Requested size: 426.79135pt x 118.45676pt.
- [13
+ [14
 
  <./figs/camera_files.pdf>]
-Overfull \hbox (1.44354pt too wide) in paragraph at lines 922--923
+Overfull \hbox (1.44354pt too wide) in paragraph at lines 924--925
 []\T1/cmtt/m/n/10 fineCalibration(maxiter=500) \T1/cmr/m/n/10 - This func-tion 
 will solve for the co-ef-fi-cients of the quadratic
  []
 
-[14] [15]
-<./figs/blob_file.pdf, id=553, 223.10614pt x 155.32921pt>
+[15] [16]
+<./figs/blob_file.pdf, id=558, 223.10614pt x 155.32921pt>
 File: ./figs/blob_file.pdf Graphic file (type pdf)
 <use ./figs/blob_file.pdf>
-Package pdftex.def Info: ./figs/blob_file.pdf  used on input line 1031.
+Package pdftex.def Info: ./figs/blob_file.pdf  used on input line 1033.
 (pdftex.def)             Requested size: 284.52756pt x 198.10016pt.
- [16 <./figs/blob_file.pdf>]
-<./figs/particle_file.pdf, id=587, 390.14703pt x 291.52518pt>
+ [17 <./figs/blob_file.pdf>]
+<./figs/particle_file.pdf, id=592, 390.14703pt x 291.52518pt>
 File: ./figs/particle_file.pdf Graphic file (type pdf)
 <use ./figs/particle_file.pdf>
-Package pdftex.def Info: ./figs/particle_file.pdf  used on input line 1083.
+Package pdftex.def Info: ./figs/particle_file.pdf  used on input line 1085.
 (pdftex.def)             Requested size: 341.43306pt x 255.13727pt.
 
-Overfull \hbox (18.38263pt too wide) in paragraph at lines 1092--1093
+Overfull \hbox (18.38263pt too wide) in paragraph at lines 1094--1095
 \T1/cmr/m/n/10 we run the rel-e-vant func-tions: \T1/cmtt/m/n/10 get_voxel_dict
 ionary() $\OMS/cmsy/m/n/10 !$ \T1/cmtt/m/n/10 list_candidates() $\OMS/cmsy/m/n/
 10 !$ \T1/cmtt/m/n/10 get_particles()\T1/cmr/m/n/10 ,
  []
 
-[17] [18 <./figs/particle_file.pdf>]
-<./figs/trajectory_files.pdf, id=621, 470.98941pt x 297.17282pt>
+[18] [19 <./figs/particle_file.pdf>]
+<./figs/trajectory_files.pdf, id=625, 470.98941pt x 297.17282pt>
 File: ./figs/trajectory_files.pdf Graphic file (type pdf)
 <use ./figs/trajectory_files.pdf>
-Package pdftex.def Info: ./figs/trajectory_files.pdf  used on input line 1151.
+Package pdftex.def Info: ./figs/trajectory_files.pdf  used on input line 1153.
 (pdftex.def)             Requested size: 284.52756pt x 179.52937pt.
- [19 <./figs/trajectory_files.pdf>]
-<./figs/smoothed_trajfile.pdf, id=647, 514.2885pt x 471.065pt>
+ [20 <./figs/trajectory_files.pdf>]
+<./figs/smoothed_trajfile.pdf, id=651, 514.2885pt x 471.065pt>
 File: ./figs/smoothed_trajfile.pdf Graphic file (type pdf)
 <use ./figs/smoothed_trajfile.pdf>
-Package pdftex.def Info: ./figs/smoothed_trajfile.pdf  used on input line 1197.
+Package pdftex.def Info: ./figs/smoothed_trajfile.pdf  used on input line 1199.
 
 (pdftex.def)             Requested size: 341.43306pt x 312.73677pt.
 
-[20 <./figs/smoothed_trajfile.pdf>] (./user_manual.bbl [21])
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 1249.
- [22]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 1249.
+[21 <./figs/smoothed_trajfile.pdf>] (./user_manual.bbl [22])
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 1251.
+ [23]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 1251.
 
 (./user_manual.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 1249.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 1249.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 1251.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 1251.
 
 Package rerunfilecheck Info: File `user_manual.out' has not changed.
 (rerunfilecheck)             Checksum: 9A4D44832F094F173A1E46A2FCDB15BC;3167.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 1249.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 1251.
  ) 
 Here is how much of TeX's memory you used:
- 9722 strings out of 494847
- 141498 string characters out of 6179080
+ 9723 strings out of 494847
+ 141505 string characters out of 6179080
  250843 words of memory out of 5000000
  12701 multiletter control sequences out of 15000+600000
  20386 words of font info for 60 fonts, out of 8000000 for 9000
@@ -707,10 +707,10 @@ fb></usr/share/texmf/fonts/type1/public/cm-super/sfrm1728.pfb></usr/share/texmf
 cm-super/sftt0900.pfb></usr/share/texmf/fonts/type1/public/cm-super/sftt1000.pf
 b></usr/share/texmf/fonts/type1/public/cm-super/sftt1200.pfb></usr/share/texmf/
 fonts/type1/public/cm-super/sftt1440.pfb>
-Output written on user_manual.pdf (24 pages, 3115810 bytes).
+Output written on user_manual.pdf (25 pages, 3116623 bytes).
 PDF statistics:
- 793 PDF objects out of 1000 (max. 8388607)
- 680 compressed objects within 7 object streams
- 183 named destinations out of 1000 (max. 500000)
+ 798 PDF objects out of 1000 (max. 8388607)
+ 684 compressed objects within 7 object streams
+ 184 named destinations out of 1000 (max. 500000)
  427 words of extra memory for PDF output out of 10000 (max. 10000000)
 

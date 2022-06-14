@@ -538,6 +538,7 @@ class workflow(object):
         voxel_size = self.get_param('matching', 'voxel_size')
         max_blob_distance = self.get_param('matching', 'max_blob_distance')
         max_err = self.get_param('matching', 'max_err')
+        frame_start = self.get_param('matching', 'frame_start')
         N_frames = self.get_param('matching', 'N_frames')
         save_name = self.get_param('matching', 'save_name')
         
@@ -561,15 +562,25 @@ class workflow(object):
                                max_err=max_err, 
                                reverse_eta_zeta=True)
         
+        ts = int(mbf.time_lst[0])
+        te = int(mbf.time_lst[-1])
+        print('semented particles time range: %d -> %d'%(ts,te),'\n')
+        
+        if frame_start is not None:
+            if frame_start>=ts and frame_start <=te:
+                ts = frame_start
+            else: 
+                raise ValueError('frame_start outside the available frame range')
+        
         # setting the frame range to match
         if N_frames is None:
-            frames = None
+            frames = range(ts, te+1)
         else:
             try:
-                frames = range(N_frames)
+                frames = range(ts, ts+N_frames)
             except:
                 tp = type(frames)
-                msg = 'N_frames must be an integer of None (given %s).'%tp
+                msg = 'N_frames must be an integer or None (given %s).'%tp
                 raise TypeError(msg)
                 
                 
