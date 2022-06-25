@@ -2,13 +2,13 @@
 
 \bibitem{Virant1997}
 M.~Virant and T.~Dracos.
-\newblock {3D PTV} and its application on lagrangian motion.
-\newblock {\em Measurement}, 8:1552--1593, 1997.
+\newblock {3D PTV} and its application on {Lagrangian} motion.
+\newblock {\em Measurement Science and Technology}, 8:1552--1593, 1997.
 
 \bibitem{Maas1993}
 H.~G. Maas, D.~Gruen, and D.~Papantoniou.
-\newblock Particle tracking velocimetry in three-dimensional flows part i:
-  Photogrammetric determination of particle coordinates.
+\newblock Particle tracking velocimetry in three-dimensional flows {Part I:
+  Photogrammetric} determination of particle coordinates.
 \newblock {\em Experiments in Fluid}, 15:133--146, 1993.
 
 \bibitem{Luthi2005}
@@ -17,7 +17,7 @@ B.~L{\"u}thi, A.~Tsinober, and W.~Kinzelbach.
 \newblock {\em Journal of Fluid mechanics}, 528:87--118, 2005.
 
 \bibitem{Xu2008}
-Haitao Xu.
+H.~Xu.
 \newblock Tracking {Lagrangian} trajectories in position--velocity space.
 \newblock {\em Measurement Science and Technology}, 19(7):075105, 2008.
 

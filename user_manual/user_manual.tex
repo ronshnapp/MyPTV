@@ -96,7 +96,7 @@
 \subsection{3D-PTV principles}
 
 
-The 3D-PTV method is used to measure the trajectories of particles in 3D space. It utilizes the principles of stereoscopic vision to reconstruct 3D positions of particles from images taken from several angles. A scheme of a typical 3D-PTV experiment using a four camera system is shown in Fig.~\ref{fig:3dptv_exp}. The "work horse" behind the 3D-PTV method is the co-linearity condition, the 3D model. In principle, if we know what is the position and what is the orientation of the camera in 3D space ($O'$ and $\theta$ in Fig.~\ref{fig:3dmodel}), we can use the pin-hole camera model to relate the image space coordinates of a particle ($\eta,\, \zeta$ in Fig.~\ref{fig:3dmodel}) to the ray of light connecting the imaging center and the particle. Then, if we have more than one camera, the particle will be located at the intersection of the two rays. Detailed information is given in \cite{Virant1997, Maas1993}.  
+The 3D-PTV method is used to measure the trajectories of particles in 3D space. It utilizes the principles of stereoscopic vision to reconstruct 3D positions of particles from images taken from several angles. A scheme of a typical 3D-PTV experiment using a four-camera system is shown in Fig.~\ref{fig:3dptv_exp}. The "workhorse" behind the 3D-PTV method is the co-linearity condition, the 3D model. In principle, if we know what the position is and what is the orientation of the camera in 3D space ($O'$ and $\theta$ in Fig.~\ref{fig:3dmodel}), we can use the pin-hole camera model to relate the image space coordinates of a particle ($\eta,\, \zeta$ in Fig.~\ref{fig:3dmodel}) to the ray of light connecting the imaging center and the particle. Then, if we have more than one camera, the particle will be located at the intersection of the two rays. Detailed information is given in \cite{Virant1997, Maas1993}.  
 
 
 \begin{figure}[!ht]
@@ -113,7 +113,7 @@ The 3D-PTV method is used to measure the trajectories of particles in 3D space. 
 
 
 
-Once the experiment, namely data acquisition, is done, there are six intrinsic steps to follow in order to complete the analysis. The six steps are outlined in Fig.~\ref{fig:steps}. In Camera calibration, we use images of known calibration targets to estimate the position, orientation and internal parameters of the cameras. In particle segmentation we use image analysis to obtain the particles' image space coordinates ($\eta, \, \zeta$). In the Particle matching step we use the ray crossing principle to decide which particle image in each of the cameras correspond to the same physical particle, and triangulate their positions through stereo matching. In particle tracking we connect the positions of particles in 3D space to form trajectories. In data conditioning we might use smoothing and re-tracking algorithms to enhance the quality of our data according to some physical heuristics. Lastly, we can analyze the data to obtain information on the physics of the particles we are studying. The MyPTV package is meant to handle the first five of these steps.    
+Once the experiment, namely data acquisition, is done, there are six intrinsic steps to follow in order to complete the analysis. The six steps are outlined in Fig.~\ref{fig:steps}. In the camera calibration step, we use images of known calibration targets to estimate the position, orientation, and internal parameters of the cameras. In particle segmentation, we use image analysis to obtain the particles' image space coordinates ($\eta, \, \zeta$). In the Particle matching step, we use the ray crossing principle to decide which particle image in each camera corresponds to the same physical particle, and triangulate their positions through stereo matching. In particle tracking, we connect the positions of particles in 3D space to form trajectories. In data conditioning, we might use smoothing and re-tracking algorithms to enhance our data quality according to some physical heuristics. Lastly, we can analyze the data to obtain information on the physics of the particles we are studying. The MyPTV package is meant to handle the first five of these steps.    
 
 
 
@@ -133,7 +133,7 @@ The sections that follow outline the code used to handle the 3D-PTV method in My
 \subsection{3D model}
 
 
-To transform the 2D particles seen in camera images we use a pinhole camera model. In particular, the following expression relates the coordinates in the 2D image space coordinates and a direction vector pointing out from the camera imaging center:
+We use a pinhole camera model to transform the 2D particles seen in the camera images. In particular, the following expression relates the coordinates in the 2D image space coordinates and a direction vector pointing out from the camera imaging center:
 %
 \begin{equation}
 \vec{r}-\vec{O} = \Big( \, 
@@ -204,14 +204,13 @@ where $[E]$ is a $3\times5$ matrix that holds the correction coefficients; the l
 \subsection{MyPTV usage and structure}
 
 
-MyPTV is used to conduct the post processing steps in which the experimental raw data - images - are transformed into particles' trajectories. The five steps include camera calibration, image segmentation, particle matching, particle tracking, and, data conditioning which is divided into smoothing and stitching of broken trajectories. This section outlines how these steps are to be followed and how MyPTV is structured to facilitate them. Section~\ref{sec:workflow} gives instructions on how to efficiently use MyPTV. 
+MyPTV is used to conduct the post-processing steps in which the experimental raw data (images) are transformed into particles' trajectories. The five steps include camera calibration, image segmentation, particle matching, particle tracking, and, data conditioning which is divided into smoothing and stitching of broken trajectories. This section outlines how these steps are to be followed and how MyPTV is structured to facilitate them. Section~\ref{sec:workflow} gives instructions on how to efficiently use MyPTV. 
 
 
-At the current stage MyPTV does not include a graphical user interface. Instead, the package includes a script that can be used to efficiently and conveniently run the various steps in the post processing. Knowledge in Python is not required to operate MyPTV.
+At the current stage, MyPTV does not include a graphical user interface. Instead, the package includes a script that can be used to efficiently and conveniently run the various post-processing steps. Knowledge of Python is not required to operate MyPTV.
 
 
-
-Each of the steps described above is dealt with in MyPTV as a separate "module". Each module consists of a Python script file which includes one or several classes. Detailed information on each of these classes is given in Sections~\ref{sec:image_mod}--\ref{sec:stitching}, and the code itself includes documentation to a level appropriate for development. In addition to the source code, MyPTV includes a \textit{workflow} script that is used to operate the software in an organized fashion. Thus, MyPTV can either be used either by using the workflow script, or by directly evoking classes from the source code. 
+The internal structure of MyPTV is made of separate "modules", each of which deals with a particular step out of the list described above. Each module consists of a Python script file that includes one or several classes. Detailed information on each of these classes is given in Sections~\ref{sec:image_mod}--\ref{sec:stitching}, and the code itself includes documentation to a level appropriate for development. In addition to the source code, MyPTV includes a \textit{workflow} script that is used to operate the software in an organized fashion. Thus, MyPTV can be used either by using the workflow script or by directly evoking classes from the source code. 
 
 
 
@@ -226,7 +225,7 @@ Each of the steps described above is dealt with in MyPTV as a separate "module".
 \section{The Workflow}\label{sec:workflow}
 
 
-Operation of MyPTV can be facilitated using the \texttt{workflow.py} script. The script is found under the \textit{example} folder under the home directory of the MyPTV package. The workflow is used through command line given instructions and a file that outlines the parameters to be used in each step.
+MyPTV can be operated using the \texttt{workflow.py} script. The script is found under the \textit{example} folder under the home directory of the MyPTV package. The workflow is used through command line given instructions and a file that outlines the parameters to be used in each step.
 
 
 
@@ -239,7 +238,7 @@ To begin post processing of the 3D-PTV results, please follow these steps:
 \begin{enumerate}
 	\item Prepare a new directory; place inside of it the experiment data: the calibration images in a directory called \texttt{Calibration} and the particle images under separate folders named after the name of each camera.
 	\item Locate the \texttt{example} under the root folder of the MyPTV package. This can be used as a template to the experiment directory made in the previous step.
-	\item Copy the files \texttt{workfolw.py} and \texttt{params\_file.yml} from the \texttt{example} folder into your experiment's folder.
+	\item Copy the files \texttt{workflow.py} and \texttt{params\_file.yml} from the \texttt{example} folder into your experiment's folder.
 \end{enumerate}
 
 
