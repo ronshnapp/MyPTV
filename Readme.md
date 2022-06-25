@@ -39,18 +39,13 @@ MyPTV requires you have Python 3 installed with pip, along with the Python packa
 1) Open your terminal and change directory to the path of the code:
 	`cd path/to/myptv` 
 	
-2) Finally, we use pip to install by using the following command: 
+2) we use pip to install by using the following command: 
 	`pip install .`
 or 
 	`pip install -r .\requirements.txt`
 
 3) Optionally, parts of the code can be tested using pytest:
 	`pytest ./tests/ -W ignore::RuntimeWarning`
-
-4) Once this is done we are ready to go! You can now import MyPTV in your python code as usual. For example:
-	`import myptv.imaging_mod`
-or 	
-   `from myptv import imaging_mod`
 
 ###### Using `conda` 
 
@@ -65,18 +60,26 @@ where the package is downloaded:
 3) Optionally, parts of the code can be tested using pytest:
 	`pytest ./tests/ -W ignore::RuntimeWarning`
 
-4) Once this is done we are ready to go! You can now import MyPTV in your python code as usual. For example:
+## How to start?
+
+To setup MyPTV on your local machine, either clone or download this repository and install MyPTV using the instructions above. Then, you can find detailed using instructions in the Manual (see `/user_manual/user_manual.pdf`).
+
+After the installation is done, you can import MyPTV in your python code as usual. For example:
 	`import myptv.imaging_mod`
 or 	
    `from myptv import imaging_mod`
 
-## How to start?
+## Community guidelines
 
-Detailed instructions are given in the Manual, see `/user_manual/user_manual.pdf`.
+MyPTV was founded in 2022 by Ron Shnapp. In its core, MyPTV is a scientific open source project and contributions are most welcome! 
 
-## Who manages this project?
+1) Facing difficulties using of installing MyPTV? Want to share your new exciting results? Try posting a question on MyPTV's Discussion forum - https://github.com/ronshnapp/MyPTV/discussions. 
 
-MyPTV was founded and is maintained by Ron Shnapp (ronshnapp@gmail.com). Contributions are most welcome. 
+2) Do you wish to contribute to our effort by further developing of MyPTV? Would you like to help debugging and/or test the software? Please leave a post on our Discussion forum - https://github.com/ronshnapp/MyPTV/discussionscontact. 
+
+3) Did you spot a bug? Would like to raise an issue? Please open an issue in our Github repositories' issues section - https://github.com/ronshnapp/MyPTV/issue.
+
+In any case, if you feel the need - please feel free to send Ron an email directly (ronshnapp@gmail.com)!
 
 ## References
 
