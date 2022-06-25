@@ -288,6 +288,9 @@ class particle_segmentation(object):
                     to_remove.append(d[1])
                 else:
                     to_remove.append(d[0])
+                    
+            to_remove = list(set(to_remove))
+                    
             for i in sorted(to_remove, reverse=True): 
                 del blobs[i] 
             

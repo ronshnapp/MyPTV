@@ -427,7 +427,7 @@ class workflow(object):
         if method not in ['dilation', 'labeling']:
             raise ValueError('Method can be only "dilation" or "labeling"')
         
-        if method=='dilation' and type(particle_size) != int:
+        if method=='dilation' and type(p_size) != int:
             raise ValueError('In dilation, particle_size can only be integer')
         
         # get the shape of the images
