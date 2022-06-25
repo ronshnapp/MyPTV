@@ -336,7 +336,7 @@ For the initial calibration, follow these steps:
 \begin{enumerate}
 	\item \textit{Generate the camera file:} The camera file holds the camera parameters (see Fig.~\ref{fig:camfiles}). An empty camera file can be generated automatically by the workflow script when we start the calibration sequence in a directory that doesn't havea  camera file in it (by running \texttt{python workflow.py params\_file.yml calibration} in the command line).
 	
-	\item \textit{Enter an initial guess:} Open the camera file just generated and insert an initial guess for the camera's position ($\vec{O}$ in the first line, and $\vec{\theta}$ in the second line). See Fig.~\ref{fig:cam_pos_example} for a reference on how camera translations and orientations work. 
+	\item \textit{Enter an initial guess:} Open the camera file just generated and insert an initial guess for the camera's position ($\vec{O}$ in the first line), orientation ($\vec{\theta}$ in the second line), and the focal depth ($f$ in the third line). See the \textit{Understanding camera external parameters} box and Fig.~\ref{fig:cam_pos_example} for a reference on how camera translations and orientations and focal lengths are defined. 
 	
 	\item \textit{Segment 6 calibration points:} Choose six points of the calibration target and prepare a file that lets MyPTV know their coordinates in image space and in lab space (see Fig.~\ref{fig:calpointfile} for the format). The name of the file should be inserted under \texttt{calibration\_points\_file} in the \texttt{params\_file.yml}. \\
 	The calibration points file can be generated easily using a dedicated user interface (GUI). To run the GUI, enter \texttt{python workflow.py params\_file calibration\_point\_gui} in the command line. Alternatively, if MyPTV can't find the \texttt{calibration\_points\_file}, the GUI will start automatically. Instruction are given in Fig.~\ref{fig:Cal_point_GUI}. Note, for best performance, it is best to have some asymmetry in the points chosen (e.g. see the blue crosses in Fig.~\ref{fig:Cal_point_GUI}).
@@ -359,11 +359,48 @@ This concludes the initial calibration step.
 
 
 
+\vspace{.5cm}
 
 \begin{figure}[!ht]
-	\centering
-	\includegraphics[width=\textwidth]{Cam_pos_examples.pdf}
-	\caption{Two examples for camera setups. The (x, y, z) system represents the lab space, and the (x', y', z') represents the camera's system of reference. In (a) the camera's position is roughly $\vec{O} = (0,0,1)$, and an appropriate rotation vector could be $\vec{\theta} = (0,\pi,0)$. In (b) the camera's position might be $\vec{O} = (1,1,1)$, and the orientation vector might approximately be $\vec{\theta} = (-\frac{1}{2}\pi,-\frac{3}{4}\pi,0)$. Rules of thumb in trying to guess $\vec{\theta}$ are: 1) ask yourself how should one rotate the lab's frame of reference so that it aligns with the camera's frame of reference; 2) we first rotate around the x axis, then around y and then around z; 3) in many cases the origin of the images is on the top left corner, so a half a turn rotation around the z axis is often needed. \label{fig:cam_pos_example}}
+\begin{center}
+	
+	\fcolorbox{white}{bcolor}{
+	\begin{minipage}[c][][c]{0.95\textwidth}
+		
+		\vspace{.1cm}
+		
+		\textbf{Understanding camera external parameters:} The external parameters of a camera in MyPTV include its position, its orientation, and its focal length, $\vec{O}$, $\vec{\theta}$, and $f$, respectively. In the calibration process, it is important to understand these parameters to be able to give a good initial guess and judge the results of the calibration procedure. Thus, let us explain how these parameters are defined.
+		
+		\vspace{.5cm}
+		
+		Each camera is associated with an image space reference frame, shown in Fig.~\ref{fig:cam_pos_example} as the $x',$ $y'$, and $z'$ axes. The $z'$ axis is normal to the imaging plane (the camera's sensor), while $x',$ and $y'$ are tangent to it; the system is right-handed. 
+		
+		\vspace{.25cm}
+		
+		The position parameter, $\vec{O}$, is defined as a vector pointing from the origin of the lab space coordinate system to the origin of the camera's reference frame. It is measured in lab-space units (e.g. millimeters). Therefore, one could estimate $\vec{O}$ directly by using a ruler or a measuring tape to measure where the camera is in the lab-space coordinates. 
+		
+		\vspace{.25cm}
+		
+		The orientation parameter, $\vec{\theta}$, is a vector of three angles that describe the rotation of the camera's reference frame with respect to the lab space frame, namely the camera's Euler angles. The first angle describes the rotation around the $x'$ axis, the second describes rotation around $y'$, and the third angle describes rotation around $z'$. Rules of thumb in trying to guess $\vec{\theta}$ are: 1) ask yourself "how should one rotate the lab's frame of reference so that it aligns with the camera's frame of reference?"; 2) we first rotate around the $x'$ axis, then around $y'$ and then around $z'$. Note: in many cases, the origin of the images is on the top left corner, so half a turn rotation around the $z'$ axis is often needed. See Fig.~\ref{fig:cam_pos_example} for an example.
+		
+		\vspace{.25cm}
+		
+		The focal length parameter,$f$, is essentially an extension factor. In MyPTV $f$ is measured in units of pixels. The focal length is normally more or less equal to the camera's lens focal length. For example, if one uses a camera with a 60mm lens in their experiment, and the size of one camera pixel is 10$\mu$m=0.01mm, then $f$ would roughly be equal to 6000 (pixels). Potentially, one could also estimate $f$ in an experiment: 1) place the camera in a known position facing a calibration target (as e.g. in Fig.4a) and take a picture 2) prepare a calibration points file for a few of the points on the calibration target; 3) preparing a camera file using the known position and orientation 4) insert some initial value for $f$; 5) using the \texttt{workflow.py} file to compare the distribution of the points using this value of $f$; 6) repeat steps 4 and 5 until a fair agreement is found.  
+		
+		\vspace{.25cm}
+		
+		\begin{center}
+			\includegraphics[width=\textwidth]{Cam_pos_examples.pdf}
+			\caption{Two examples for camera setups. The (x, y, z) system represents the lab space, and the (x', y', z') represents the camera's system of reference. In (a) the camera's position is roughly $\vec{O} = (0,0,1)$, and an appropriate rotation vector could be $\vec{\theta} = (0,\pi,0)$. In (b) the camera's position might be $\vec{O} = (1,1,1)$, and the orientation vector might approximately be $\vec{\theta} = (-\frac{1}{2}\pi,-\frac{3}{4}\pi,0)$. \label{fig:cam_pos_example}}
+		\end{center}
+		
+		
+		\vspace{.1cm}
+		
+	\end{minipage}
+	}
+\end{center}
+
 \end{figure}
 
 
