@@ -21,7 +21,7 @@ from numpy import dot, array, savetxt
 class smooth_trajectories(object):
     '''
     A class used to smooth trajectories in a list of trajectories. 
-    Due to the smoothing we also calculate the velocity and acceleration
+    During smoothing, we also calculate the velocity and acceleration
     of the trajectories.
     The input trajectory list structure is the same as the files produced by
     the classes in tracking_mod.py.

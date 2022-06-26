@@ -4,7 +4,7 @@ Created on Wed March 23 2022
 
 @author: ron
 
-An implementation for the trajectory segments stitching algorithm. We are 
+An implementation of the trajectory segments stitching algorithm. We are 
 looking to connect together trajectories that, for some reason, were broken 
 during the tracking process, and to connect them together.
 
@@ -129,6 +129,8 @@ class traj_stitching(object):
         if -1 in traj_ids:
             traj_ids.remove(-1)
         
+        # make a dictionary whose keys are trajectory ids and values are
+        # the trajectories themselves
         traj_dic = {}
         for id_ in traj_ids:
             tr = self.get_traj(id_)
@@ -142,14 +144,54 @@ class traj_stitching(object):
                 
             traj_dic[id_] = tr 
         
+        # make a dicionary whose keys are frame numbers and values are lists
+        # of the trajectories ids that start at these times
+        t0_dic = {}
+        for id_ in traj_ids:
+            t0_i = traj_dic[id_][0,-1]
+            try:
+                t0_dic[t0_i].append(id_)
+            except:
+                t0_dic[t0_i] = [id_]
+            
+        
+        # make the list of d_ij
         self.dij_list = []
+        count, N = 0, len(traj_ids)
         for id_i in traj_ids:
-            for id_j in traj_ids:
-                if id_i == id_j: continue
-                dij = self.calc_d(traj_dic[id_i], traj_dic[id_j])
-                if dij != -1:
-                    dt = traj_dic[id_j][0,-1] - traj_dic[id_i][-1,-1]
-                    self.dij_list.append((id_i, id_j, dt, dij))
+            print('', end='\r')
+            print('calculating d_ij: %d / %d'%(count,N), end='\r') 
+            
+            traj_i = traj_dic[id_i]
+            ts_i = traj_i[-1,-1]
+            t0_to_search = [ts_i + i for i in range(1, 1 + self.Ts)]
+            
+            for t0 in t0_to_search:
+                try:
+                    for id_j in t0_dic[t0]:
+                        traj_j = traj_dic[id_j]
+                        dij = self.calc_d(traj_i, traj_j)
+                        if dij != -1:
+                            dt = traj_j[0,-1] - traj_i[-1,-1]
+                            self.dij_list.append((id_i, id_j, dt, dij))
+                except:
+                    continue
+                
+            count += 1
+        print('') 
+        
+        # make the list of d_ij
+        # traj_ids = sorted(traj_ids, key=lambda i: traj_dic[i][0,-1])
+        # self.dij_list = []
+        # for i in range(len(traj_ids)):
+        #     for j in range(len(traj_ids)):
+        #         id_i, id_j = traj_ids[i], traj_ids[j]
+        #         traj_i, traj_j = traj_dic[id_i], traj_dic[id_j]
+        #         dij = self.calc_d(traj_i, traj_j)
+        #         if dij != -1:
+        #             dt = traj_j[0,-1] - traj_i[-1,-1]
+        #             self.dij_list.append((id_i, id_j, dt, dij))
+        
     
     
     def find_best_stitch_candidates(self):
@@ -273,20 +315,21 @@ class traj_stitching(object):
         '''
         This performs all the steps of the trajectory stitching process.
         '''
-        traj_ids = list(set(self.traj_list[:,0]))
+        whr = self.traj_list[:,0] != -1
+        traj_ids = list(set(self.traj_list[whr,0]))
         ntr = len(traj_ids)
         print('starting at %d trajectories'%(ntr))
-        whr = self.traj_list[:,0] != -1
         nsmp = len(self.traj_list[whr])*1.0
         print('with %.1f samples per trajectory on average'%(nsmp/ntr),'\n')
         
-        print('searching for candidates to connect')
+        print('searching for candidates to connect:')
         self.calc_dij()
+        print('fetching the best matches...')
         self.find_best_stitch_candidates()
         
         N = len(self.dij_list)
-        print('found %d connections to be made'%N)
-        print('connecting')
+        print('found %d connections to be made,'%N)
+        print('connecting...')
         ntraj0 = len(self.traj_list)
         self.connect_traj()
         print('finished connecting trajectories', '\n')
