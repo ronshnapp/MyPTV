@@ -33,28 +33,35 @@ MyPTV requires you have Python 3 installed with pip, along with the Python packa
 ###### Using `pip`
 
 1) Open your terminal and change directory to the path of the code:
-	`cd path/to/myptv` 
-	
+
+​	`cd path/to/myptv` 
+​	
 2) we use pip to install by using the following command: 
-	`pip install .`
-or 
-	`pip install -r .\requirements.txt`
+
+​	`pip install .`    or    `pip install -r .\requirements.txt`
 
 3) Optionally, parts of the code can be tested using pytest:
-	`pytest ./tests/ -W ignore::RuntimeWarning`
+
+​	`pytest ./tests/ -W ignore::RuntimeWarning`
 
 ###### Using `conda` 
 
 1) Install Anaconda or Miniconda and from the command shell inside the directory
 where the package is downloaded:
 
-	`conda env create -f environment.yml`
+​	`conda env create -f environment.yml`
+
 2) Activate the environment:
 
-	`conda activate myptv`
+​	`conda activate myptv`
 
-3) Optionally, parts of the code can be tested using pytest:
-	`pytest ./tests/ -W ignore::RuntimeWarning`
+3) Install MyPTV in the new environment: 
+
+​	`pip install .`
+
+4) Optionally, parts of the code can be tested using pytest:
+
+​	`pytest ./tests/ -W ignore::RuntimeWarning`
 
 ## How to start?
 
