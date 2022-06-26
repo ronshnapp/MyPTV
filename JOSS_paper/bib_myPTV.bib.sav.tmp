@@ -1,6 +1,6 @@
 @Article{Virant1997,
-  author    = {M. Virant and T. Dracos},
-  journal   = {Measurement},
+  author    = {Virant, M. and Dracos, T.},
+  journal   = {Measurement Science and Technology},
   title     = {{3D PTV} and its application on {Lagrangian} motion},
   year      = {1997},
   pages     = {1552--1593},
@@ -205,5 +205,3 @@
   author    = {Michalec, F.-G. and Fouxon, I. and Souissi, S. and Holzner, M.},
   journal   = {Proceedings of the National Academy of Sciences},
   title     = {Zooplankton can actively adjust their motility to turbulent flow},
-  year      = {2017},
-  n
