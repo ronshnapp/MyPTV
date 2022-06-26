@@ -246,23 +246,28 @@ To begin post processing of the 3D-PTV results, please follow these steps:
 
 \subsubsection{The \texttt{workflow.py} script}
 
-\texttt{workflow.py} is a Python script used by the user to run the various steps of the experiment. It is used through the terminal or commend line. To use the various functions, use the following syntax:
+\texttt{workflow.py} is a Python script used by the user to run the various steps of the post-processing. The script is used through the terminal or command line. To use MyPTVs various functions, use the following syntax:
+%
 \begin{verbatim}
 cd \path\to\experiment\folder
 python workflow.py params_file.yml "command"
 \end{verbatim}
+%
 where \texttt{"command"} should be replaced with one of the following options, depending on the particular step of the post processing:
 %
 \begin{verbatim}
 	calibration
+	calibration_point_gui
 	match_target_file
+	calibration_with_particles
 	segmentation
 	matching
 	tracking	
 	smoothing
 	stitching
 \end{verbatim}
-
+%
+Each of these commands initiates one of MyPTVs functionalities, and a detailed explanation on them is found in Sections \ref{sec:cal_guide}--\ref{sec:workflow_stitch}.
 
 
 \subsubsection{The \texttt{params\_file.yml} file}
@@ -275,7 +280,7 @@ The \texttt{params\_file.yml} outlines all the parameters needed in order to run
 
 
 
-\subsection{Calibration guide}
+\subsection{Calibration guide} \label{sec:cal_guide}
 
 A good calibration is key to having success in your PTV experiment! Thus, follow this guide to calibrate your camera using MyPTV. 
 
@@ -338,8 +343,8 @@ For the initial calibration, follow these steps:
 	
 	\item \textit{Enter an initial guess:} Open the camera file just generated and insert an initial guess for the camera's position ($\vec{O}$ in the first line), orientation ($\vec{\theta}$ in the second line), and the focal depth ($f$ in the third line). See the \textit{Understanding camera external parameters} box and Fig.~\ref{fig:cam_pos_example} for a reference on how camera translations and orientations and focal lengths are defined. 
 	
-	\item \textit{Segment 6 calibration points:} Choose six points of the calibration target and prepare a file that lets MyPTV know their coordinates in image space and in lab space (see Fig.~\ref{fig:calpointfile} for the format). The name of the file should be inserted under \texttt{calibration\_points\_file} in the \texttt{params\_file.yml}. \\
-	The calibration points file can be generated easily using a dedicated user interface (GUI). To run the GUI, enter \texttt{python workflow.py params\_file calibration\_point\_gui} in the command line. Alternatively, if MyPTV can't find the \texttt{calibration\_points\_file}, the GUI will start automatically. Instruction are given in Fig.~\ref{fig:Cal_point_GUI}. Note, for best performance, it is best to have some asymmetry in the points chosen (e.g. see the blue crosses in Fig.~\ref{fig:Cal_point_GUI}).
+	\item \textit{Segment 6 calibration points:} We start by choosing six points (or more) of the calibration target. The points should not be coplanar and it is best to choose them such that there is some assymetry (e.g. see the blue crosses in Fig.~\ref{fig:Cal_point_GUI}). Then, we need to prepare a file that lets MyPTV know their coordinates in image space and in lab space (see Fig.~\ref{fig:calpointfile} for the format). The name of the file should be inserted under \texttt{calibration\_points\_file} in the \texttt{params\_file.yml}. \\
+	The calibration points file can be generated easily using a dedicated graphical user interface (GUI). To run the GUI, enter \texttt{python workflow.py params\_file calibration\_point\_gui} in the command line. Alternatively, if MyPTV can't find the \texttt{calibration\_points\_file}, the GUI will start automatically. Instruction are given in Fig.~\ref{fig:Cal_point_GUI}.
 	
 	\item \textit{Calibrate using 6 points:} We now calibrate the camera (i.e. improve the initial guess), using the calibration sequence. To start the sequence enter \texttt{python workflow.py params\_file.yml calibration} in the command line. Then, the following actions can be chosen by the user:
 	\begin{verbatim}
