@@ -8,6 +8,8 @@ Version: 0.4.3
 
 MyPTV is an open source software designed for 3D particle Tracking Velocimetry (3D-PTV) measurements. In short, 3D-PTV is a method used to track the positions of particles in three dimensions, which is used extensively in fluid mechanics, biology and soft matter physics. The method relies on stereoscopic digital photography from calibrated cameras to infer particle's 3D positions and track their motion through time. 
 
+<img src="./user_manual/figs/traj_animation.gif" width="70%" height="70%"/>
+
 MyPTV makes 3D particle tracking accessible to a wide range of scientists in two ways. First, we use the Python programming language, which is open source and accessible to the scientific, non-professional computer programmers, community. We believe that this accessibility to the inner workings of the code is essential for 3D-PTV to go into the future. Second, we attempt to keep the dependencies as few as possible and write as much of the code ourselves; this will help in maintaining the project for many years to come as Python keeps evolving. 
 
 MyPTV builds heavily on the well-proven mathematical framework developed in the OpenPTV project (https://www.openptv.net/), and especially, the photogrammetry principles are the same [1]. The main difference is that the code is written in Python, thus making it accessible to a wider scientific community. Furthermore, MyPTV uses several new adaptations of the traditional algorithms that have been introduced in recent years, e.g. [2-6], and several novel algorithms that we are using were developed here.
