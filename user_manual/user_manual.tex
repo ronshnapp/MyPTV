@@ -15,7 +15,8 @@
 \usepackage{array}
 \usepackage{natbib}
 \usepackage[caption=false]{subfig}
-
+\usepackage{titling}
+\usepackage{titlesec}
 
 \usepackage{xcolor}
 
@@ -32,14 +33,18 @@
 	linkcolor = blue
 }
 
-\title{MyPTV user manual}
-\author{Ron Shnapp}
+\title{\Huge \sffamily \textsc{\textbf{User Manual}}}
+\author{}%Ron Shnapp}
 \date{}
 
 
 
-
-
+\pretitle{%
+	\begin{center}
+		\LARGE
+		\includegraphics[width=8cm]{logo.png}\\[3cm]
+	}
+\posttitle{\end{center}}
 
 
 \begin{document}
@@ -47,11 +52,11 @@
 	
 
 
-
+	
 \maketitle
 
 \thispagestyle{empty}
-\vspace{3.5cm}
+\vspace{2.5cm}
 
 \begin{center}
 	\includegraphics[width=10cm]{traj_image.jpg}
@@ -60,7 +65,7 @@
 \vfill
 
 \begin{minipage}{14cm}
-	{\small 
+	{\small \sffamily
 	Vesrion: 0.4.3 \\
 	Last updated: \today \\
 	Github repository: \url{https://github.com/ronshnapp/MyPTV} \\
