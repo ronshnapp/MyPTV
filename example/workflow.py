@@ -239,42 +239,49 @@ class workflow(object):
             print('initial error: %.3f pixels'%(cal.mean_squared_err()))
             print('')
             
-            user = True
-            print('Starting calibration sequence:')
-            while user != '9':
-                print("enter '1' for external parameters calibration")
-                print("enter '2' for internal correction ('fine') calibration")
-                print("enter '3' to show current camera external parameters")
-                print("enter '4' to plot the calibration points' projection")
-                print("enter '8' to save the results")
-                print("enter '9' to quit")
-                user = input('')
-                
-                if user == '1':
-                    print('\n', 'Iterating to minimize external parameters')
-                    cal.searchCalibration(maxiter=2000)
-                    err = cal.mean_squared_err()
-                    print('\n','calibration error: %.3f pixels'%(err),'\n')
-                
-                if user == '2':
-                    print('\n', 'Iterating to minimize correction terms')
-                    cal.fineCalibration()
-                    err = cal.mean_squared_err()
-                    print('\n','calibration error:', err,'\n')
-                    
-                if user == '3':
-                    print('\n', cam, '\n')
-                
-                if user == '4':
-                    img = imread(cal_image)
-                    fig, ax = subplots()
-                    ax.imshow(img, cmap='gray')
-                    cal.plot_proj(ax=ax)
-                    show()
-                    
-                if user == '8':
-                    print('\n', 'Saving results')
-                    cam.save('.')
+            
+            
+            from myptv.cal_gui import cal_gui
+            gui = cal_gui(cal, cal_image)
+            
+# =============================================================================
+#             user = True
+#             print('Starting calibration sequence:')
+#             while user != '9':
+#                 print("enter '1' for external parameters calibration")
+#                 print("enter '2' for internal correction ('fine') calibration")
+#                 print("enter '3' to show current camera external parameters")
+#                 print("enter '4' to plot the calibration points' projection")
+#                 print("enter '8' to save the results")
+#                 print("enter '9' to quit")
+#                 user = input('')
+#                 
+#                 if user == '1':
+#                     print('\n', 'Iterating to minimize external parameters')
+#                     cal.searchCalibration(maxiter=2000)
+#                     err = cal.mean_squared_err()
+#                     print('\n','calibration error: %.3f pixels'%(err),'\n')
+#                 
+#                 if user == '2':
+#                     print('\n', 'Iterating to minimize correction terms')
+#                     cal.fineCalibration()
+#                     err = cal.mean_squared_err()
+#                     print('\n','calibration error:', err,'\n')
+#                     
+#                 if user == '3':
+#                     print('\n', cam, '\n')
+#                 
+#                 if user == '4':
+#                     img = imread(cal_image)
+#                     fig, ax = subplots()
+#                     ax.imshow(img, cmap='gray')
+#                     cal.plot_proj(ax=ax)
+#                     show()
+#                     
+#                 if user == '8':
+#                     print('\n', 'Saving results')
+#                     cam.save('.')
+# =============================================================================
                     
             
         # if not, generate an empty file camera file
