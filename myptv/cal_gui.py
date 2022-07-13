@@ -9,7 +9,7 @@ A gui for manually marking points on a calibration target.
 
 
 #from PIL import Image, ImageTk
-from tkinter import Label, LabelFrame, Entry, Tk, Button
+from tkinter import Label, LabelFrame, Entry, Tk, Button, Checkbutton, IntVar
 from matplotlib.pyplot import subplots, show, imread
 
 
@@ -31,11 +31,10 @@ class cal_gui(object):
         '''
         self.calibrate_obj = calibrate_obj
         self.cal_image = cal_image
-        self.err = self.calibrate_obj.mean_squared_err()
         
         # set the window
         self.root = Tk()
-        self.root.geometry('400x380')
+        self.root.geometry('400x480')
         self.root.resizable(0,0)
         self.root.title('MyPTV: calibration GUI')
 
@@ -66,11 +65,20 @@ class cal_gui(object):
                                 padx=2, pady=4, width=20)
         fine_cal_button.grid(row=1, column=0, padx=10, pady=2, sticky='ew')
         
+        
+        # grab manual button
+        grab_button = Button(button_frame1, text='Grab manual', 
+                                command = self.grab_manual, 
+                                padx=2, pady=4, width=14)
+        grab_button.grid(row=2, column=0, padx=10, pady=2, sticky='ew')
+        
+        
+        
         # plot calibration
         plot_button = Button(button_frame1, text='Plot calibration', 
                                 command = self.plot_calibration, 
                                 padx=2, pady=4, width=20)
-        plot_button.grid(row=2, column=0, padx=10, pady=2, sticky='ew')
+        plot_button.grid(row=3, column=0, padx=10, pady=2, sticky='ew')
         
         
         # save points button
@@ -99,9 +107,31 @@ class cal_gui(object):
         self.status = Label(status_label, text='Status:', padx=2, pady=2)
         self.status.grid(row=0, column=0, rowspan=1, sticky='nw', padx=2, pady=2)
         self.status_show = Label(status_label, text='wating for action', padx=2, pady=2,
-                                 width=50, anchor='w', fg='green')
+                                 width=40, anchor='w', fg='green')
         self.status_show.grid(row=0, column=1, rowspan=1, sticky='nw', padx=2, pady=2)
         
+        
+        
+        self.camera = Label(status_label, text='Camera:', padx=2, pady=2)
+        self.camera.grid(row=1, column=0, rowspan=1, sticky='nw', padx=2, pady=2)
+        
+        cam = 'camera name'
+        if self.calibrate_obj is not None:
+            cam = self.calibrate_obj.camera.name
+        
+        self.camera_show = Label(status_label, text=cam, padx=2, pady=2,
+                                 width=40, anchor='w')
+        self.camera_show.grid(row=1, column=1, rowspan=1, sticky='nw', padx=2, pady=2)
+
+
+
+        self.manual_var = IntVar()
+        self.manual_state = Checkbutton(status_label, padx=2, pady=2,
+                                        command=self.manual_onof, 
+                                        variable = self.manual_var)
+        self.manual_state.grid(row=2, column=1, rowspan=1, sticky='nw', padx=2, pady=2)
+        self.manual = Label(status_label, text='Manual:', padx=2, pady=2)
+        self.manual.grid(row=2, column=0, rowspan=1, sticky='nw', padx=2, pady=2)
         
         
         
@@ -126,19 +156,21 @@ class cal_gui(object):
         self.x_input = Entry(pos_dashboard, width=14)
         self.x_input.insert(0,'0.0')
         self.x_input.grid(row=0, column=1, rowspan=1, sticky='nw', padx=2, pady=2)
+        self.x_input.configure(fg='red')
         
         self.yloc = Label(pos_dashboard, text='Oy:', padx=2, pady=2)
         self.yloc.grid(row=1, column=0, rowspan=1, sticky='nw', padx=2, pady=2)
         self.y_input = Entry(pos_dashboard, width=14)
         self.y_input.insert(0,'0.0')
         self.y_input.grid(row=1, column=1, rowspan=1, sticky='nw', padx=2, pady=2)
+        self.y_input.configure(fg='red')
         
         self.zloc = Label(pos_dashboard, text='Oz:', padx=2, pady=2)
         self.zloc.grid(row=2, column=0, rowspan=1, sticky='nw', padx=2, pady=2)
         self.z_input = Entry(pos_dashboard, width=14)
         self.z_input.insert(0,'0.0')
         self.z_input.grid(row=2, column=1, rowspan=1, sticky='nw', padx=2, pady=2)
-        
+        self.z_input.configure(fg='red')
         
         
         
@@ -153,19 +185,21 @@ class cal_gui(object):
         self.xori_input = Entry(ori_dashboard, width=14)
         self.xori_input.insert(0,'0.0')
         self.xori_input.grid(row=0, column=1, rowspan=1, sticky='nw', padx=2, pady=2)
+        self.xori_input.configure(fg='red')
         
         self.yori = Label(ori_dashboard, text=chr(1012)+'y:', padx=2, pady=2)
         self.yori.grid(row=1, column=0, rowspan=1, sticky='nw', padx=2, pady=2)
         self.yori_input = Entry(ori_dashboard, width=14)
         self.yori_input.insert(0,'0.0')
         self.yori_input.grid(row=1, column=1, rowspan=1, sticky='nw', padx=2, pady=2)
+        self.yori_input.configure(fg='red')
         
         self.zori = Label(ori_dashboard, text=chr(1012)+'z:', padx=2, pady=2)
         self.zori.grid(row=2, column=0, rowspan=1, sticky='nw', padx=2, pady=2)
         self.zori_input = Entry(ori_dashboard, width=14)
         self.zori_input.insert(0,'0.0')
         self.zori_input.grid(row=2, column=1, rowspan=1, sticky='nw', padx=2, pady=2)
-        
+        self.zori_input.configure(fg='red')
         
         
         
@@ -179,19 +213,21 @@ class cal_gui(object):
         self.f_input = Entry(int_dashboard, width=14)
         self.f_input.insert(0,'0.0')
         self.f_input.grid(row=0, column=1, rowspan=1, sticky='nw', padx=2, pady=2)
+        self.f_input.configure(fg='red')
         
         self.xh = Label(int_dashboard, text='xh:', padx=2, pady=2)
         self.xh.grid(row=1, column=0, rowspan=1, sticky='nw', padx=2, pady=2)
         self.xh_input = Entry(int_dashboard, width=14)
         self.xh_input.insert(0,'0.0')
         self.xh_input.grid(row=1, column=1, rowspan=1, sticky='nw', padx=2, pady=2)
+        self.xh_input.configure(fg='red')
         
         self.yh = Label(int_dashboard, text='yh:', padx=2, pady=2)
         self.yh.grid(row=2, column=0, rowspan=1, sticky='nw', padx=2, pady=2)
         self.yh_input = Entry(int_dashboard, width=14)
         self.yh_input.insert(0,'0.0')
         self.yh_input.grid(row=2, column=1, rowspan=1, sticky='nw', padx=2, pady=2)
-        
+        self.yh_input.configure(fg='red')
         
         
         
@@ -200,15 +236,25 @@ class cal_gui(object):
         err_dashboard.grid(row=2, column=1, columnspan=1, sticky='sw', padx=2, 
                           pady=10)
         
+
         self.error = Label(err_dashboard, text='Error:', padx=2, pady=2)
-        self.error.grid(row=0, column=0, rowspan=1, sticky='nw', padx=2, pady=2)
+        self.error.grid(row=1, column=0, rowspan=1, sticky='nw', padx=2, pady=2)
         self.error_input = Label(err_dashboard, text='0.0', padx=2, pady=2,
                                  width=14, bg='white')
-        self.error_input.grid(row=0, column=1, rowspan=1, sticky='nw', padx=2, pady=2)
+        self.error_input.grid(row=1, column=1, rowspan=1, sticky='nw', padx=2, pady=2)
         
         
         
-        self.update_cal_stats()
+        
+        
+        
+        
+        
+        
+        
+        
+        if self.calibrate_obj is not None:
+            self.update_cal_stats()
         
         
         
@@ -258,9 +304,43 @@ class cal_gui(object):
         self.yh_input.insert(0,'%.1f'%self.calibrate_obj.camera.yh)
         
         self.err = self.calibrate_obj.mean_squared_err()
-        self.error_input.config(text = '%.3e px'%self.err)
+        if self.err<1000 and self.err>10:
+            self.error_input.config(text = '%.1f px'%self.err)
+        elif self.err<1000 and self.err>0.01:
+            self.error_input.config(text = '%.3f px'%self.err)
+        else:
+            self.error_input.config(text = '%.3e px'%self.err)
+            
         self.root.update()
         
+        
+        
+    def manual_onof(self):
+        state = self.manual_var.get()
+        
+        if state==1:
+            self.x_input.configure(fg='black')
+            self.y_input.configure(fg='black')
+            self.z_input.configure(fg='black')
+            self.xori_input.configure(fg='black')
+            self.yori_input.configure(fg='black')
+            self.zori_input.configure(fg='black')
+            self.f_input.configure(fg='black')
+            self.xh_input.configure(fg='black')
+            self.yh_input.configure(fg='black')
+            
+        else:
+            self.x_input.configure(fg='red')
+            self.y_input.configure(fg='red')
+            self.z_input.configure(fg='red')
+            self.xori_input.configure(fg='red')
+            self.yori_input.configure(fg='red')
+            self.zori_input.configure(fg='red')
+            self.f_input.configure(fg='red')
+            self.xh_input.configure(fg='red')
+            self.yh_input.configure(fg='red')
+        
+    
         
     def external_calibration(self):
         '''Does the searchCalibration, i.e. external calibration'''
@@ -286,6 +366,29 @@ class cal_gui(object):
         print('\n','calibration error:', err,'\n')
         self.update_cal_stats()
         self.status_show.configure(fg='green', text='done! waiting for action')
+        
+        
+        
+    def grab_manual(self):
+        
+        manual_state = self.manual_var.get()
+        if manual_state==0:
+            raise ValueError('manual state is not turned on.')
+        
+        self.calibrate_obj.camera.O[0] = float(self.x_input.get())
+        self.calibrate_obj.camera.O[1] = float(self.y_input.get())
+        self.calibrate_obj.camera.O[2] = float(self.z_input.get())
+        self.calibrate_obj.camera.theta[0] = float(self.xori_input.get())
+        self.calibrate_obj.camera.theta[1] = float(self.yori_input.get())
+        self.calibrate_obj.camera.theta[2] = float(self.zori_input.get())
+        self.calibrate_obj.camera.f = float(self.f_input.get())
+        self.calibrate_obj.camera.xh = float(self.xh_input.get())
+        self.calibrate_obj.camera.yh = float(self.yh_input.get())
+        
+        self.calibrate_obj.camera.calc_R()
+        
+        self.update_cal_stats()
+        
         
     
     def plot_calibration(self):
