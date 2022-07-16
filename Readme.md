@@ -5,7 +5,7 @@ Version: 0.4.3
 
 ## About
 
-#### `[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6846969.svg)](https://doi.org/10.5281/zenodo.6846969)`
+`[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6846969.svg)](https://doi.org/10.5281/zenodo.6846969)`
 
 MyPTV is an open source software designed for 3D particle Tracking Velocimetry (3D-PTV) measurements. In short, 3D-PTV is a method used to track the positions of particles in three dimensions, which is used extensively in fluid mechanics, biology and soft matter physics. The method relies on stereoscopic digital photography from calibrated cameras to infer particle's 3D positions and track their motion through time. 
 
