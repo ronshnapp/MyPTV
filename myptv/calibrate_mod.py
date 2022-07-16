@@ -37,7 +37,8 @@ class calibrate(object):
         This calculates the mean squared distance between the 
         projection and the given coordinates  (in units of pixel).
         
-        (in the calibration we want to minimize this D)
+        (This is the cost functino that we want to minimize in the 
+         calibration process)
         '''
         z_lst = []        
         for x in self.lab_coords:
