@@ -17,6 +17,7 @@ from numpy import array, gradient, dot, savetxt
 from numpy import append as NPappend
 from myptv.utils import fit_polynomial
 from myptv.traj_smoothing_mod import smooth_traj_poly
+from itertools import groupby
 
 
 class traj_stitching(object):    
@@ -62,7 +63,8 @@ class traj_stitching(object):
         i - int, trajectory number
         '''
         key = lambda s: s[-1]
-        tr = array(sorted(self.traj_list[self.traj_list[:,0] == i], key=key))
+        #tr = array(sorted(self.traj_list[self.traj_list[:,0] == i], key=key))
+        tr = array(sorted(self.traj_list[self.index_id_hash[i],:], key=key))
         return tr
 
 
@@ -131,9 +133,28 @@ class traj_stitching(object):
         
         # make a dictionary whose keys are trajectory ids and values are
         # the trajectories themselves
+# =============================================================================
+#         Legacy code:
+#
+#         traj_dic = {}
+#         for id_ in traj_ids:
+#             tr = self.get_traj(id_)
+#             v = tr[:,4:7]
+#             if (v==0).all():
+#                 x = tr[:,1:4]
+#                 v = gradient(x, axis=0)
+#                 a = gradient(v, axis=0)
+#                 tr[:,4:7] = v
+#                 tr[:,7:10] = a
+#                 
+#             traj_dic[id_] = tr 
+# =============================================================================
+        
         traj_dic = {}
-        for id_ in traj_ids:
-            tr = self.get_traj(id_)
+        trajs = [array(sorted(list(g), key=lambda a: a[-1])) for k,g in 
+                 groupby(self.traj_list, key=lambda x: x[0]) if k!=-1]
+        for tr in trajs:
+            id_ = tr[0,0]
             v = tr[:,4:7]
             if (v==0).all():
                 x = tr[:,1:4]
@@ -141,7 +162,6 @@ class traj_stitching(object):
                 a = gradient(v, axis=0)
                 tr[:,4:7] = v
                 tr[:,7:10] = a
-                
             traj_dic[id_] = tr 
         
         # make a dicionary whose keys are frame numbers and values are lists
@@ -179,18 +199,7 @@ class traj_stitching(object):
                 
             count += 1
         print('') 
-        
-        # make the list of d_ij
-        # traj_ids = sorted(traj_ids, key=lambda i: traj_dic[i][0,-1])
-        # self.dij_list = []
-        # for i in range(len(traj_ids)):
-        #     for j in range(len(traj_ids)):
-        #         id_i, id_j = traj_ids[i], traj_ids[j]
-        #         traj_i, traj_j = traj_dic[id_i], traj_dic[id_j]
-        #         dij = self.calc_d(traj_i, traj_j)
-        #         if dij != -1:
-        #             dt = traj_j[0,-1] - traj_i[-1,-1]
-        #             self.dij_list.append((id_i, id_j, dt, dij))
+
         
     
     
@@ -232,7 +241,11 @@ class traj_stitching(object):
         '''
         connected_traj_i = []
         connected_traj_j = []
+        
+        count = 1
         for i,j,dt,dij in self.dij_list:
+            print('', end='\r')
+            print(' %d / %d'%(count, len(self.dij_list)), end='\r')
             
             tr_i = self.get_traj(i)
             tr_j = self.get_traj(j)
@@ -253,41 +266,59 @@ class traj_stitching(object):
             # the time needed to interpolate
             tm_interp = [float(i) for i in range(1,int(dt))]
             
-            # in each direction fit a polynomial and fill missing samples
-            interp_samples_j = [[j,0,0,0,0,0,0,0,0,0,tm_+t_ie] 
-                              for tm_ in tm_interp]
-            for k in range(3):
-                x_ = list(x_i[:,k]) + list(x_j[:,k])
-                poly_coeffs = fit_polynomial(tm_fitting, x_, 3)
-                for e, tm_ in enumerate(tm_interp):
-                    # interpolate position
-                    tm_vect = [tm_**3, tm_**2, tm_, 1.0]
-                    x_interp = dot(poly_coeffs, tm_vect)
-                    interp_samples_j[e][1+k] = x_interp
-                                       
-            # add the interpolated samples to the traj_list
-            self.traj_list = NPappend(self.traj_list, interp_samples_j, axis=0)
+            if len(tm_interp)>0:
+                # in each direction fit a polynomial and fill missing samples
+                interp_samples_j = [[j,0,0,0,0,0,0,0,0,0,tm_+t_ie] 
+                                  for tm_ in tm_interp]
+                for k in range(3):
+                    x_ = list(x_i[:,k]) + list(x_j[:,k])
+                    poly_coeffs = fit_polynomial(tm_fitting, x_, 3)
+                    for e, tm_ in enumerate(tm_interp):
+                        # interpolate position
+                        tm_vect = [tm_**3, tm_**2, tm_, 1.0]
+                        x_interp = dot(poly_coeffs, tm_vect)
+                        interp_samples_j[e][1+k] = x_interp
+                                           
+                # add the interpolated samples to the traj_list and update
+                # index hash table
+                Ntl = len(self.traj_list)
+                Ninterp = len(interp_samples_j)
+                self.traj_list = NPappend(self.traj_list, 
+                                          interp_samples_j, axis=0)
+                self.index_id_hash[j] += list(range(Ntl, Ninterp + Ntl))
             
             # change the traj_number of traj i to j
             for k in range(len(self.traj_list)):
                 if self.traj_list[k][0] == i:
                     self.traj_list[k][0] = j
+            i_indexes = self.index_id_hash[i]
+            self.index_id_hash[j] += i_indexes
+            self.index_id_hash[i] = []
             
             connected_traj_i.append(i)
             connected_traj_j.append(j)
+            
+            count += 1
 
             
         # finish by calculating the velocity and acceleration of the 
         # the stitched trajectory by using the smoothing function
+# =============================================================================
+#         for id_ in list(set(self.traj_list[:,0])):
+#             
+#             # (we add the single samples at the end)
+#             if id_==-1:
+#                 continue
+#             
+#             traj = self.get_traj(id_)
+#             
+# =============================================================================
         self.new_traj_list = []
-        for id_ in list(set(self.traj_list[:,0])):
-            
-            # (we add the single samples at the end)
-            if id_==-1:
-                continue
-            
-            traj = self.get_traj(id_)
-            if id_ in connected_traj_j:
+        trajs = [array(sorted(list(g), key=lambda a: a[-1])) for k,g in 
+                 groupby(self.traj_list, key=lambda x: x[0]) if k!=-1]
+        for traj in trajs:
+            id_ = traj[0,0]
+            if id_ in connected_traj_j and len(traj)>=5:
                 pos = traj[:,1:4]
                 new_p, new_v, new_acc = smooth_traj_poly(pos.T, 5, 3)
                 for i in range(len(pos)):
@@ -321,6 +352,17 @@ class traj_stitching(object):
         print('starting at %d trajectories'%(ntr))
         nsmp = len(self.traj_list[whr])*1.0
         print('with %.1f samples per trajectory on average'%(nsmp/ntr),'\n')
+        
+        
+        # making a hash table of id -> index list of trajectories
+        self.index_id_hash = {}
+        for i in range(len(self.traj_list)):
+            id_ = self.traj_list[i][0]
+            try:
+                self.index_id_hash[id_].append(i)
+            except:
+                self.index_id_hash[id_] = [i]
+        
         
         print('searching for candidates to connect:')
         self.calc_dij()
