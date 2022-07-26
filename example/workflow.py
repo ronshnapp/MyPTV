@@ -653,6 +653,7 @@ class workflow(object):
         '''
         from myptv.tracking_mod import tracker_four_frames
         from numpy import array
+        from os import getcwd, listdir
         
         # fetching parameters
         particles_fm = self.get_param('tracking', 'particles_file_name')
@@ -703,8 +704,20 @@ class workflow(object):
 
         # save the results
         if save_name is not None:
-            print('\n','saving file.')
-            t4f.save_results(save_name)
+            cwd_ls = listdir(getcwd())
+            if save_name in cwd_ls:
+                print('\n The file name "%s" already exists in'%save_name)
+                print(' the working directory. Should I save anyways?')
+                usr = input('(1=yes, else=no)')
+                if usr == '1':
+                    print('\n','saving file.')
+                    t4f.save_results(save_name)
+                else:
+                    print('\n', 'skipped saving.')
+            
+            else:
+                print('\n','saving file.')
+                t4f.save_results(save_name)
         
         print('\n', 'Finished tracking.')
         
