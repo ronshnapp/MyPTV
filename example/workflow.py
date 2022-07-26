@@ -470,11 +470,24 @@ class workflow(object):
             
             print('\n','blobs found:', len(loopSegment.blobs))
             
-            if save_name is not None:
-                loopSegment.save_results(save_name)
-                print('File saved (%s).'%(save_name))
+            # saving the semented blobs:
+            if save_name is not None and type(save_name)==str:
+                cwd_ls = os.listdir(os.getcwd())
+                if save_name in cwd_ls:
+                    print('\n The file name "%s" already exists in'%save_name)
+                    print(' the working directory. Should I save anyways?')
+                    usr = input('(1=yes, else=no)')
+                    if usr == '1':
+                        loopSegment.save_results(save_name)
+                        print('\nfile saved.')
+                    else:
+                        print('\nskipped saving')
+                    
+                else:
+                    loopSegment.save_results(save_name)
+                    print('\nfile saved.')    
+            print('\nDone.\n')
             
-            print('Done.')
         
         
         # segmenting the image if there is only 1 frames
@@ -510,11 +523,24 @@ class workflow(object):
                 particleSegment.plot_blobs()
                 show()
                 
-            if save_name is not None and type(save_name)==str:
-                particleSegment.save_results(save_name)
-                print('file saved.')
                 
-            print('done.')
+            # Saving the segmented blobs:
+            if save_name is not None and type(save_name)==str:
+                cwd_ls = os.listdir(os.getcwd())
+                if save_name in cwd_ls:
+                    print('\n The file name "%s" already exists in'%save_name)
+                    print(' the working directory. Should I save anyways?')
+                    usr = input('(1=yes, else=no)')
+                    if usr == '1':
+                        particleSegment.save_results(save_name)
+                        print('\nfile saved.')
+                    else:
+                        print('\nskipped saving')
+                else:
+                    particleSegment.save_results(save_name)
+                    print('\nfile saved.')
+                
+            print('\nDone.\n')
             
             
             
