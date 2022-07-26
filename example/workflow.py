@@ -551,6 +551,7 @@ class workflow(object):
         '''
         from myptv.particle_matching_mod import match_blob_files
         from myptv.imaging_mod import camera, img_system
+        from os import getcwd, listdir
         
         # fetching the parameters
         blob_fn = self.get_param('matching', 'blob_files')
@@ -627,10 +628,22 @@ class workflow(object):
         
         # save the results
         if save_name is not None:
-            print('\n','saving file.')
-            mbf.save_results(save_name)
+            cwd_ls = listdir(getcwd())
+            if save_name in cwd_ls:
+                print('\n The file name "%s" already exists in'%save_name)
+                print(' the working directory. Should I save anyways?')
+                usr = input('(1=yes, else=no)')
+                if usr == '1':
+                    print('\n','saving file.')
+                    mbf.save_results(save_name)
+                else:
+                    print('\n','skiped saving.')
+                
+            else:
+                print('\n','saving file.')
+                mbf.save_results(save_name)
         
-        print('\n', 'Finished Matching.')
+        print('\n', 'Finished Matching.\n')
             
         
         
