@@ -773,6 +773,7 @@ class workflow(object):
         '''
         from numpy import loadtxt
         from myptv.traj_stitching_mod import traj_stitching
+        from os import getcwd, listdir
         
         # fetchhing the stitching parameters
         trajectory_file = self.get_param('stitching', 'trajectory_file')
@@ -786,10 +787,22 @@ class workflow(object):
         ts = traj_stitching(traj_list, Ts, dm)
         ts.stitch_trajectories()
         
-        # saveing the data
+        # saving the data
         if save_name is not None:
-            print('\n', 'Saveing the data.')    
-            ts.save_results(save_name)
+            cwd_ls = listdir(getcwd())
+            if save_name in cwd_ls:
+                print('\n The file name "%s" already exists in'%save_name)
+                print(' the working directory. Should I save anyways?')
+                usr = input('(1=yes, else=no)')
+                if usr == '1':
+                    print('\n', 'Saveing the data.')    
+                    ts.save_results(save_name)
+                else:
+                    print('\n', 'Skipped saving file.')
+            
+            else:
+                print('\n', 'Saveing the data.')    
+                ts.save_results(save_name)
         
         print('\n', 'Done.')
         
