@@ -3,7 +3,7 @@ Version: 0.4.3
 
 <img src="./user_manual/figs/logo.png" style="zoom:20%;" />
 
-<a href="https://doi.org/10.5281/zenodo.6846969"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.6846969.svg" alt="DOI"></a>
+<a href="https://joss.theoj.org/papers/10.21105/joss.04398#"><img src="https://joss.theoj.org/papers/10.21105/joss.04398/status.svg" alt="DOI"></a>   <a href="https://doi.org/10.5281/zenodo.6846969"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.6846969.svg" alt="DOI"></a>
 
 ## About
 
@@ -88,6 +88,14 @@ MyPTV was founded in 2022 by Ron Shnapp. In its core, MyPTV is a scientific open
 3) Did you spot a bug? Would like to raise an issue? Please open an issue in our Github repositories' issues section - https://github.com/ronshnapp/MyPTV/issue.
 
 In any case, if you feel the need - please feel free to send Ron an email directly (ronshnapp@gmail.com)!
+
+## How to cite
+
+If you found MyPTV useful for your scientific work, you may cite us as:
+
+Shnapp, R., (2022). MyPTV: A Python Package for 3D Particle Tracking. Journal of Open Source Software, 7(75), 4398, https://doi.org/10.21105/joss.04398 
+
+See our paper on JOSS: https://joss.theoj.org/papers/10.21105/joss.04398#
 
 ## References
 
