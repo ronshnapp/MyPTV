@@ -9,7 +9,7 @@ calibration module for the cameras
 
 """
 
-from numpy import mean, sum, hstack, array, loadtxt
+from numpy import mean, sum, hstack, array, loadtxt, zeros, ones, arange
 from pandas import read_csv
 
 
@@ -23,31 +23,57 @@ class calibrate(object):
     procedure uses scipy minimize method (through searchCalibration()).
     '''
     
-    def __init__(self, camera, lab_coords, img_coords):
+    def __init__(self, camera, lab_coords, img_coords, random_sampling=50):
+        '''
+        input -
+        camera - the camera instance to be calibrated
+        lab_coords - a list of 1d arrays of length 3, giving the calibration 
+                     points coordinates in lab space
+        lab_coords - a list of 1d arrays of length 2, giving the calibration 
+                     points coordinates in the camera's pixels
+        random_sampling - an integer, using self.stochastic_search_calibration
+                          in each iteration of the minimization the cost
+                          function is calculated with a given subset of 
+                          calibration points with this number of samples. 
         
+        '''
         self.camera = camera
         self.img_coords = img_coords
         self.lab_coords = lab_coords
         self.D_lst = [self.mean_squared_err()]
         self.sep = sum((array(self.img_coords[1])-array(self.img_coords[0]))**2)**0.5
+        self.random_sampling = random_sampling
         
         
-    def mean_squared_err(self, correction=True):
+        
+    def mean_squared_err(self, correction=True, points=None):
         '''
         This calculates the mean squared distance between the 
-        projection and the given coordinates  (in units of pixel).
+        projection and the given coordinates (in units of pixel).
         
         (in the calibration we want to minimize this D)
+        
+        if points=None, then the calculation is using all the calibratino 
+        points. Otherwise, it can be a tuple of two lists, the first being a 
+        list of lab_points and the second is a list of img_points. 
         '''
+        
+        if points is None:
+            lp, imp = self.lab_coords, self.img_coords
+        else:
+            lp, imp = points
+            
         z_lst = []        
-        for x in self.lab_coords:
+        for x in lp:
             z_lst.append(self.camera.projection(x, correction=correction))
-        e = array(z_lst) - array(self.img_coords)
+        e = array(z_lst) - array(imp)
         D = mean( sum(e**2, axis=1)**0.5 )
+        
         return D
         
     
-    def searchCalibration(self, maxiter=5000, fix_f=True):
+    
+    def searchCalibration(self, maxiter=5000, fix_f=True, points=None):
         '''
         using scipy minimize function to obtain calibration
         parameters for the camera.
@@ -65,7 +91,7 @@ class calibrate(object):
                 
             self.camera.calc_R()
             
-            meanSquaredErr = self.mean_squared_err()
+            meanSquaredErr = self.mean_squared_err(points=points)
             self.D_lst.append( meanSquaredErr )
             return meanSquaredErr
         
@@ -77,13 +103,88 @@ class calibrate(object):
         else:
             X0 = hstack([c.O, c.theta, c.xh, c.yh, c.f])
                         
-        res = minimize(func, X0, method='nelder-mead', 
-                       options={'disp': True, 'maxiter': maxiter})
-        return res
+        res = minimize(func, X0, method='nelder-mead',
+                       options={'maxiter': maxiter})
+        
+        return res.message, res.x
     
     
     
-    def fineCalibration(self, maxiter=500):
+    def stochastic_searchCalibration(self, iterSteps=2000):
+        '''
+        This function divides the calibration points into subsets with 
+        self.random_sampling points each, and then performs iterSteps 
+        minimization steps using searchCalibration for each point subset.
+        '''
+        from random import shuffle
+        
+        print('\nRunning stochastic self-calibration\n')
+        
+        nPointsTot = len(self.lab_coords)
+        
+        # We do the minimization over many different subsets
+        # of increasing sizes
+        
+        subset_sizes = [self.random_sampling]
+        while subset_sizes[-1]*2<nPointsTot:
+            subset_sizes.append(int(subset_sizes[-1]*2))
+        
+        
+        for subset_size in subset_sizes:
+            print('\niterating at subset size %d'%subset_size)
+            
+            itermax = int((iterSteps * self.random_sampling)/subset_size)
+            
+            # get random subsets of the points -
+            nSubsets = int(nPointsTot / subset_size)
+            subsets = [([],[]) for i in range(nSubsets)]
+            
+            shuffledIndexes = list(range(nPointsTot))
+            shuffle(shuffledIndexes)
+            
+            for e, ind in enumerate(shuffledIndexes):
+                subsets[e%nSubsets][0].append(self.lab_coords[ind])
+                subsets[e%nSubsets][1].append(self.img_coords[ind])
+            
+            # Run minimization steps using the subsets:
+            e=0
+            err_i = self.mean_squared_err()
+            Xi = hstack([self.camera.O, self.camera.theta,
+                          self.camera.xh, self.camera.yh])
+            convergenceTracker = [err_i]
+            for subset in subsets:
+                e+=1
+                print('starting subset %d/%d; err=%.3f'%(e, len(subsets), 
+                                                self.mean_squared_err()))
+                self.searchCalibration(maxiter=itermax, points=subset)
+                err_ip1 = self.mean_squared_err()
+                Xip1 = hstack([self.camera.O, self.camera.theta,
+                                self.camera.xh, self.camera.yh])
+                
+                # if the error increased, go back to previous state
+                if err_ip1 > err_i:
+                    self.camera.O = Xi[:3]
+                    self.camera.theta = Xi[3:6]
+                    self.camera.xh = Xi[6]
+                    self.camera.yh = Xi[7]
+                    self.camera.calc_R()
+                    convergenceTracker.append(0.0)
+                    
+                else:
+                    convergenceTracker.append(abs((err_i - err_ip1)/err_i))
+                    err_i = err_ip1
+                    Xi = Xip1
+                
+                # check for converence of the error
+                if all([conv < 0.005 for conv in convergenceTracker[-3:]]):
+                    print('\nreached dead end. Increasing subset size.')
+                    break                
+                
+        print('\nstochastic iteration done; err=%.3f'%(self.mean_squared_err()))
+        
+    
+    
+    def fineCalibration(self, maxiter=500, points=None):
         '''
         Calibration for the nonlinear error term. 
         This function attempts to find the 27 parameters that minimize the
@@ -96,16 +197,75 @@ class calibrate(object):
             X_ = X.reshape(shape)
             self.camera.E[0,:] = X_[0,:]
             self.camera.E[1,:] = X_[1,:]
-            meanSquaredErr = self.mean_squared_err(correction=True)
-            self.D_lst.append( meanSquaredErr )
+            meanSquaredErr = self.mean_squared_err(correction=True, 
+                                                   points=points )
+            self.D_lst.append( meanSquaredErr)
             return meanSquaredErr
         
         c = self.camera
         X0 = c.E[:2,:]
         res = minimize(func, X0, method='nelder-mead', 
-                       options={'disp': True, 'maxiter': maxiter})
+                       options={'maxiter': maxiter})
         return res
     
+    
+    def stochastic_fineCalibration(self, iterSteps=1000):
+        
+        from random import shuffle
+        
+        nPointsTot = len(self.lab_coords)
+        subset_sizes = [self.random_sampling]
+        while subset_sizes[-1]*2<nPointsTot:
+            subset_sizes.append(int(subset_sizes[-1]*2))
+        
+        
+        for subset_size in subset_sizes:
+            
+            itermax = int((iterSteps * self.random_sampling)/subset_size)
+            
+            # get random subsets of the points -
+            nSubsets = int(nPointsTot / subset_size)
+            subsets = [([],[]) for i in range(nSubsets)]
+            
+            shuffledIndexes = list(range(nPointsTot))
+            shuffle(shuffledIndexes)
+            
+            for e, ind in enumerate(shuffledIndexes):
+                subsets[e%nSubsets][0].append(self.lab_coords[ind])
+                subsets[e%nSubsets][1].append(self.img_coords[ind])
+            
+            # Run minimization steps using the subsets:
+            e=0
+            err_i = self.mean_squared_err()
+            Xi = self.camera.E[:2,:].copy()
+            convergenceTracker = [err_i]
+            for subset in subsets:
+                e+=1
+                print('starting subset %d/%d; err=%.3f'%(e, len(subsets), 
+                                                self.mean_squared_err()))
+
+                self.fineCalibration(maxiter=itermax, points=subset)
+                err_ip1 = self.mean_squared_err()
+                Xip1 = self.camera.E[:2,:].copy()
+                
+                # if the error increased, go back to previous state
+                if err_ip1 > err_i:
+                    self.camera.E[0,:] = Xi[0,:]
+                    self.camera.E[1,:] = Xi[1,:]
+                    convergenceTracker.append(0.0)
+                    
+                else:
+                    convergenceTracker.append(abs((err_i - err_ip1)/err_i))
+                    err_i = err_ip1
+                    Xi = Xip1
+                    
+                # check for converence of the error
+                if all([conv < 0.005 for conv in convergenceTracker[-4:]]):
+                    print('\nreached dead end. Increasing subset size.')
+                    break
+                
+        print('\nstochastic iteration done; err=%.3f'%(self.mean_squared_err()))
+                
     
     
     def plot_proj(self, ax = None):
