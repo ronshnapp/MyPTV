@@ -81,15 +81,32 @@ class cal_gui(object):
         plot_button.grid(row=3, column=0, padx=10, pady=2, sticky='ew')
         
         
+        
+        # Stochastic external
+        stochasticSearch_button = Button(button_frame1, text='Fast ext. cal.', 
+                                command = self.stochasticSearchCal,
+                                padx=10, pady=4, width=15) 
+        stochasticSearch_button.grid(row=0, column=1, padx=10, pady=2,
+                                     sticky='ew')
+        
+        
+        # Stochastic final
+        stochasticFine_button = Button(button_frame1, text='Fast fine cal.', 
+                                command = self.stochasticfine,
+                                padx=10, pady=4, width=15) 
+        stochasticFine_button.grid(row=1, column=1, padx=10, pady=2,
+                                     sticky='ew')
+        
+        
         # save points button
         save_button = Button(button_frame1, text='Save', 
                                 command = self.Save, padx=10, pady=4, width=15) 
-        save_button.grid(row=0, column=1, padx=10, pady=2, sticky='ew')
+        save_button.grid(row=2, column=1, padx=10, pady=2, sticky='ew')
         
         # quit button
         quit_button = Button(button_frame1, text='Quit', 
                                 command = self.Quit, padx=10, pady=4) 
-        quit_button.grid(row=1, column=1, padx=10, pady=2, sticky='ew')
+        quit_button.grid(row=3, column=1, padx=10, pady=2, sticky='ew')
         
         
         
@@ -346,7 +363,7 @@ class cal_gui(object):
         '''Does the searchCalibration, i.e. external calibration'''
         print('\n','Iterating to minimize external parameters...','\n')
         self.status_show.configure(fg='red', 
-                                   text='iterating to minimize external parameters...')
+                                   text='minimizing external parameters...')
         self.root.update()
         self.calibrate_obj.searchCalibration(maxiter=2000)
         err = self.calibrate_obj.mean_squared_err()
@@ -359,7 +376,7 @@ class cal_gui(object):
         '''Does the fine (non-linear error) calibration'''
         print('\n', 'Iterating to minimize correction terms')
         self.status_show.configure(fg='red', 
-                                   text='iterating to minimize fine calibration...')
+                                   text='minimizing fine calibration...')
         self.root.update()
         self.calibrate_obj.fineCalibration()
         err = self.calibrate_obj.mean_squared_err()
@@ -401,6 +418,30 @@ class cal_gui(object):
             ax.imshow(img, cmap='gray')
         self.calibrate_obj.plot_proj(ax=ax)
         show()
+        self.status_show.configure(fg='green', text='done! waiting for action')
+        
+        
+    def stochasticSearchCal(self):
+        '''Does the Stochastic_searchCalibration'''
+        self.status_show.configure(fg='red', 
+                                   text='calibrating using stochastic search...')
+        self.root.update()
+        self.calibrate_obj.stochastic_searchCalibration(iterSteps=2000)
+        err = self.calibrate_obj.mean_squared_err()
+        print('\n','calibration error: %.3f pixels'%(err),'\n')
+        self.update_cal_stats()
+        self.status_show.configure(fg='green', text='done! waiting for action')
+        
+        
+    def stochasticfine(self):
+        '''Does the Stochastic_FineCalibration'''
+        self.status_show.configure(fg='red', 
+                                   text='calibrating using stochastic search...')
+        self.root.update()
+        self.calibrate_obj.stochastic_fineCalibration(iterSteps=2000)
+        err = self.calibrate_obj.mean_squared_err()
+        print('\n','calibration error: %.3f pixels'%(err),'\n')
+        self.update_cal_stats()
         self.status_show.configure(fg='green', text='done! waiting for action')
         
         
