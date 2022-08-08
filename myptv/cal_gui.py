@@ -34,7 +34,7 @@ class cal_gui(object):
         
         # set the window
         self.root = Tk()
-        self.root.geometry('400x480')
+        self.root.geometry('390x500')
         self.root.resizable(0,0)
         self.root.title('MyPTV: calibration GUI')
 
@@ -47,10 +47,16 @@ class cal_gui(object):
         button_label.grid(row=0, column=0, padx=(10), pady=3, sticky='nsew')
         
 
-        # Buttons frame
+        # Buttons frame1
         button_frame1 = Label(button_label)
         button_frame1.grid(row=0, column=0, columnspan=1, sticky='nsw', padx=2, 
                           pady=3)
+        
+        
+        # Buttons frame2
+        button_frame2 = Label(button_label)
+        button_frame2.grid(row=1, column=0, columnspan=1, sticky='nsw', padx=2, 
+                          pady=10)
         
         
         # external params calibration button
@@ -74,13 +80,6 @@ class cal_gui(object):
         
         
         
-        # plot calibration
-        plot_button = Button(button_frame1, text='Plot calibration', 
-                                command = self.plot_calibration, 
-                                padx=2, pady=4, width=20)
-        plot_button.grid(row=3, column=0, padx=10, pady=2, sticky='ew')
-        
-        
         
         # Stochastic external
         stochasticSearch_button = Button(button_frame1, text='Fast ext. cal.', 
@@ -98,15 +97,30 @@ class cal_gui(object):
                                      sticky='ew')
         
         
+        
+        # plot calibration
+        plot_button = Button(button_frame2, text='Plot calibration', 
+                                command = self.plot_calibration, 
+                                padx=2, pady=4, width=20)
+        plot_button.grid(row=0, column=0, padx=10, pady=2, sticky='ew')
+        
+        # plot error historam
+        plot_button = Button(button_frame2, text='Plot error hist.', 
+                                command = self.plot_err_hist, 
+                                padx=2, pady=4, width=20)
+        plot_button.grid(row=1, column=0, padx=10, pady=2, sticky='ew')
+        
+        
         # save points button
-        save_button = Button(button_frame1, text='Save', 
+        save_button = Button(button_frame2, text='Save', 
                                 command = self.Save, padx=10, pady=4, width=15) 
-        save_button.grid(row=2, column=1, padx=10, pady=2, sticky='ew')
+        save_button.grid(row=0, column=1, padx=10, pady=2, sticky='ew')
+        
         
         # quit button
-        quit_button = Button(button_frame1, text='Quit', 
+        quit_button = Button(button_frame2, text='Quit', 
                                 command = self.Quit, padx=10, pady=4) 
-        quit_button.grid(row=3, column=1, padx=10, pady=2, sticky='ew')
+        quit_button.grid(row=1, column=1, padx=10, pady=2, sticky='ew')
         
         
         
@@ -260,15 +274,7 @@ class cal_gui(object):
                                  width=14, bg='white')
         self.error_input.grid(row=1, column=1, rowspan=1, sticky='nw', padx=2, pady=2)
         
-        
-        
-        
-        
-        
-        
-        
-        
-        
+
         
         if self.calibrate_obj is not None:
             self.update_cal_stats()
@@ -417,6 +423,16 @@ class cal_gui(object):
             img = imread(self.cal_image)
             ax.imshow(img, cmap='gray')
         self.calibrate_obj.plot_proj(ax=ax)
+        show()
+        self.status_show.configure(fg='green', text='done! waiting for action')
+        
+        
+    def plot_err_hist(self):
+        '''Plots the calibration error histogram'''
+        self.status_show.configure(fg='red', text='plotting calibration...')
+        self.root.update()
+        fig, ax = subplots()
+        self.calibrate_obj.plot_err_distribution(ax=ax)
         show()
         self.status_show.configure(fg='green', text='done! waiting for action')
         

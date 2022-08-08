@@ -204,7 +204,7 @@ class workflow(object):
         from myptv.calibrate_mod import calibrate
         from os import listdir
         from os.path import isfile
-        from matplotlib.pyplot import subplots, show, imread
+        #from matplotlib.pyplot import subplots, show, imread
         
         # fetch parameters from the file
         cam_name = self.get_param('calibration', 'camera_name')
@@ -236,11 +236,10 @@ class workflow(object):
             cam.load('.')
             print('camera data loaded successfully.')
             cal = calibrate(cam, cam.lab_points, cam.image_points)
-            print('initial error: %.3f pixels'%(cal.mean_squared_err()))
-            print('')
+            print('initial error: %.3f pixels\n'%(cal.mean_squared_err()))
             
             
-            
+            print('starting calibratino GIU\n')
             from myptv.cal_gui import cal_gui
             gui = cal_gui(cal, cal_image)
             

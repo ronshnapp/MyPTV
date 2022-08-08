@@ -23,7 +23,7 @@ class calibrate(object):
     procedure uses scipy minimize method (through searchCalibration()).
     '''
     
-    def __init__(self, camera, lab_coords, img_coords, random_sampling=50):
+    def __init__(self, camera, lab_coords, img_coords, random_sampling=20):
         '''
         input -
         camera - the camera instance to be calibrated
@@ -206,10 +206,11 @@ class calibrate(object):
         X0 = c.E[:2,:]
         res = minimize(func, X0, method='nelder-mead', 
                        options={'maxiter': maxiter})
-        return res
+        
+        return res.message, res.x
     
     
-    def stochastic_fineCalibration(self, iterSteps=1000):
+    def stochastic_fineCalibration(self, iterSteps=2000):
         
         from random import shuffle
         
@@ -286,6 +287,20 @@ class calibrate(object):
             
         ax.set_aspect('equal')
         
+        
+    def plot_err_distribution(self, ax = None):
+        import matplotlib.pyplot as plt
+        
+        if ax == None:
+            fig, ax = plt.subplots()
+        
+        imc = array(self.img_coords)
+        z_lst = array([self.camera.projection(x) for x in self.lab_coords])
+        err = sum((imc-z_lst)**2, axis=1)**0.5
+        
+        h = ax.hist( err, bins='auto')
+        ax.set_xlabel('Camera projection err [px]')
+        ax.set_ylabel('Counts')
         
         
     def manual_calibration(self):
