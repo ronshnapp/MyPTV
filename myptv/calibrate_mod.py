@@ -50,7 +50,7 @@ class calibrate(object):
         '''
         This calculates the mean squared distance between the 
         projection and the given coordinates (in units of pixel).
-        
+
         (in the calibration we want to minimize this D)
         
         if points=None, then the calculation is using all the calibratino 
