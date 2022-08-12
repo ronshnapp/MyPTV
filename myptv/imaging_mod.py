@@ -242,8 +242,9 @@ class camera(object):
         '''
         the projection equation is 
         [eta, zeta, f] = b * [R]^-1 + e(eta, zeta)
-        This function returns (eta, zeta) for an input of b*[R]^-1
-        by solving a least squares equation
+        This function returns (eta, zeta) for an input of b*[R]^-1. 
+        To make inverting the non-linear correction solvable we 
+        linearize the error term with a Taylor series expantion.
         '''
         
         Z3 = [eta_, zeta_, eta_**2, zeta_**2, eta_ * zeta_]
@@ -251,6 +252,7 @@ class camera(object):
         #      eta_**3, eta_**2*zeta_, eta_*zeta_**2, zeta_**3]
         e_ = dot(self.E, Z3)
         
+        # calculating the derivatives of the error term:
         e_0 = e_[0]
         a, b, c, d, ee = self.E[0,:]
         e_eta_0 = a + 2*c*eta_ + ee*zeta_
