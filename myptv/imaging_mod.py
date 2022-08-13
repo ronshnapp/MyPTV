@@ -185,6 +185,9 @@ class camera(object):
                     [sin(tz),cos(tz),0],
                     [0,0,1]])
         self.R = dot(dot(Rx,Ry), Rz)
+        
+        #bR_inv = dot(-self.O, self.R.T)
+        #self.a = bR_inv[2] / self.f
     
     
     def get_r(self, eta, zeta):
@@ -221,19 +224,18 @@ class camera(object):
         output - (eta, zeta) (array,2) - camera coordinates of the projection 
                                          of x
         '''
-        B = x - self.O
-        b = B / (B[0]**2 + B[1]**2 + B[2]**2)**0.5
-        v = dot(b, inv(self.R))
+        b = x - self.O
+        v = dot(b, self.R.T) #inv(self.R))
         a =  v[2] / self.f
         eta_ = v[0] / a  + self.resolution[0]/2 + self.xh
         zeta_ = v[1] / a + self.resolution[1]/2 + self.yh
         
-        # add the error correction term.
+        # if we add the error correction term.
         if correction:
             eta, zeta = self.eta_zeta_from_bRinv(eta_, zeta_)
             return array([eta, zeta])
         
-        # do not use the error correction term.
+        # if we don't use the error correction term.
         else:
             return array([eta_, zeta_])
     

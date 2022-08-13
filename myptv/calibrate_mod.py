@@ -102,9 +102,18 @@ class calibrate(object):
         
         else:
             X0 = hstack([c.O, c.theta, c.xh, c.yh, c.f])
-                        
-        res = minimize(func, X0, method='nelder-mead',
-                       options={'maxiter': maxiter})
+            
+        # res = minimize(func, X0, method='nelder-mead',
+        #                options={'maxiter': maxiter})
+            
+        if (self.camera.E == 0).all():
+            res = minimize(func, X0, method='BFGS',
+                            options={'maxiter': maxiter},
+                            jac = '2-point')
+            
+        else:
+            res = minimize(func, X0, method='nelder-mead',
+                            options={'maxiter': maxiter})
         
         return res.message, res.x
     
@@ -130,6 +139,8 @@ class calibrate(object):
             subset_sizes.append(int(subset_sizes[-1]*2))
         
         
+        err_0 = self.mean_squared_err()
+        ee = 0
         for subset_size in subset_sizes:
             print('\niterating at subset size %d'%subset_size)
             
@@ -176,11 +187,15 @@ class calibrate(object):
                     Xi = Xip1
                 
                 # check for converence of the error
-                if all([conv < 0.005 for conv in convergenceTracker[-3:]]):
-                    print('\nreached dead end. Increasing subset size.')
-                    break                
+                if ee>0:
+                    if all([conv < 0.005 for conv in convergenceTracker[-3:]]):
+                        print('\nreached dead end. Increasing subset size.')
+                        break                
+                ee+=1
                 
-        print('\nstochastic iteration done; err=%.3f'%(self.mean_squared_err()))
+        err = self.mean_squared_err()
+        print('\n','Error reduced by: %.2f%%'%( (err_0-err)/err_0*100 ))
+        print('stochastic iteration done; err=%.3f'%(err))
         
     
     
@@ -219,7 +234,8 @@ class calibrate(object):
         while subset_sizes[-1]*2<nPointsTot:
             subset_sizes.append(int(subset_sizes[-1]*2))
         
-        
+        err_0 = self.mean_squared_err()
+        ee = 0
         for subset_size in subset_sizes:
             
             itermax = int((iterSteps * self.random_sampling)/subset_size)
@@ -261,12 +277,94 @@ class calibrate(object):
                     Xi = Xip1
                     
                 # check for converence of the error
-                if all([conv < 0.005 for conv in convergenceTracker[-4:]]):
-                    print('\nreached dead end. Increasing subset size.')
-                    break
+                if ee>0:
+                    if all([conv < 0.005 for conv in convergenceTracker[-4:]]):
+                        print('\nreached dead end. Increasing subset size.')
+                        break
+            ee+=1
                 
-        print('\nstochastic iteration done; err=%.3f'%(self.mean_squared_err()))
+        err = self.mean_squared_err()
+        print('\n','Error reduced by: %.2f%%'%( (err_0-err)/err_0*100 ))
+        print('\n','stochastic iteration done; err=%.3f'%(self.mean_squared_err()))
                 
+        
+        
+# =============================================================================
+#    An attempt to calculate the error gradient numerically. This turns out
+#    to be somwhat of a challange, and the speed does not increase in the
+#    minimization. So, we will drop this for now.     
+#
+#     def errorGradient(self, X):
+#         '''
+#         returns the gradient of the mean squared error. 
+#         '''
+#         from numpy import sin, cos, dot
+#         
+#         # the inverse of the rotation matrix is its transpose
+#         R_inv = self.camera.R.T
+#         
+#         # calculating the derivatives of the rotation matrix
+#         tx,ty,tz = self.camera.theta
+#         Rx = array([[1,0,0],
+#                     [0,cos(tx),-sin(tx)],
+#                     [0,sin(tx),cos(tx)]])
+#         Ry = array([[cos(ty),0,sin(ty)],
+#                      [0,1,0],
+#                      [-sin(ty),0,cos(ty)]])
+#         Rz = array([[cos(tz),-sin(tz),0],
+#                     [sin(tz),cos(tz),0],
+#                     [0,0,1]])
+#         
+#         dxRx = array([[1,0,0],
+#                       [0,-sin(tx),-cos(tx)],
+#                       [0,cos(tx),-sin(tx)]])
+#         dyRy = array([[-sin(ty),0,cos(ty)],
+#                       [0,1,0],
+#                       [-cos(ty),0,-sin(ty)]])
+#         dzRz = array([[-sin(tz),-cos(tz),0],
+#                       [cos(tz),-sin(tz),0],
+#                       [0,0,1]])
+#         
+#         dxR = dot(dot(dxRx,Ry), Rz).T
+#         dyR = dot(dot(Rx,dyRy), Rz).T
+#         dzR = dot(dot(Rx,Ry), dzRz).T
+#         
+#         a = dot(-self.camera.O, R_inv)[2] / self.camera.f
+#         
+#         
+#         # calculating the gradients by summing over all calibration points
+#         grad_E = zeros(8)
+#         for i in range(len(self.lab_coords)):
+#             eta, zeta = self.img_coords[i]
+#             eta_, zeta_ = self.camera.projection(self.lab_coords[i])
+#             ei = ((eta-eta_)**2 + (zeta-zeta_)**2)**0.5
+#             
+#             # derivative of O
+#             grad_E[0] += -((eta_-eta)*R_inv[0,0] + (zeta_-zeta)*R_inv[0,1])/ei/a
+#             grad_E[1] += -((eta_-eta)*R_inv[1,0] + (zeta_-zeta)*R_inv[1,1])/ei/a
+#             #grad_E[2] += -((eta_-eta)*R_inv[2,0] + (zeta_-zeta)*R_inv[2,1])/ei/a
+#             
+#             dx = self.lab_coords[i] - self.camera.O
+#             deta_dOz = (R_inv[0,2]*dot(dx, R_inv[:,2])-R_inv[2,2]*dot(dx, R_inv[:,0]))/dot(dx, R_inv[:,2])**2
+#             dzeta_dOz = (R_inv[1,2]*dot(dx, R_inv[:,2])-R_inv[2,2]*dot(dx, R_inv[:,1]))/dot(dx, R_inv[:,2])**2
+#             grad_E[2] += -((eta_-eta)*deta_dOz + (zeta_-zeta)*dzeta_dOz)/ei*self.camera.f
+#             
+#             # derivative of theta
+#             Ax = (self.lab_coords[i] - self.camera.O).dot(dxR)
+#             grad_E[3] += -((eta-eta_)*Ax[0] + (zeta-zeta_)*Ax[1])/ei/a
+#             Ay = (self.lab_coords[i] - self.camera.O).dot(dyR)
+#             grad_E[4] += -((eta-eta_)*Ay[0] + (zeta-zeta_)*Ay[1])/ei/a
+#             Az = (self.lab_coords[i] - self.camera.O).dot(dzR)
+#             grad_E[5] += -((eta-eta_)*Az[0] + (zeta-zeta_)*Az[1])/ei/a
+#         
+#             # derivative of xh and yh
+#             grad_E[6] += ((eta-eta_) + (zeta-zeta_))/ei
+#             grad_E[7] += ((eta-eta_) + (zeta-zeta_))/ei
+#             
+#         #print(grad_E / len(self.lab_coords))
+#         return grad_E / len(self.lab_coords)
+# =============================================================================
+    
     
     
     def plot_proj(self, ax = None):
