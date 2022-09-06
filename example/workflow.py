@@ -44,20 +44,22 @@ class workflow(object):
         self.param_file_path = param_file
         self.params = self.read_params_file()
         
+        
+        self.allowed_actions = ['help', 'calibration', 'calibration_point_gui', 
+                           'calibration_with_particles',
+                           'match_target_file', 'matching', 'segmentation',
+                           'smoothing', 'stitching', 'tracking']
+        
+        
         # perform the wanted action:
         if action is None:
             print('Started workflow with no particular action.')
             
         elif action != None:
             
-            allowed_actions = ['calibration', 'calibration_point_gui', 
-                               'calibration_with_particles',
-                              'match_target_file', 'segmentation', 'matching',
-                              'tracking', 'smoothing', 'stitching']
-            
             msg1 = 'The given action is unknown.'
-            msg2 = 'allowed actions are:'+str(allowed_actions)
-            if action not in allowed_actions:
+            msg2 = 'allowed actions are:'+str(self.allowed_actions)
+            if action not in self.allowed_actions:
                 raise ValueError(msg1+'\n'+msg2)
             
             elif action == 'calibration':
@@ -86,7 +88,33 @@ class workflow(object):
             
             elif action == 'stitching':
                 self.do_stitching()
+                
+            elif action == 'help':
+                self.help_me()
             
+            
+    
+    def help_me(self):
+        '''
+        Prints a message that might help users with the allowable commands.
+        '''
+        print('\nThe workflow script is intended to help users utilize MyPTVs')
+        print('capabilities in their 3D particle tracking experiments. \n')
+        
+        print('To use the workflow script, run it with Python, usin one of')
+        print('the following actions that you would like to perform:\n')
+        
+        for e, act in enumerate(self.allowed_actions):
+            print('%d) "%s"'%(e, act))
+            
+        print('\nThe script will now close, so the wanted action could be run.')
+        
+        print('\nGood luck!')
+        
+        print('\nP.S. - try using the user manual that is found on the main')
+        print('Github repository.')
+            
+    
             
     
     
