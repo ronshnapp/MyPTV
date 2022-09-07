@@ -507,7 +507,7 @@ class workflow(object):
             # saving the semented blobs:
             if save_name is not None and type(save_name)==str:
                 cwd_ls = os.listdir(os.getcwd())
-                if save_name in cwd_ls:
+                if save_name in cwd_ls or os.path.exists(save_name):
                     print('\n The file name "%s" already exists in'%save_name)
                     print(' the working directory. Should I save anyways?')
                     usr = input('(1=yes, else=no)')
@@ -561,7 +561,7 @@ class workflow(object):
             # Saving the segmented blobs:
             if save_name is not None and type(save_name)==str:
                 cwd_ls = os.listdir(os.getcwd())
-                if save_name in cwd_ls:
+                if save_name in cwd_ls or os.path.exists(save_name):
                     print('\n The file name "%s" already exists in'%save_name)
                     print(' the working directory. Should I save anyways?')
                     usr = input('(1=yes, else=no)')
@@ -586,6 +586,8 @@ class workflow(object):
         from myptv.particle_matching_mod import match_blob_files
         from myptv.imaging_mod import camera, img_system
         from os import getcwd, listdir
+        from os.path import exists as pathExists
+        
         
         # fetching the parameters
         blob_fn = self.get_param('matching', 'blob_files')
@@ -663,7 +665,7 @@ class workflow(object):
         # save the results
         if save_name is not None:
             cwd_ls = listdir(getcwd())
-            if save_name in cwd_ls:
+            if save_name in cwd_ls or pathExists(save_name):
                 print('\n The file name "%s" already exists in'%save_name)
                 print(' the working directory. Should I save anyways?')
                 usr = input('(1=yes, else=no)')
@@ -688,6 +690,7 @@ class workflow(object):
         from myptv.tracking_mod import tracker_four_frames
         from numpy import array
         from os import getcwd, listdir
+        from os.path import exists as pathExists
         
         # fetching parameters
         particles_fm = self.get_param('tracking', 'particles_file_name')
@@ -739,7 +742,7 @@ class workflow(object):
         # save the results
         if save_name is not None:
             cwd_ls = listdir(getcwd())
-            if save_name in cwd_ls:
+            if save_name in cwd_ls or pathExists(save_name):
                 print('\n The file name "%s" already exists in'%save_name)
                 print(' the working directory. Should I save anyways?')
                 usr = input('(1=yes, else=no)')
@@ -764,6 +767,7 @@ class workflow(object):
         from numpy import loadtxt
         from myptv.traj_smoothing_mod import smooth_trajectories
         from os import getcwd, listdir
+        from os.path import exists as pathExists
         
         # fetching the smoothing parameters
         trajectory_file = self.get_param('smoothing', 'trajectory_file')
@@ -782,7 +786,7 @@ class workflow(object):
         # saving the data
         if save_name is not None:
             cwd_ls = listdir(getcwd())
-            if save_name in cwd_ls:
+            if save_name in cwd_ls or pathExists(save_name):
                 print('\n The file name "%s" already exists in'%save_name)
                 print(' the working directory. Should I save anyways?')
                 usr = input('(1=yes, else=no)')
@@ -808,6 +812,7 @@ class workflow(object):
         from numpy import loadtxt
         from myptv.traj_stitching_mod import traj_stitching
         from os import getcwd, listdir
+        from os.path import exists as pathExists
         
         # fetchhing the stitching parameters
         trajectory_file = self.get_param('stitching', 'trajectory_file')
@@ -824,7 +829,7 @@ class workflow(object):
         # saving the data
         if save_name is not None:
             cwd_ls = listdir(getcwd())
-            if save_name in cwd_ls:
+            if save_name in cwd_ls or pathExists(save_name):
                 print('\n The file name "%s" already exists in'%save_name)
                 print(' the working directory. Should I save anyways?')
                 usr = input('(1=yes, else=no)')
