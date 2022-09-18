@@ -342,9 +342,11 @@ class particle_segmentation(object):
             
         if self.mass_limits[0] is not None:
             fltr = lambda b: b[2] > self.mass_limits[0]
+            self.blobs = list(filter(fltr, self.blobs))
         
         if self.mass_limits[1] is not None:
             fltr = lambda b: b[2] < self.mass_limits[1]
+            self.blobs = list(filter(fltr, self.blobs))
             
             
             
