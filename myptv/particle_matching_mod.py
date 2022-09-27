@@ -140,13 +140,10 @@ class match_blob_files(object):
             pd = self.get_particles_dic(tm)
             nb = sum([len(pd[k]) for k in pd.keys()]) /len(pd.keys())
             print('', end='\r')
-            print(' frame: %d ; %.1f blobs per cam'%(tm, nb), end='\r')
             
             # for iterations after the first run, use the time
             # augmented matching
             if e>0:
-                #fltr = lambda p: p[-1]==frames[e-1]
-                #previous_particles = list(filter(fltr, self.particles))
                 mut = matching_using_time(self.imsys, pd, previous_particles,
                                           max_err = self.max_err)
                 #return mut  # <-- used for checks
@@ -194,6 +191,13 @@ class match_blob_files(object):
             # list the particles found in this frame from the next iteration 
             # of the time matching
             previous_particles = self.particles[-countParticlesInThisFrame:]
+            
+            c4 = sum([1 for p in previous_particles if len(p[3])==4])
+            c3 = sum([1 for p in previous_particles if len(p[3])==3])
+            c2 = sum([1 for p in previous_particles if len(p[3])==2])
+            pc = ' quads. trips. pairs. = (%d, %d, %d)'%(c4, c3, c2)
+            print(' frame: %d ; %.1f blobs/cam ;'%(tm, nb) + pc, end='\r')
+                
             
         
         # filter particles with large triangulation error
