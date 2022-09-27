@@ -131,6 +131,15 @@ class calibrate(object):
         
         nPointsTot = len(self.lab_coords)
         
+        
+        # in case there are not enough calibraiton points
+        if nPointsTot < self.random_sampling + 1:
+            print('Number of calibration points too small for stochastic ')
+            print('calibration. Falling back to regular minimization.')
+            self.searchCalibration()
+            return
+            
+        # if there are sufficient amount of points -     
         # We do the minimization over many different subsets
         # of increasing sizes
         
