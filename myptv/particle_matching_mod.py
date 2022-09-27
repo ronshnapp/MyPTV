@@ -129,9 +129,12 @@ class match_blob_files(object):
         
         # start matching, one frame at a time
         self.particles = []
+        previous_particles = []
         print('')
         
         for e,tm in enumerate(frames):
+            
+            countParticlesInThisFrame = 0
             
             # set up a blobs dictionary with camera names as key
             pd = self.get_particles_dic(tm)
@@ -142,15 +145,17 @@ class match_blob_files(object):
             # for iterations after the first run, use the time
             # augmented matching
             if e>0:
-                fltr = lambda p: p[-1]==frames[e-1]
-                previous_particles = list(filter(fltr, self.particles))
+                #fltr = lambda p: p[-1]==frames[e-1]
+                #previous_particles = list(filter(fltr, self.particles))
                 mut = matching_using_time(self.imsys, pd, previous_particles,
                                           max_err = self.max_err)
                 #return mut  # <-- used for checks
                 mut.triangulate_candidates()
                 for p in mut.matched_particles:
                     self.particles.append(p + [tm])
+                    countParticlesInThisFrame += 1
                 
+                # update the particles dictionary
                 pd = mut.return_updated_particle_dict()
                 
                 
@@ -173,7 +178,7 @@ class match_blob_files(object):
 #                 pd = itm.return_updated_particle_dict()
 # =============================================================================
                                 
-            # match particles using the matching object
+            # match particles using the voxel method
             M = matching(self.imsys, pd, self.RIO, self.voxel_size,
                          max_err = self.max_err)
             #return M  # <-- used for checks
@@ -184,11 +189,18 @@ class match_blob_files(object):
             # extract the matched particles to the list self.particles 
             for p in M.matched_particles:
                 self.particles.append(p + [tm])
+                countParticlesInThisFrame += 1
+                
+            # list the particles found in this frame from the next iteration 
+            # of the time matching
+            previous_particles = self.particles[-countParticlesInThisFrame:]
             
+        
+        # filter particles with large triangulation error
         self.particles = list(filter(lambda p: p[4]<self.max_err,
                                      self.particles))
-        
-        print('\n','done!')                        
+        print('\n')
+        print('done!\n')                        
         errors = [p[4] for p in self.particles]
         print('mean error: %.3f'%(sum(errors)/len(errors)))
         Np = len(self.particles)
