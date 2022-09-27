@@ -653,13 +653,15 @@ class workflow(object):
         mbf.get_particles(frames=frames)
         
         # print matching statistics
-        print('particles matched:', len(mbf.particles))
-        c4 = sum([1 for p in mbf.particles if len(p[3])==4])
-        print('quadruplets:', c4)
-        c3 = sum([1 for p in mbf.particles if len(p[3])==3])
-        print('triplets:', c3)
-        c2 = sum([1 for p in mbf.particles if len(p[3])==2])
-        print('pairs:', c2)
+        print('particles matched: %d \n'%(len(mbf.particles)))
+        
+        Nframes = len(frames)
+        c4 = sum([1 for p in mbf.particles if len(p[3])==4]) / Nframes
+        print('quadruplets: %.1f per frame'%c4)
+        c3 = sum([1 for p in mbf.particles if len(p[3])==3]) / Nframes
+        print('triplets: %.1f per frame'%c3)
+        c2 = sum([1 for p in mbf.particles if len(p[3])==2]) / Nframes
+        print('pairs: %.1f per frame \n'%c2)
         
         
         # save the results
