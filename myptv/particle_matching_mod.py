@@ -141,9 +141,11 @@ class match_blob_files(object):
             nb = sum([len(pd[k]) for k in pd.keys()]) /len(pd.keys())
             print('', end='\r')
             
+            
             # for iterations after the first run, use the time
             # augmented matching
-            if e>0:
+            useTimeMatching = True
+            if e>0 and useTimeMatching:
                 mut = matching_using_time(self.imsys, pd, previous_particles,
                                           max_err = self.max_err)
                 #return mut  # <-- used for checks
@@ -481,7 +483,7 @@ class matching(object):
     def get_particles(self):
         '''Once all candidates are found, this function chooses the "best"
         matches and returns them. The reliability of the matches is considered 
-        higher is
+        higher if
         1) they have higher number of cameras participating in the
         triangulation
         2) the RMS of distance between the crossing point and the epipolar 
@@ -585,6 +587,7 @@ class matching_using_time(object):
         previously_used_blobs - A list. Each item in the list is a particle 
                                 that was matched successfully in the previous 
                                 frame.
+                                
         max_err - the maximum allowable triangulation error.
         
         '''
@@ -602,7 +605,7 @@ class matching_using_time(object):
         Will do the triangulation of blobs that are nearest to those that 
         were successfully matched in the previous frame.
         
-        1) for each successfully matched particles in the previous frame, 
+        1) for each successfully matched particle in the previous frame, 
            we find the nearest neighbouring blobs in the current frame
            
         2) we triangulate the blobs
@@ -619,14 +622,31 @@ class matching_using_time(object):
             nearest_blobs_num = {}
             nearest_blobs_coords = {}
             
+            # for the blobs that participated in this particle
             for blb in p_blobs:
                 ci,(rn, (x, y)) = blb
                 cn = self.imsys.cameras[ci].name
                 bn = self.trees[ci].query((x, y))[1]
                 nearest_blobs_num[ci] = bn
                 nearest_blobs_coords[ci] = self.pd[cn][bn]
+             
+            # for cameras that weren't used in this particle we project
+            # the particle on them and locate the nearest blob in the next 
+            # frame. If the neighbour is close enough in the triangulation 
+            # we will use it.
+            camNum = len(self.imsys.cameras)
+            usedCams = list(nearest_blobs_coords.keys())
+            unusedCams = [i for i in range(camNum) if (i not in usedCams)]
+            p_xyz = p[:3] 
+            for ci in unusedCams:
+                cn = self.imsys.cameras[ci].name
+                projectionI = self.imsys.cameras[ci].projection(p_xyz)
+                bn = self.trees[ci].query(projectionI)[1]
+                nearest_blobs_num[ci] = bn
+                nearest_blobs_coords[ci] = self.pd[cn][bn]
+            
                 
-            # second, triangulate them:
+            # second, triangulate the nearest blob neighbours:
             triangulated = self.imsys.stereo_match(nearest_blobs_coords, 1e9)
             
         
