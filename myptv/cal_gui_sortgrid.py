@@ -7,15 +7,19 @@ Created on April 23, 2022
 A gui for manually marking points on a calibration target. 
 """
 
-
+from myptv.imaging_mod import camera
+from myptv.segmentation_mod import particle_segmentation
+from myptv.calibrate_mod import calibrate
 from PIL import Image, ImageTk
 from tkinter import Label, Canvas, LabelFrame, Entry, Tk, Scrollbar, Button
+from numpy import array
 
 
 
 
 
-class cal_point_gui(object):
+
+class cal_gui_sortgrid(object):
     '''
     This is a Tkinter based graphical user interface that can be used to mark
     points on a static image, give their lab space coordinates, and then save
@@ -23,18 +27,41 @@ class cal_point_gui(object):
     '''
     
     
-    def __init__(self, cam_name, image_name, savename):
+    def __init__(self, cam_name, image_name):
         '''
         input: 
         
-        image_name - the calibration image used choose the points
+        cam_name - string, the name of the cameras that we wish to calibrate.
+        
+        cam_res - the resolution of the cameras we are calibrating.
+        
+        image_name - the calibration image used choose the points.
+        
+        segmentationParams - dictionary with the values of the segmentation
+                             parameters.
+        
+        blobs_fname - the file name under which the segmented blobs are saved.
         
         savename - the name of the text file in which the extracted data will
                    be saved.
         '''
-        self.cam_name = cam_name
-        self.fname = savename
         self.image_name = image_name
+        self.image = Image.open(self.image_name)
+        image_size = self.image.size
+        
+        self.cam_name = cam_name
+        self.cam_res = image_size
+        try:
+            self.cam = camera(self.cam_name, self.cam_res, 
+                          cal_points_fname = self.cam_name+'_manualPoints')
+            self.cam.load('.')
+        except:
+            self.cam = camera(self.cam_name, self.cam_res)
+        #self.fname = savename
+        
+        #self.blobs_fname = blobs_fname
+        self.segmented = []
+        
         self.xy_marked = (-1, -1)
         self.point_list = []      # <-- list of points to save
         self.point_markers = []   # <-- position of crosses
@@ -51,9 +78,7 @@ class cal_point_gui(object):
         # (1) Image frame, first column
         
         # load the image
-        image = Image.open(self.image_name)
-        image_size = image.size
-        photo = ImageTk.PhotoImage(image)
+        photo = ImageTk.PhotoImage(self.image)
         
         
         
@@ -136,21 +161,21 @@ class cal_point_gui(object):
         
         self.xloc = Label(pos_dashboard, text='Ox:', padx=2, pady=2)
         self.xloc.grid(row=0, column=0, rowspan=1, sticky='nw', padx=2, pady=2)
-        self.x_input = Entry(pos_dashboard, width=14)
-        self.x_input.insert(0,'0.0')
-        self.x_input.grid(row=0, column=1, rowspan=1, sticky='nw', padx=2, pady=2)
+        self.Ox_input = Entry(pos_dashboard, width=14)
+        self.Ox_input.insert(0,'0.0')
+        self.Ox_input.grid(row=0, column=1, rowspan=1, sticky='nw', padx=2, pady=2)
         
         self.yloc = Label(pos_dashboard, text='Oy:', padx=2, pady=2)
         self.yloc.grid(row=1, column=0, rowspan=1, sticky='nw', padx=2, pady=2)
-        self.y_input = Entry(pos_dashboard, width=14)
-        self.y_input.insert(0,'0.0')
-        self.y_input.grid(row=1, column=1, rowspan=1, sticky='nw', padx=2, pady=2)
+        self.Oy_input = Entry(pos_dashboard, width=14)
+        self.Oy_input.insert(0,'0.0')
+        self.Oy_input.grid(row=1, column=1, rowspan=1, sticky='nw', padx=2, pady=2)
         
         self.zloc = Label(pos_dashboard, text='Oz:', padx=2, pady=2)
         self.zloc.grid(row=2, column=0, rowspan=1, sticky='nw', padx=2, pady=2)
-        self.z_input = Entry(pos_dashboard, width=14)
-        self.z_input.insert(0,'0.0')
-        self.z_input.grid(row=2, column=1, rowspan=1, sticky='nw', padx=2, pady=2)
+        self.Oz_input = Entry(pos_dashboard, width=14)
+        self.Oz_input.insert(0,'0.0')
+        self.Oz_input.grid(row=2, column=1, rowspan=1, sticky='nw', padx=2, pady=2)
         
         
         
@@ -231,25 +256,25 @@ class cal_point_gui(object):
         self.threshold_input.grid(row=0, column=1, rowspan=1, sticky='nw', padx=2, pady=2)
         
         
-        self.xmin = Label(segmentation_frame, text='x min:', padx=2, pady=2)
+        self.xmin = Label(segmentation_frame, text='x min size:', padx=2, pady=2)
         self.xmin.grid(row=1, column=0, rowspan=1, sticky='nw', padx=2, pady=2)
         self.xmin_input = Entry(segmentation_frame, width=7)
         self.xmin_input.insert(0,'2')
         self.xmin_input.grid(row=1, column=1, rowspan=1, sticky='nw', padx=2, pady=2)
         
-        self.xmax = Label(segmentation_frame, text='x max:', padx=2, pady=2)
+        self.xmax = Label(segmentation_frame, text='x max size:', padx=2, pady=2)
         self.xmax.grid(row=2, column=0, rowspan=1, sticky='nw', padx=2, pady=2)
         self.xmax_input = Entry(segmentation_frame, width=7)
         self.xmax_input.insert(0,'30')
         self.xmax_input.grid(row=2, column=1, rowspan=1, sticky='nw', padx=2, pady=2)
         
-        self.ymin = Label(segmentation_frame, text='y min:', padx=2, pady=2)
+        self.ymin = Label(segmentation_frame, text='y min size:', padx=2, pady=2)
         self.ymin.grid(row=3, column=0, rowspan=1, sticky='nw', padx=2, pady=2)
         self.ymin_input = Entry(segmentation_frame, width=7)
         self.ymin_input.insert(0,'2')
         self.ymin_input.grid(row=3, column=1, rowspan=1, sticky='nw', padx=2, pady=2)
         
-        self.ymax = Label(segmentation_frame, text='y max:', padx=2, pady=2)
+        self.ymax = Label(segmentation_frame, text='y max size:', padx=2, pady=2)
         self.ymax.grid(row=4, column=0, rowspan=1, sticky='nw', padx=2, pady=2)
         self.ymax_input = Entry(segmentation_frame, width=7)
         self.ymax_input.insert(0,'30')
@@ -262,15 +287,33 @@ class cal_point_gui(object):
         self.minMass_input.grid(row=5, column=1, rowspan=1, sticky='nw', padx=2, pady=2)
         
         self.maxMass = Label(segmentation_frame, text='mass max:', padx=2, pady=2)
-        self.maxMass.grid(row=5, column=0, rowspan=1, sticky='nw', padx=2, pady=2)
+        self.maxMass.grid(row=6, column=0, rowspan=1, sticky='nw', padx=2, pady=2)
         self.maxMass_input = Entry(segmentation_frame, width=7)
-        self.maxMass_input.insert(0,'300')
-        self.maxMass_input.grid(row=5, column=1, rowspan=1, sticky='nw', padx=2, pady=2)
+        self.maxMass_input.insert(0,'10000')
+        self.maxMass_input.grid(row=6, column=1, rowspan=1, sticky='nw', padx=2, pady=2)
+        
+        self.sigma = Label(segmentation_frame, text='blur sgima:', padx=2, pady=2)
+        self.sigma.grid(row=7, column=0, rowspan=1, sticky='nw', padx=2, pady=2)
+        self.sigma_input = Entry(segmentation_frame, width=7)
+        self.sigma_input.insert(0,'0')
+        self.sigma_input.grid(row=7, column=1, rowspan=1, sticky='nw', padx=2, pady=2)
+        
+        self.median = Label(segmentation_frame, text='median filter:', padx=2, pady=2)
+        self.median.grid(row=8, column=0, rowspan=1, sticky='nw', padx=2, pady=2)
+        self.median_input = Entry(segmentation_frame, width=7)
+        self.median_input.insert(0,'0')
+        self.median_input.grid(row=8, column=1, rowspan=1, sticky='nw', padx=2, pady=2)
+        
+        self.local = Label(segmentation_frame, text='blur sgima:', padx=2, pady=2)
+        self.local.grid(row=9, column=0, rowspan=1, sticky='nw', padx=2, pady=2)
+        self.local_input = Entry(segmentation_frame, width=7)
+        self.local_input.insert(0,'0')
+        self.local_input.grid(row=9, column=1, rowspan=1, sticky='nw', padx=2, pady=2)
         
         
         segment_button = Button(segmentation_frame, text='Segment image', 
                                 command = self.sementImage, padx=2, pady=7)
-        segment_button.grid(row=6, column=0, padx=2, pady=7, sticky='ew')
+        segment_button.grid(row=10, column=0, padx=2, pady=7, sticky='ew')
         
         
         
@@ -444,22 +487,152 @@ class cal_point_gui(object):
         
     def calibrate(self):
         '''Calibrates the camera using marked points'''
+        self.cam = camera(self.cam_name, self.cam_res, 
+                          cal_points_fname = self.cam_name+'_manualPoints')
+        self.cam.load('.')
+        print('camera data loaded successfully.')
+        cal = calibrate(self.cam, self.cam.lab_points, self.cam.image_points)
+        err = cal.mean_squared_err()
+        print('initial error: %.3f pixels\n'%(err))
+        
+        print('\nAttempting to minimize calibration error...\n')
+        err_iminus1 = err
+        for i in range(10):
+            cal.searchCalibration()
+            err = cal.mean_squared_err()
+            
+            print(i, err)
+            
+            if err<0.5:
+                break
+            
+            if abs(err - err_iminus1)/err_iminus1 < 0.001:
+                break
+        
+            err_iminus1 = err
+        
+        self.error_input.config(text = '%0.3f'%err)
+        print('Finished with error: %.3f pixels\n'%(err))
+            
+            
         
         
     def show_calibration(self):
-        '''Plots the initial calibration on the calibration image'''
+        '''Plots the calibration points images on the calibration image'''
+        
+        # refresh the image
+        image = Image.open(self.image_name)
+        s = image.size
+        image = image.resize((int(s[0]*self.z),int(s[1]*self.z)),
+                             Image.ANTIALIAS)
+        new_bird = ImageTk.PhotoImage(image)
+        self.board.configure(image = new_bird)
+        self.board.image = new_bird
+        self.canvas.delete('all')
+        self.canvas.create_image(0, 0, image=new_bird, anchor='nw')
+        self.canvas.configure(scrollregion = self.canvas.bbox("all"))
         
         
+        # plot point projections
+        for p in self.cam.lab_points:
+            proj = self.cam.projection(p)
+            x0 = int(int(proj[0])*self.z) - int(self.hbar.get()[1])
+            y0 = int(int(proj[1])*self.z) - int(self.vbar.get()[1])
+            
+            print(proj)
+            self.canvas.create_oval(x0-4, y0-4, x0+4, y0+4, 
+                                    fill='#cf9417')
+        
+    
+    
     
     def genCamFile(self):
         '''Generates a camera file with the given initial guess'''
+        ox = float(self.Ox_input.get()) 
+        oy = float(self.Oy_input.get()) 
+        oz = float(self.Oz_input.get())
+        tx = float(self.xori_input.get()) 
+        ty = float(self.yori_input.get()) 
+        tz = float(self.zori_input.get()) 
+        f = float(self.f_input.get()) 
+        xh = float(self.xh_input.get()) 
+        yh = float(self.yh_input.get()) 
+        
+        self.cam.O = [ox,oy,oz]
+        self.cam.theta = [tx,ty,tz]
+        self.cam.f = f
+        self.cam.xh = xh
+        self.cam.yh = yh
+        self.cam.calc_R()
+        self.cam.save('.')
+        
+        print(self.cam)
+        print('\nCamera file generated. \n')
         return None
 
 
     def sementImage(self):
         '''Segments the image and save the blob file'''
-        return None
+        
+        
+        self.segmentationParams ={'image': array(self.image),
+                                  'threshold': float(self.threshold_input.get()), 
+                                  'max_xsize': float(self.xmax_input.get()), 
+                                  'max_ysize': float(self.ymax_input.get()), 
+                                  'min_xsize': float(self.xmin_input.get()), 
+                                  'min_ysize': float(self.ymin_input.get()),
+                                  'min_mass': float(self.minMass_input.get()),
+                                  'max_mass': float(self.maxMass_input.get()),
+                                  'sigma': float(self.sigma_input.get()), 
+                                  'median': float(self.median_input.get()),
+                                  'local_filter': float(self.local_input.get()), 
+                                  'mask': 1,
+                                  'method': 'labeling',
+                                  'particle_size':8}
+        
+        for k in ['sigma', 'median', 'local_filter']:
+            if self.segmentationParams[k] == 0.0:
+                self.segmentationParams[k] = None
+        
+        particleSegment = particle_segmentation(**self.segmentationParams)
+        particleSegment.get_blobs()
+        particleSegment.apply_blobs_size_filter()
+        
+        print('\nSegmenting image...\n')
+        print('blobs found:', len(particleSegment.blobs))
+        
+        self.segmented = []
+        for b in particleSegment.blobs:
+            self.segmented.append((b[0][1], b[0][0], b[1][1], b[1][0]))
+            
+        # plot the segmented particles over a refreshed image
+        image = Image.open(self.image_name)
+        s = image.size
+        image = image.resize((int(s[0]*self.z),int(s[1]*self.z)),
+                             Image.ANTIALIAS)
+        new_bird = ImageTk.PhotoImage(image)
+        self.board.configure(image = new_bird)
+        self.board.image = new_bird
+        self.canvas.delete('all')
+        self.canvas.create_image(0, 0, image=new_bird, anchor='nw')
+        self.canvas.configure(scrollregion = self.canvas.bbox("all"))
 
+        self.plotSegmented()
+        
+        saveName = self.cam_name + '_CalBlobs'
+        particleSegment.save_results(saveName)
+        print('\nFile saved. Done.\n')
+        return None
+    
+    
+    def plotSegmented(self):
+        for x_, y_, wx, wy in self.segmented:
+            x_ = int(x_*self.z) - int(self.hbar.get()[1])
+            y_ = int(y_*self.z) - int(self.vbar.get()[1])
+            wx = wx/2*self.z; wy = wy/2*self.z
+            self.canvas.create_rectangle(x_-wx, y_-wy, x_+wx, y_+wy, 
+                                         outline="#2bcf0e", width=1)
+    
 
     def addPoint(self):
         '''add marked point to list'''
@@ -508,9 +681,10 @@ class cal_point_gui(object):
         self.Yloc.configure(text = self.xy_marked[1])
         
     
+    
     def zoomIn(self, event):
         '''zoom in the image with + key'''
-        self.z = self.z*1.1
+        self.z = self.z*1.15
         image = Image.open(self.image_name)
         s = image.size
         image = image.resize((int(s[0]*self.z),int(s[1]*self.z)),
@@ -523,11 +697,12 @@ class cal_point_gui(object):
         self.canvas.configure(scrollregion = self.canvas.bbox("all"))
         
         self.mark_points()
+        self.plotSegmented()
     
         
     def zoomOut(self, event):
         '''zoom out with - key'''
-        self.z = self.z*0.9
+        self.z = self.z*(1/1.15)
         image = Image.open(self.image_name)
         s = image.size
         image = image.resize((int(s[0]*self.z),int(s[1]*self.z)),
@@ -538,7 +713,9 @@ class cal_point_gui(object):
         self.canvas.delete('all')
         self.canvas.create_image(0, 0, image=new_bird, anchor='nw')
         self.canvas.configure(scrollregion = self.canvas.bbox("all"))
+        
         self.mark_points()
+        self.plotSegmented()
         
         
     def location_handler(self, event):
@@ -594,10 +771,12 @@ class cal_point_gui(object):
         
     
     def Save(self):
-        '''save trajectory data'''
+        '''save the manually selected calibration points'''
         from numpy import savetxt
-        savetxt(self.fname, self.point_list, fmt='%.1f', delimiter='\t')
-        print('Points saved at: %s'%self.fname)
+        saveName = self.cam_name+'_manualPoints'
+        savetxt(saveName, self.point_list, 
+                fmt='%.1f', delimiter='\t')
+        print('Points saved at: %s'%saveName)
         
         
     def Quit(self):
@@ -608,9 +787,10 @@ class cal_point_gui(object):
 
 
 if __name__ == '__main__':
-    im_fname = '/home/ron/Desktop/Research/plankton_sweeming/experiments/20220406/Cal/Cam2.tif'
-    save_fname = 'test'
-    gui = cal_point_gui('camX', im_fname, save_fname)
+    im_fname = '/home/ron/Desktop/Research/plankton_sweeming/experiments/20220916/MyPTV_analysis/Calibration/cal2.tif'    
+    target_fname = '/home/ron/Desktop/Research/plankton_sweeming/experiments/20220916/MyPTV_analysis/Calibration/target_file'
+    gui = cal_gui_sortgrid('camX', im_fname)
 
-
+#cam = camera(cam_name, res)
+#cam.save('.')
 
