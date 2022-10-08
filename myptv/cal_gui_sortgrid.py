@@ -10,6 +10,7 @@ A gui for manually marking points on a calibration target.
 from myptv.imaging_mod import camera
 from myptv.segmentation_mod import particle_segmentation
 from myptv.calibrate_mod import calibrate
+from myptv.utils import match_calibration_blobs_and_points
 from PIL import Image, ImageTk
 from tkinter import Label, Canvas, LabelFrame, Entry, Tk, Scrollbar, Button
 from numpy import array
@@ -27,27 +28,21 @@ class cal_gui_sortgrid(object):
     '''
     
     
-    def __init__(self, cam_name, image_name):
+    def __init__(self, cam_name, image_name, target_fname):
         '''
         input: 
         
         cam_name - string, the name of the cameras that we wish to calibrate.
         
-        cam_res - the resolution of the cameras we are calibrating.
-        
         image_name - the calibration image used choose the points.
         
-        segmentationParams - dictionary with the values of the segmentation
-                             parameters.
-        
-        blobs_fname - the file name under which the segmented blobs are saved.
-        
-        savename - the name of the text file in which the extracted data will
-                   be saved.
+        target_fname - the file name of the calibration target's target file.
         '''
         self.image_name = image_name
         self.image = Image.open(self.image_name)
         image_size = self.image.size
+        
+        self.target_fname = target_fname
         
         self.cam_name = cam_name
         self.cam_res = image_size
@@ -476,15 +471,7 @@ class cal_gui_sortgrid(object):
         
         
         
-    def saveTargetPoints(self):
-        '''Will save the matched segmented blobs and targets, making a 
-           calibration points file.'''
-        
-        
-    def matchTargetPoints(self):
-        '''Will match the target points to the segmented blobs'''
-        
-        
+    
     def calibrate(self):
         '''Calibrates the camera using marked points'''
         self.cam = camera(self.cam_name, self.cam_res, 
@@ -546,6 +533,61 @@ class cal_gui_sortgrid(object):
     
     
     
+    def saveTargetPoints(self):
+        '''Will save the matched segmented blobs and targets, making a 
+           calibration points file.'''
+        saveName = self.cam_name + '_cal_points'
+        self.mtf.save_results(saveName)
+        print('Calibration point file "%s" saved'%saveName)
+        
+        
+        
+        
+    def matchTargetPoints(self):
+        '''Will match the target points to the segmented blobs'''
+        
+        segmented_file = self.cam_name + '_CalBlobs'
+        self.mtf = match_calibration_blobs_and_points(self.cam, segmented_file,
+                                                      self.target_fname)
+        self.mtf.pair_points()
+    
+        # plot the pairs
+        self.plot_matched_point_pair()
+      
+        
+      
+            
+    def plot_matched_point_pair(self):
+        '''
+        Will plot the pairs of calibration points (segmented and their 
+        projections).
+        '''
+        self.segmented = []
+        for pair in self.mtf.point_pairs:
+            # the segmented image space calibration points
+            xImg = int(pair[0]*self.z) - int(self.hbar.get()[1]) 
+            yImg = int(pair[1]*self.z) - int(self.vbar.get()[1])
+            
+            wx = 4*self.z; wy = 4*self.z
+            self.canvas.create_rectangle(xImg-wx, yImg-wy, xImg+wx, yImg+wy, 
+                                         outline="#2bcf0e", width=1)
+            
+            # the projection of the lab space points 
+            eta, zeta = self.cam.projection(pair[2:])
+            xProj = int(eta*self.z) - int(self.hbar.get()[1])
+            yProj = int(zeta*self.z) - int(self.vbar.get()[1])
+            
+            wx = 2*self.z; wy = 2*self.z
+            self.canvas.create_oval(xProj-wx, yProj-wy, xProj+wx, yProj+wy, 
+                                         fill="#d94559", width=0)
+            
+            # connect the pairs
+            self.canvas.create_line(xImg, yImg, xProj, yProj, 
+                                    fill="#991527", width=1)
+            
+            
+
+
     def genCamFile(self):
         '''Generates a camera file with the given initial guess'''
         ox = float(self.Ox_input.get()) 
@@ -569,6 +611,8 @@ class cal_gui_sortgrid(object):
         print(self.cam)
         print('\nCamera file generated. \n')
         return None
+
+
 
 
     def sementImage(self):
@@ -697,7 +741,13 @@ class cal_gui_sortgrid(object):
         self.canvas.configure(scrollregion = self.canvas.bbox("all"))
         
         self.mark_points()
-        self.plotSegmented()
+        
+        if hasattr(self, 'mtf'):
+            self.plot_matched_point_pair()
+        
+        else:
+            self.plotSegmented()
+            
     
         
     def zoomOut(self, event):
@@ -715,7 +765,12 @@ class cal_gui_sortgrid(object):
         self.canvas.configure(scrollregion = self.canvas.bbox("all"))
         
         self.mark_points()
-        self.plotSegmented()
+        
+        if hasattr(self, 'mtf'):
+            self.plot_matched_point_pair()
+        
+        else:
+            self.plotSegmented()
         
         
     def location_handler(self, event):
@@ -789,7 +844,7 @@ class cal_gui_sortgrid(object):
 if __name__ == '__main__':
     im_fname = '/home/ron/Desktop/Research/plankton_sweeming/experiments/20220916/MyPTV_analysis/Calibration/cal2.tif'    
     target_fname = '/home/ron/Desktop/Research/plankton_sweeming/experiments/20220916/MyPTV_analysis/Calibration/target_file'
-    gui = cal_gui_sortgrid('camX', im_fname)
+    gui = cal_gui_sortgrid('camX', im_fname, target_fname)
 
 #cam = camera(cam_name, res)
 #cam.save('.')
