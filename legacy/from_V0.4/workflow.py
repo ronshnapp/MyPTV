@@ -45,13 +45,10 @@ class workflow(object):
         self.params = self.read_params_file()
         
         
-        self.allowed_actions = ['help', 'initial_calibration', 
-                                'final_calibration',
-                                'calibration_with_particles', 'matching', 
-                                'segmentation',
-                                'smoothing', 'stitching', 'tracking', 
-                                'calibration', 'calibration_point_gui', 
-                                'match_target_file']
+        self.allowed_actions = ['help', 'calibration', 'calibration_point_gui', 
+                           'calibration_with_particles',
+                           'match_target_file', 'matching', 'segmentation',
+                           'smoothing', 'stitching', 'tracking']
         
         
         # perform the wanted action:
@@ -65,14 +62,17 @@ class workflow(object):
             if action not in self.allowed_actions:
                 raise ValueError(msg1+'\n'+msg2)
             
-            elif action == 'initial_calibration':
-                self.initial_calibration()
-                
-            elif action == 'final_calibration':
-                self.final_calibration()
+            elif action == 'calibration':
+                self.calibration_sequence()
+            
+            elif action == 'calibration_point_gui':
+                self.calibration_point_gui()
                 
             elif action == 'calibration_with_particles':
                 self.calibration_with_particles()
+            
+            elif action == 'match_target_file':
+                self.match_target_file()
                 
             elif action == 'segmentation':
                 self.do_segmentation()
@@ -91,26 +91,6 @@ class workflow(object):
                 
             elif action == 'help':
                 self.help_me()
-                
-                
-            # legacy functions:
-            elif action == 'calibration':
-                print('Note: you are running an outdated action!')
-                print('consider using the initial_calibration and')
-                print('final_calibration actions instead.')
-                self.calibration_sequence()
-            
-            elif action == 'calibration_point_gui':
-                print('Note: you are running an outdated action!')
-                print('consider using the initial_calibration and')
-                print('final_calibration actions instead.')
-                self.calibration_point_gui()
-            
-            elif action == 'match_target_file':
-                print('Note: you are running an outdated action!')
-                print('consider using the initial_calibration and')
-                print('final_calibration actions instead.')
-                self.match_target_file()
             
             
     
@@ -187,93 +167,6 @@ class workflow(object):
     
     
     
-    
-    def initial_calibration(self):
-        '''
-        Starts the initial calibration GUI
-        '''
-        from myptv.gui_intial_cal import initial_cal_gui
-        from matplotlib.pyplot import imread
-        
-        # fetch parameters from the file
-        cam_name = self.get_param('calibration', 'camera_name')
-        cal_image = self.get_param('calibration', 'calibration_image')
-        target_file = self.get_param('calibration', 'target_file')
-        res = self.get_param('calibration', 'resolution').split(',')
-        res = (float(res[0]), float(res[1]))
-        
-        image = imread(cal_image)
-        if image.shape[1] != res[0] or image.shape[0] != res[1]:
-            msg = 'The given resolution doesnt match the image size'
-            raise ValueError(msg)
-        
-        gui = initial_cal_gui(cam_name, cal_image, target_file)
-        
-        
-        
-    def final_calibration(self):
-        '''
-        Starts the initial calibration GUI
-        '''
-        from myptv.gui_final_cal import cal_gui
-        from myptv.imaging_mod import camera
-        from myptv.calibrate_mod import calibrate
-        from matplotlib.pyplot import imread
-        import os
-        
-        # fetch parameters from the file
-        cam_name = self.get_param('calibration', 'camera_name')
-        cal_image = self.get_param('calibration', 'calibration_image')
-        res = self.get_param('calibration', 'resolution').split(',')
-        res = (float(res[0]), float(res[1]))
-        
-        
-        # checking that a camera file in the working directory
-        ls = os.listdir('.')                
-        
-        # make sure camera file exists
-        if cam_name not in ls:
-            msg = 'No camera file was found. Start with initial calibration.'
-            raise ValueError(msg)
-            
-        # detect the calibration folder
-        cal_folder = '.'
-        for fname in ls:
-            if fname in ['calibration', 'Calibration', 'cal', 'Cal']:
-                if os.path.isdir(os.path.join('.', fname)):
-                    cal_folder = os.path.join('.', fname)
-                    break
-        
-        # get the blob file and setup the camera instance
-        blob_file = os.path.join(cal_folder, cam_name+'_manualPoints')
-        
-        try:
-            cam = camera(cam_name, res, cal_points_fname = blob_file)
-        except:
-            msg = 'Calibration point file (%s) not found!'%blob_file
-            msg2 = 'Make sure the initial calibration was completed fully.'
-            raise ValueError(msg+msg2)
-            
-        
-        # load the camera
-        cam.load('.')
-        print('camera data loaded successfully.')
-        cal = calibrate(cam, cam.lab_points, cam.image_points)
-        print('initial error: %.3f pixels\n'%(cal.mean_squared_err()))
-        
-        # run the final calibration gui
-        print('starting calibratino GIU\n')
-        gui = cal_gui(cal, cal_image)                                   
-            
-        
-    
-    
-    
-    # ========================================================================
-    # /\/\//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
-    #  Legacy functions that are no longer needed due to the cal_gui's
-    # /\/\//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
-    # ========================================================================
     
     def match_target_file(self):
         '''
@@ -377,6 +270,45 @@ class workflow(object):
             print('starting calibratino GIU\n')
             from myptv.gui_final_cal import cal_gui
             gui = cal_gui(cal, cal_image)
+            
+# =============================================================================
+#             user = True
+#             print('Starting calibration sequence:')
+#             while user != '9':
+#                 print("enter '1' for external parameters calibration")
+#                 print("enter '2' for internal correction ('fine') calibration")
+#                 print("enter '3' to show current camera external parameters")
+#                 print("enter '4' to plot the calibration points' projection")
+#                 print("enter '8' to save the results")
+#                 print("enter '9' to quit")
+#                 user = input('')
+#                 
+#                 if user == '1':
+#                     print('\n', 'Iterating to minimize external parameters')
+#                     cal.searchCalibration(maxiter=2000)
+#                     err = cal.mean_squared_err()
+#                     print('\n','calibration error: %.3f pixels'%(err),'\n')
+#                 
+#                 if user == '2':
+#                     print('\n', 'Iterating to minimize correction terms')
+#                     cal.fineCalibration()
+#                     err = cal.mean_squared_err()
+#                     print('\n','calibration error:', err,'\n')
+#                     
+#                 if user == '3':
+#                     print('\n', cam, '\n')
+#                 
+#                 if user == '4':
+#                     img = imread(cal_image)
+#                     fig, ax = subplots()
+#                     ax.imshow(img, cmap='gray')
+#                     cal.plot_proj(ax=ax)
+#                     show()
+#                     
+#                 if user == '8':
+#                     print('\n', 'Saving results')
+#                     cam.save('.')
+# =============================================================================
                     
             
         # if not, generate an empty file camera file
@@ -407,13 +339,6 @@ class workflow(object):
         
         print('\n', 'Starting calibration point segmentation GUI', '\n')
         gui = cal_point_gui(cal_image, blob_file)
-        
-        
-    # ========================================================================
-    # /\/\//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
-    #                         End of legacy functions
-    # /\/\//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
-    # ========================================================================
     
     
     

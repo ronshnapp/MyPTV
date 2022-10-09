@@ -267,9 +267,8 @@ where \texttt{"command"} should be replaced with one of the following options, d
 %
 \begin{verbatim}
 	help
-	calibration
-	calibration_point_gui
-	match_target_file
+	initial_calibration
+	final_calibration
 	calibration_with_particles
 	segmentation
 	matching
@@ -283,7 +282,7 @@ Each of these commands initiates one of MyPTVs functionalities, and a detailed e
 
 \subsubsection{The \texttt{params\_file.yml} file}
 
-The \texttt{params\_file.yml} outlines all the parameters needed in order to run MyPTV using the workflow script. Thus, in every step conducted go through the lists of parameters and make sure that their values are correct. The definitions are tabulated per every step in the sections below.
+The \texttt{params\_file.yml} outlines all the parameters needed in order to run MyPTV using the workflow script. In every step conducted, go through the lists of parameters and make sure that their values are correct. The definitions per every step are tabulated in the sections below.
 
 
 
@@ -296,30 +295,36 @@ The \texttt{params\_file.yml} outlines all the parameters needed in order to run
 A good calibration is key to having success in your PTV experiment! Thus, follow this guide to calibrate your camera using MyPTV. 
 
 
-Camera calibration consists of several steps in which we determine the external ($\vec{O}$, $\vec{\theta}$) and internal ($f$, $x_h,\,y_h$, $[E]$) parameters of our camera system. Each camera in MyPTV is calibrated separately using a \textit{calibration image} - an image of an object with marked points on it whose coordinates are known to us, a \textit{calibration target}. Therefore, to calibrate a camera, we make sure that we have a calibration image ready, as seen, for example, in Fig.~\ref{fig:cal_img}. 
+Camera calibration consists of several steps in which we determine the external ($\vec{O}$, $\vec{\theta}$) and internal ($f$, $x_h,\,y_h$, $[E]$) parameters of our camera system. Each camera in MyPTV is calibrated separately, To calibrate a camera we use a \textit{calibration image} - an image of an object with marked points on it whose coordinates are known to us, a \textit{calibration target}. Therefore, to calibrate a camera, we make sure that we have a calibration image ready, as seen, for example, in Fig.~\ref{fig:cal_img}.
 
-Importantly, since the goal is finding the cameras' positions, once a calibration image was taken in an experiment it is critical that the cameras are not moved. Also, the calibration target needs to be in the same medium in which the experiment will be performed to ensure that any refraction is corrected by the error terms (e.g. if you are using a tank of water, place the calibration target inside the tank of water). 
-
-
-A schematic block diagram for the calibration process of each camera is given in Fig.~\ref{fig:calibsteps}. The calibration is divided into two sub-processes: 1) initial calibration, in which we use only 6 calibration points to obtain an approximate calibration estimation, and, 2) final calibration, in which we use all the calibration points on the calibration target to improve the accuracy of the initial calibration. The various steps of the process are performed in MyPTV through the workflow script, and detailed instructions are given below. 
+Importantly, since the goal is finding the cameras' positions, once a calibration image was taken in an experiment it is crucial that the cameras are not moved. Even minor vibrations can ruin an experiment Also, the calibration target needs to be in the same medium in which the experiment will be performed to ensure that any refraction is corrected by the error terms (for example, if you are using a tank of water, place the calibration target inside the tank of water). 
 
 
-\begin{figure}
-	\centering
-	\includegraphics[width=10cm]{Calibration_steps.pdf}
-	\caption{A block diagram representing the steps to follow in the calibration of each camera using MyPTV. \label{fig:calibsteps}}
-\end{figure}
+The calibration in MyPTV is performed in two steps: \textit{initial calibration} and \textit{final calibration}. The initial calibration is used to obtain a rough estimation of the camera's parameters using a small number of calibration points, as well as to extract the information for all the calibration points on the calibration target. In the final calibration we fine tune the camera's parameters in order to minimize the \textit{calibration error}. The process is explained in details in the following sub sections. 
+
+
+%A schematic block diagram for the calibration process of each camera is given in Fig.~\ref{fig:calibsteps}. The calibration is divided into two sub-processes: 1) initial calibration, in which we use only 6 calibration points to obtain an approximate calibration estimation, and, 2) final calibration, in which we use all the calibration points on the calibration target to improve the accuracy of the initial calibration. The various steps of the process are performed in MyPTV through the workflow script, and detailed instructions are given below. 
+%
+%
+%\begin{figure}
+%	\centering
+%	\includegraphics[width=10cm]{Calibration_steps.pdf}
+%	\caption{A block diagram representing the steps to follow in the calibration of each camera using MyPTV. \label{fig:calibsteps}}
+%\end{figure}
 
 
 
 
+\subsubsection{Preparing a \texttt{target\_file}}
+
+The target file is a text file (tab separated values), in which each row shows the lab space coordinates of a calibration point.  An example for the format is shown in Fig.~\ref{fig:target_file}. If there is no target file in the experimental folder, this is the time to generate one. Prepare such a file and save it in the experiment's calibration folder.
 
 
 
 
 \subsubsection{Preparing the parameters in the \texttt{params\_file}}
 
-As in any step of MyPTV, we first make sure that the \texttt{params\_file.yaml} in our experiment folder has the correct parameters, namely file names under the calibration tab; see Tab.~\ref{tab:cal_paramsfile}. Each camera is calibrated separately, and so, for the calibration of each camera we need to change the file names in \texttt{params\_file.yaml} appropriately (alternatively, one could have separate parameter files for each camera).  
+As in any step of MyPTV, we make sure that the \texttt{params\_file.yaml} in our experiment folder has the correct parameters, namely file names under the calibration tab; see Tab.~\ref{tab:cal_paramsfile}. Each camera is calibrated separately, and so, for the calibration of each camera we need to change the file names in \texttt{params\_file.yaml} appropriately (alternatively, one could have separate parameter files for each camera).  
 
 \begin{table}
 	\centering
@@ -330,11 +335,11 @@ As in any step of MyPTV, we first make sure that the \texttt{params\_file.yaml} 
 		\hline
 		\texttt{camera\_name} & the name of the camera to be calibrated \\
 		
-		\texttt{calibration\_points\_file} & path to the file that lists the correlated lab space and image space coordinates \\
+		%\texttt{calibration\_points\_file} & path to the file that lists the correlated lab space and image space coordinates \\
 		
 		\texttt{target\_file} & path to the file that lists the calibration target's lab points \\
 		
-		\texttt{segmented\_points\_file} & path of the file with segmented calibration points \\
+		%\texttt{segmented\_points\_file} & path of the file with segmented calibration points \\
 		
 		\texttt{calibration\_image} & path of the calibration image \\
 		

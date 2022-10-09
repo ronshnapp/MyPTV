@@ -14,13 +14,14 @@ from myptv.utils import match_calibration_blobs_and_points
 from PIL import Image, ImageTk
 from tkinter import Label, Canvas, LabelFrame, Entry, Tk, Scrollbar, Button
 from numpy import array
+import os
 
 
 
 
 
 
-class cal_gui_sortgrid(object):
+class initial_cal_gui(object):
     '''
     This is a Tkinter based graphical user interface that can be used to mark
     points on a static image, give their lab space coordinates, and then save
@@ -52,10 +53,17 @@ class cal_gui_sortgrid(object):
             self.cam.load('.')
         except:
             self.cam = camera(self.cam_name, self.cam_res)
-        #self.fname = savename
-        
-        #self.blobs_fname = blobs_fname
+
         self.segmented = []
+        
+        # try to find a calibration folder
+        ls = os.listdir('.')
+        self.folder = '.'
+        for fname in ls:
+            if fname in ['calibration', 'Calibration', 'cal', 'Cal']:
+                if os.path.isdir(os.path.join('.', fname)):
+                    self.folder = os.path.join('.', fname)
+        
         
         self.xy_marked = (-1, -1)
         self.point_list = []      # <-- list of points to save
@@ -64,9 +72,9 @@ class cal_gui_sortgrid(object):
         
         # set the window
         self.root = Tk()
-        self.root.geometry('1000x700+320+70')
+        self.root.geometry('1100x700+320+70')
         self.root.title('MyPTV: Initial Calibration GUI')
-        self.root.configure(background='#709eba')
+        #self.root.configure(background='#709eba')
 
         
         # =====================================================================
@@ -79,7 +87,7 @@ class cal_gui_sortgrid(object):
         
         # place the image inside a canvas in a frame
         self.board = Label(image=photo)
-        frame = LabelFrame(self.root, bg='#bad4e3', width=700, height=450,
+        frame = LabelFrame(self.root, bg='#c2c2c2', width=700, height=450,
                            padx=(5), pady=5)
         frame.grid(row=0, column=0, padx=(5), pady=5, sticky='nsew')
         #frame.place(x=120, y=30)
@@ -125,16 +133,16 @@ class cal_gui_sortgrid(object):
         # ====================================================================
         # (2) The second column
         second_column = LabelFrame(self.root, padx=2, pady=10, width=100, 
-                                   bg='#bad4e3')
+                                   bg='#c2c2c2')
         second_column.grid(row=0, column=1, padx=(2), pady=10, sticky='nsew')
         
         
         
         # =========================
         # cam file generation frame
-        camFile_frame = LabelFrame(second_column, padx=2, pady=10, width=100,
-                                   text='cam file generation')
-        camFile_frame.grid(row=0, column=0, padx=5, pady=10, sticky='nwe')
+        camFile_frame = LabelFrame(second_column, padx=2, pady=8, width=100,
+                                   text='1) cam file generation')
+        camFile_frame.grid(row=0, column=0, padx=5, pady=8, sticky='nwe')
         
         
         
@@ -211,17 +219,17 @@ class cal_gui_sortgrid(object):
         self.f_input.insert(0,'0.0')
         self.f_input.grid(row=0, column=1, rowspan=1, sticky='nw', padx=2, pady=2)
         
-        self.xh = Label(int_dashboard, text='xh:', padx=2, pady=2)
-        self.xh.grid(row=1, column=0, rowspan=1, sticky='nw', padx=2, pady=2)
-        self.xh_input = Entry(int_dashboard, width=14)
-        self.xh_input.insert(0,'0.0')
-        self.xh_input.grid(row=1, column=1, rowspan=1, sticky='nw', padx=2, pady=2)
+        # self.xh = Label(int_dashboard, text='xh:', padx=2, pady=2)
+        # self.xh.grid(row=1, column=0, rowspan=1, sticky='nw', padx=2, pady=2)
+        # self.xh_input = Entry(int_dashboard, width=14)
+        # self.xh_input.insert(0,'0.0')
+        # self.xh_input.grid(row=1, column=1, rowspan=1, sticky='nw', padx=2, pady=2)
         
-        self.yh = Label(int_dashboard, text='yh:', padx=2, pady=2)
-        self.yh.grid(row=2, column=0, rowspan=1, sticky='nw', padx=2, pady=2)
-        self.yh_input = Entry(int_dashboard, width=14)
-        self.yh_input.insert(0,'0.0')
-        self.yh_input.grid(row=2, column=1, rowspan=1, sticky='nw', padx=2, pady=2)
+        # self.yh = Label(int_dashboard, text='yh:', padx=2, pady=2)
+        # self.yh.grid(row=2, column=0, rowspan=1, sticky='nw', padx=2, pady=2)
+        # self.yh_input = Entry(int_dashboard, width=14)
+        # self.yh_input.insert(0,'0.0')
+        # self.yh_input.grid(row=2, column=1, rowspan=1, sticky='nw', padx=2, pady=2)
         
         
         
@@ -238,9 +246,9 @@ class cal_gui_sortgrid(object):
         
         # ==================
         # segmentation frame
-        segmentation_frame = LabelFrame(second_column, padx=2, pady=10, 
-                                        width=100, text='image segmentation')
-        segmentation_frame.grid(row=1, column=0, padx=5, pady=30, sticky='sew')
+        segmentation_frame = LabelFrame(second_column, padx=2, pady=8, 
+                                        width=100, text='2) image segmentation')
+        segmentation_frame.grid(row=1, column=0, padx=5, pady=8, sticky='s')
         
         
         
@@ -299,17 +307,44 @@ class cal_gui_sortgrid(object):
         self.median_input.insert(0,'0')
         self.median_input.grid(row=8, column=1, rowspan=1, sticky='nw', padx=2, pady=2)
         
-        self.local = Label(segmentation_frame, text='blur sgima:', padx=2, pady=2)
+        self.local = Label(segmentation_frame, text='local filter:', padx=2, pady=2)
         self.local.grid(row=9, column=0, rowspan=1, sticky='nw', padx=2, pady=2)
         self.local_input = Entry(segmentation_frame, width=7)
         self.local_input.insert(0,'0')
         self.local_input.grid(row=9, column=1, rowspan=1, sticky='nw', padx=2, pady=2)
         
         
+        ROI_frame = LabelFrame(segmentation_frame, padx=2, pady=2, 
+                                        width=100, text='ROI')
+        ROI_frame.grid(row=11, column=0, columnspan=2, padx=5, pady=1, sticky='sew')
+        
+        self.ROI_x0y0 = Label(ROI_frame, text='x0, y0:', padx=2, pady=2)
+        self.ROI_x0y0.grid(row=0, column=0, rowspan=1, sticky='nw', padx=2, pady=2)
+        self.ROI_x1y1 = Label(ROI_frame, text='x1, y1:', padx=2, pady=2)
+        self.ROI_x1y1.grid(row=1, column=0, rowspan=1, sticky='nw', padx=2, pady=2)
+        
+        self.ROIx0 = Entry(ROI_frame, width=7)
+        self.ROIx0.insert(0,'0')
+        self.ROIx0.grid(row=0, column=1)
+        self.ROIy0 = Entry(ROI_frame, width=7)
+        self.ROIy0.insert(0,'0')
+        self.ROIy0.grid(row=0, column=2)
+        self.ROIx1 = Entry(ROI_frame, width=7)
+        self.ROIx1.insert(0,str(self.cam_res[0]))
+        self.ROIx1.grid(row=1, column=1)
+        self.ROIy1 = Entry(ROI_frame, width=7)
+        self.ROIy1.insert(0,str(self.cam_res[1]))
+        self.ROIy1.grid(row=1, column=2)
+        
+        
+        
         segment_button = Button(segmentation_frame, text='Segment image', 
                                 command = self.sementImage, padx=2, pady=7)
-        segment_button.grid(row=10, column=0, padx=2, pady=7, sticky='ew')
+        segment_button.grid(row=12, column=0, padx=2, pady=7, sticky='ew')
         
+        save_segment_button = Button(segmentation_frame, text='Save blobs', 
+                                command = self.save_blobs, padx=2, pady=7)
+        save_segment_button.grid(row=12, column=1, padx=2, pady=7, sticky='ew')
         
         
         
@@ -322,7 +357,7 @@ class cal_gui_sortgrid(object):
         
         
         Column3 = LabelFrame(self.root, padx=2, pady=10, width=100, 
-                                  bg='#bad4e3')
+                                  bg='#c2c2c2')
         Column3.grid(row=0, column=3, padx=(2), pady=10, sticky='nsew')
         
         
@@ -333,10 +368,10 @@ class cal_gui_sortgrid(object):
         # Marking points for initial calibration
         
         # Buttons frame
-        button_frame = LabelFrame(Column3, text='marking image points', 
-                                  padx=2, pady=10, width=100)
+        button_frame = LabelFrame(Column3, text='3) mark image points', 
+                                  padx=2, pady=8, width=100)
         button_frame.grid(row=0, column=0, columnspan=2, sticky='nwe', padx=2, 
-                          pady=10)
+                          pady=8)
         
         # add point button
         add_button = Button(button_frame, text='Mark point', 
@@ -409,10 +444,10 @@ class cal_gui_sortgrid(object):
         # ================
         # sortgrid
         
-        init_cal_frame = LabelFrame(Column3, text='sortgrid', 
-                                  padx=2, pady=10, width=100)
-        init_cal_frame.grid(row=1, column=0, columnspan=2, sticky='swe', padx=2, 
-                          pady=10)
+        init_cal_frame = LabelFrame(Column3, text='4) sortgrid', 
+                                  padx=2, pady=8, width=100)
+        init_cal_frame.grid(row=1, column=0, columnspan=2, sticky='s', padx=2, 
+                          pady=8)
         
         
         
@@ -449,10 +484,17 @@ class cal_gui_sortgrid(object):
         save_cal_points.grid(row=1, column=0, padx=2, pady=2, sticky='new')
         
         
+        
         # quit button
-        quit_button = Button(init_cal_frame, text='Quit', 
-                                command = self.Quit, padx=2, pady=4) 
-        quit_button.grid(row=4, column=0, padx=2, pady=2, sticky='ew')
+        
+        quit_frame = LabelFrame(Column3, text='', 
+                                  padx=2, pady=8, width=100)
+        quit_frame.grid(row=2, column=0, columnspan=2, sticky='sew', padx=2, 
+                          pady=2)
+        
+        quit_button = Button(quit_frame, text='Quit', width=19,
+                                command = self.Quit, padx=2, pady=2) 
+        quit_button.grid(row=0, column=0, padx=2, pady=2, sticky='sew')
         
         
         
@@ -536,7 +578,7 @@ class cal_gui_sortgrid(object):
     def saveTargetPoints(self):
         '''Will save the matched segmented blobs and targets, making a 
            calibration points file.'''
-        saveName = self.cam_name + '_cal_points'
+        saveName = os.path.join(self.folder, self.cam_name + '_cal_points')
         self.mtf.save_results(saveName)
         print('Calibration point file "%s" saved'%saveName)
         
@@ -546,7 +588,7 @@ class cal_gui_sortgrid(object):
     def matchTargetPoints(self):
         '''Will match the target points to the segmented blobs'''
         
-        segmented_file = self.cam_name + '_CalBlobs'
+        segmented_file = os.path.join(self.folder, self.cam_name + '_CalBlobs')
         self.mtf = match_calibration_blobs_and_points(self.cam, segmented_file,
                                                       self.target_fname)
         self.mtf.pair_points()
@@ -589,7 +631,9 @@ class cal_gui_sortgrid(object):
 
 
     def genCamFile(self):
-        '''Generates a camera file with the given initial guess'''
+        '''
+        Generates a camera file with the given initial guess
+        '''
         ox = float(self.Ox_input.get()) 
         oy = float(self.Oy_input.get()) 
         oz = float(self.Oz_input.get())
@@ -597,14 +641,14 @@ class cal_gui_sortgrid(object):
         ty = float(self.yori_input.get()) 
         tz = float(self.zori_input.get()) 
         f = float(self.f_input.get()) 
-        xh = float(self.xh_input.get()) 
-        yh = float(self.yh_input.get()) 
+        #xh = float(self.xh_input.get()) 
+        #yh = float(self.yh_input.get()) 
         
         self.cam.O = [ox,oy,oz]
         self.cam.theta = [tx,ty,tz]
         self.cam.f = f
-        self.cam.xh = xh
-        self.cam.yh = yh
+        #self.cam.xh = xh
+        #self.cam.yh = yh
         self.cam.calc_R()
         self.cam.save('.')
         
@@ -617,7 +661,12 @@ class cal_gui_sortgrid(object):
 
     def sementImage(self):
         '''Segments the image and save the blob file'''
+        from numpy import zeros
         
+        x0,y0 = int(self.ROIx0.get()), int(self.ROIy0.get())
+        x1,y1 = int(self.ROIx1.get()), int(self.ROIy1.get())
+        mask = zeros((self.cam_res[1], self.cam_res[0]))
+        mask[y0:y1,x0:x1] = 1
         
         self.segmentationParams ={'image': array(self.image),
                                   'threshold': float(self.threshold_input.get()), 
@@ -628,9 +677,9 @@ class cal_gui_sortgrid(object):
                                   'min_mass': float(self.minMass_input.get()),
                                   'max_mass': float(self.maxMass_input.get()),
                                   'sigma': float(self.sigma_input.get()), 
-                                  'median': float(self.median_input.get()),
-                                  'local_filter': float(self.local_input.get()), 
-                                  'mask': 1,
+                                  'median': int(self.median_input.get()),
+                                  'local_filter': int(self.local_input.get()), 
+                                  'mask': mask,
                                   'method': 'labeling',
                                   'particle_size':8}
         
@@ -638,15 +687,15 @@ class cal_gui_sortgrid(object):
             if self.segmentationParams[k] == 0.0:
                 self.segmentationParams[k] = None
         
-        particleSegment = particle_segmentation(**self.segmentationParams)
-        particleSegment.get_blobs()
-        particleSegment.apply_blobs_size_filter()
+        self.particleSegment = particle_segmentation(**self.segmentationParams)
+        self.particleSegment.get_blobs()
+        self.particleSegment.apply_blobs_size_filter()
         
         print('\nSegmenting image...\n')
-        print('blobs found:', len(particleSegment.blobs))
+        print('blobs found:', len(self.particleSegment.blobs))
         
         self.segmented = []
-        for b in particleSegment.blobs:
+        for b in self.particleSegment.blobs:
             self.segmented.append((b[0][1], b[0][0], b[1][1], b[1][0]))
             
         # plot the segmented particles over a refreshed image
@@ -663,10 +712,16 @@ class cal_gui_sortgrid(object):
 
         self.plotSegmented()
         
-        saveName = self.cam_name + '_CalBlobs'
-        particleSegment.save_results(saveName)
-        print('\nFile saved. Done.\n')
         return None
+    
+    
+    def save_blobs(self):
+        '''
+        Saves the results of the segmentation
+        '''
+        saveName = os.path.join(self.folder, self.cam_name + '_CalBlobs')
+        self.particleSegment.save_results(saveName)
+        print('\nFile saved. Done.\n')
     
     
     def plotSegmented(self):
@@ -828,7 +883,7 @@ class cal_gui_sortgrid(object):
     def Save(self):
         '''save the manually selected calibration points'''
         from numpy import savetxt
-        saveName = self.cam_name+'_manualPoints'
+        saveName = os.path.join(self.folder, self.cam_name+'_manualPoints')
         savetxt(saveName, self.point_list, 
                 fmt='%.1f', delimiter='\t')
         print('Points saved at: %s'%saveName)
@@ -844,7 +899,7 @@ class cal_gui_sortgrid(object):
 if __name__ == '__main__':
     im_fname = '/home/ron/Desktop/Research/plankton_sweeming/experiments/20220916/MyPTV_analysis/Calibration/cal2.tif'    
     target_fname = '/home/ron/Desktop/Research/plankton_sweeming/experiments/20220916/MyPTV_analysis/Calibration/target_file'
-    gui = cal_gui_sortgrid('camX', im_fname, target_fname)
+    gui = initial_cal_gui('camX', im_fname, target_fname)
 
 #cam = camera(cam_name, res)
 #cam.save('.')
