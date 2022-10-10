@@ -292,15 +292,17 @@ The \texttt{params\_file.yml} outlines all the parameters needed in order to run
 
 \subsection{Calibration guide} \label{sec:cal_guide}
 
+
 A good calibration is key to having success in your PTV experiment! Thus, follow this guide to calibrate your camera using MyPTV. 
 
 
-Camera calibration consists of several steps in which we determine the external ($\vec{O}$, $\vec{\theta}$) and internal ($f$, $x_h,\,y_h$, $[E]$) parameters of our camera system. Each camera in MyPTV is calibrated separately, To calibrate a camera we use a \textit{calibration image} - an image of an object with marked points on it whose coordinates are known to us, a \textit{calibration target}. Therefore, to calibrate a camera, we make sure that we have a calibration image ready, as seen, for example, in Fig.~\ref{fig:cal_img}.
-
-Importantly, since the goal is finding the cameras' positions, once a calibration image was taken in an experiment it is crucial that the cameras are not moved. Even minor vibrations can ruin an experiment Also, the calibration target needs to be in the same medium in which the experiment will be performed to ensure that any refraction is corrected by the error terms (for example, if you are using a tank of water, place the calibration target inside the tank of water). 
+In the process called camera calibration, our goal is to determine what are the external ($\vec{O}$, $\vec{\theta}$) and internal ($f$, $x_h,\,y_h$, $[E]$) parameters of each of our cameras. This process is done by taking an image, a \textit{calibration image}, of an object that has points with known coordinates marked on it - \textit{calibration target}. Therefore, its important to make sure that for each experiment and each camera we have a calibration image ready, as seen, for example, in Fig.~\ref{fig:cal_img}.
 
 
-The calibration in MyPTV is performed in two steps: \textit{initial calibration} and \textit{final calibration}. The initial calibration is used to obtain a rough estimation of the camera's parameters using a small number of calibration points, as well as to extract the information for all the calibration points on the calibration target. In the final calibration we fine tune the camera's parameters in order to minimize the \textit{calibration error}. The process is explained in details in the following sub sections. 
+Importantly, since our goal in calibration is to find the cameras' positions, once calibration images were taken in an experiment it is crucial that the cameras are not moved. Even minor vibrations can ruin an experiment. Also, the calibration target needs to be in the same medium in which the experiment will be performed to ensure that any refraction is corrected by the error terms (for example, if you are using a tank of water, place the calibration target inside the tank of water). 
+
+
+The calibration in MyPTV is performed in two steps: \textit{initial calibration} and \textit{final calibration}. The initial calibration is used to obtain a rough estimation of some of the camera's parameters using a small number of calibration points, as well as to extract the information for all the calibration points on the calibration target. In the final calibration we fine tune the camera's parameters in order to minimize the \textit{calibration error}. The process is explained in detail in the following sub sections. 
 
 
 %A schematic block diagram for the calibration process of each camera is given in Fig.~\ref{fig:calibsteps}. The calibration is divided into two sub-processes: 1) initial calibration, in which we use only 6 calibration points to obtain an approximate calibration estimation, and, 2) final calibration, in which we use all the calibration points on the calibration target to improve the accuracy of the initial calibration. The various steps of the process are performed in MyPTV through the workflow script, and detailed instructions are given below. 
@@ -333,7 +335,7 @@ As in any step of MyPTV, we make sure that the \texttt{params\_file.yaml} in our
 		\hline
 		Parameter & Description\\
 		\hline
-		\texttt{camera\_name} & the name of the camera to be calibrated \\
+		\texttt{camera\_name} & the name of the camera to be calibrated; for example, \texttt{cam1}, etc. \\
 		
 		%\texttt{calibration\_points\_file} & path to the file that lists the correlated lab space and image space coordinates \\
 		
@@ -352,23 +354,56 @@ As in any step of MyPTV, we make sure that the \texttt{params\_file.yaml} in our
 
 
 
-\subsubsection{Initial calibraiton}\label{sec:init_calibration}
+\subsubsection{Initial calibration}\label{sec:init_calibration}
 
 
-For the initial calibration, follow these steps:
+To start the initial calibration, we start the \textit{initial calibration GUI}. Using the workflow file in the terminal, use the following command:
+%
+\begin{verbatim}
+python workflow.py params_file.yml initial_calibration
+\end{verbatim} 
+%
+which should open the a window like the one shown in Fig.~\ref{fig:init_cal_gui}. The left most panel shows the calibration image; we can zoom in and out by pressing the "+" and "-" keys. 
+
+\begin{figure}
+	\includegraphics[width=1.0\textwidth]{initial_calibration.pdf}
+	\caption{The initial calibration GUI. \label{fig:init_cal_gui}}
+\end{figure}
+
+
+The initial calibration is composed of four steps, and each one has a dedicated panel in the GUI. The steps should, in general, be followed along the order of the steps: 1 $\rightarrow$ 4.   
+
+
+Here are the details regarding each of the initial calibration steps:
 
 \begin{enumerate}
-	\item \textit{Generate the camera file:} The camera file holds the camera parameters (see Fig.~\ref{fig:camfiles}). An empty camera file can be generated automatically by the workflow script when we start the calibration sequence in a directory that doesn't havea  camera file in it (by running \texttt{python workflow.py params\_file.yml calibration} in the command line).
+	\item \texttt{cam file generation}: Here we produce a text file that stores the camera parameters. We first have to give a first guess for the six different external parameters, $\vec{O}$ and $\vec{\theta}$, and the focal length, $f$. It's important to give a reasonably good initial guess, because the calibration problem often has local minima that make the convergence to solution difficult. To understand the how to choose the values, consult Section~\ref{sec:camera_external_params}. When done, click the \texttt{Generate cam file} button.  
 	
-	\item \textit{Enter an initial guess:} Open the camera file just generated and insert an initial guess for the camera's position ($\vec{O}$ in the first line), orientation ($\vec{\theta}$ in the second line), and the focal depth ($f$ in the third line). See Section~\ref{sec:camera_external_params} (Understanding camera external parameters) and Fig.~\ref{fig:cam_pos_example} for a reference on how camera translations and orientations and focal lengths are defined. 
+	\item \texttt{image segmentation}: In this step we use MyPTV to detect the points on the calibration image and to store their pixel coordinates in a file. Choose and tweak the segmentation parameters until all the calibration points are detected (or at least most of them if the images are not ideal). Detected points are indicated by green squares on the image. Also, a reference for the segmentation parameters can be found in Section~\ref{sec:workflow_segment}. Once done, save the file using the \texttt{save} button.
 	
-	\item \textit{Segment 6 calibration points:} We start by choosing six points (or more) of the calibration target. The points should not be coplanar and it is best to choose them such that there is some assymetry (e.g. see the blue crosses in Fig.~\ref{fig:Cal_point_GUI}). Then, we need to prepare a file that lets MyPTV know their coordinates in image space and in lab space (see Fig.~\ref{fig:calpointfile} for the format). The name of the file should be inserted under \texttt{calibration\_points\_file} in the \texttt{params\_file.yml}. \\
-	The calibration points file can be generated easily using a dedicated graphical user interface (GUI). To run the GUI, enter \texttt{python workflow.py params\_file calibration\_point\_gui} in the command line. Alternatively, if MyPTV can't find the \texttt{calibration\_points\_file}, the GUI will start automatically. Instruction are given in Fig.~\ref{fig:Cal_point_GUI}.
+	\item \texttt{mark image points}: Here, we start by choosing six points (at least) of the calibration target. The points should not be coplanar and it is best to choose them such that there is some asymmetry to reduce the chance of false convergence. For each point chosen, we mark it by clicking on it on the image and we write its' lab space coordinates in the \texttt{x lab}, \texttt{y lab}, \texttt{z lab} fields, and then click the \texttt{Mark point} button. The marked points will be shown as blue crosses on the image. After marking all the chosen points, we save their coordinates using the \texttt{Save points} button.
 	
-	\item \textit{Calibrate using 6 points:} We now calibrate the camera, namely, we optimize the camera parameters such that the calibration error is minimized). This is done using the calibration graphical user interface (GUI), which is initiated by entering \texttt{python workflow.py params\_file.yml calibration} in the command line. The calibration GUI is shown in Fig.~\ref{fig:calibration_gui} and the functionalities are listed in Tab.~\ref{tab:calibration_gui}. In general, we want to observe the calibration error decreasing (the error is the RMS deviation in pixel units). Once the error had converged to a low level, about 1.0 pixels, save the results.
+	\item \texttt{sortgrid}: In this last step, MyPTV tries to calibrate the camera using only the points we marked in step 3, and then to match the calibration points we segmented in step 2 to the points we gave in the target file. Thus, click the \texttt{initial calibration} button, make sure that the calibration error is low (aim for about 1.0), and click \texttt{show calibration}. If the results are good, click the \texttt{Match target file} button, and you should see the segmented points and the associated points from the target file paired by a red line on the image. Make sure that there are no errors in the pairing, and then save the results. If you detect errors or the initial calibration did not reach low enough error, it might be needed to generate an improved initial guess.  
+		 
 \end{enumerate}
-
+ 
 This concludes the initial calibration step.
+
+%
+%For the initial calibration, follow these steps:
+%
+%\begin{enumerate}
+%	\item \textit{Generate the camera file:} The camera file holds the camera parameters (see Fig.~\ref{fig:camfiles}). An empty camera file can be generated automatically by the workflow script when we start the calibration sequence in a directory that doesn't havea  camera file in it (by running \texttt{python workflow.py params\_file.yml calibration} in the command line).
+%	
+%	\item \textit{Enter an initial guess:} Open the camera file just generated and insert an initial guess for the camera's position ($\vec{O}$ in the first line), orientation ($\vec{\theta}$ in the second line), and the focal depth ($f$ in the third line). See Section~\ref{sec:camera_external_params} (Understanding camera external parameters) and Fig.~\ref{fig:cam_pos_example} for a reference on how camera translations and orientations and focal lengths are defined. 
+%	
+%	\item \textit{Segment 6 calibration points:} We start by choosing six points (or more) of the calibration target. The points should not be coplanar and it is best to choose them such that there is some assymetry (e.g. see the blue crosses in Fig.~\ref{fig:Cal_point_GUI}). Then, we need to prepare a file that lets MyPTV know their coordinates in image space and in lab space (see Fig.~\ref{fig:calpointfile} for the format). The name of the file should be inserted under \texttt{calibration\_points\_file} in the \texttt{params\_file.yml}. \\
+%	The calibration points file can be generated easily using a dedicated graphical user interface (GUI). To run the GUI, enter \texttt{python workflow.py params\_file calibration\_point\_gui} in the command line. Alternatively, if MyPTV can't find the \texttt{calibration\_points\_file}, the GUI will start automatically. Instruction are given in Fig.~\ref{fig:Cal_point_GUI}.
+%	
+%	\item \textit{Calibrate using 6 points:} We now calibrate the camera, namely, we optimize the camera parameters such that the calibration error is minimized). This is done using the calibration graphical user interface (GUI), which is initiated by entering \texttt{python workflow.py params\_file.yml calibration} in the command line. The calibration GUI is shown in Fig.~\ref{fig:calibration_gui} and the functionalities are listed in Tab.~\ref{tab:calibration_gui}. In general, we want to observe the calibration error decreasing (the error is the RMS deviation in pixel units). Once the error had converged to a low level, about 1.0 pixels, save the results.
+%\end{enumerate}
+
+
 
 
 
@@ -489,11 +524,11 @@ The focal length parameter,$f$, is essentially an extension factor. In MyPTV $f$
 
 
 
-\begin{figure}[!ht]
-	\centering
-	\includegraphics[width=0.85\textwidth]{Cal_point_GUI.pdf}
-	\caption{The calibration point segmentation GUI. 1 - the calibration image, with points to be segmented. 2 and 3 - scroll bars to explore the image. When the image is clicked a red cross apears (7) and its coordinates in image space are pronted in 4; to mark a calibration point click on it. 5 - to specify the lab space coordinates of the point, enter them in the correct tabs. 6 - once 'mark point' is clicked, the cross becomes blue (8), which means that the point's data was registered in the memory. to remove points from the register click 'Forget last point'. To save the points in the register click 'Save points' (the file name is the one given in \texttt{calibration\_points\_file}). To zoom in use the +/- buttons. To move the red cross more accurately, use Shift-Arrowkey. \label{fig:Cal_point_GUI}}
-\end{figure}
+%\begin{figure}[!ht]
+%	\centering
+%	\includegraphics[width=0.85\textwidth]{Cal_point_GUI.pdf}
+%	\caption{The calibration point segmentation GUI. 1 - the calibration image, with points to be segmented. 2 and 3 - scroll bars to explore the image. When the image is clicked a red cross apears (7) and its coordinates in image space are pronted in 4; to mark a calibration point click on it. 5 - to specify the lab space coordinates of the point, enter them in the correct tabs. 6 - once 'mark point' is clicked, the cross becomes blue (8), which means that the point's data was registered in the memory. to remove points from the register click 'Forget last point'. To save the points in the register click 'Save points' (the file name is the one given in \texttt{calibration\_points\_file}). To zoom in use the +/- buttons. To move the red cross more accurately, use Shift-Arrowkey. \label{fig:Cal_point_GUI}}
+%\end{figure}
 
 
 \begin{figure}[!ht]
@@ -514,22 +549,36 @@ The focal length parameter,$f$, is essentially an extension factor. In MyPTV $f$
 
 
 
-\subsubsection{Final calibraiton}
+\subsubsection{Final calibration}
 
-For the final calibration, follow these steps:
+In the final calibration we use all the calibration points to find the parameters of the camera. We do this by minimizing the calibration error, defined as the root mean square of the distances between the image-space calibration points positions and the projection of the lab-space points on the image plane. The minimization is solved numerically using the \textit{final calibration gui}. 
 
 
-\begin{enumerate}
-	\item \textit{Prepare a target file:} If there is no target file in the experimental folder, this is the time to generate one. A \textit{target file} is a text file which lists the lab-space coordinates of all the points on our calibration target according to the format shown in Fig.~\ref{fig:target_file}. Prepare such a file and save it in the experiment's calibration folder.
-	
-	\item \textit{Segment the calibration points:} To obtain the image space coordinates of all the calibration points we use the segmentation operation of the workflow script. To do so: 1) insert the name of the calibration image under the \texttt{Segmentation -> single\_image\_name} tab; 2) run the segmentation command - \texttt{python workflow.py params\_file.yml segmentation}. If the results are not satisfactory, change the segmentation parameters and re-run the segmentation command until you get it; then save the results (the file name used is the one under the \texttt{segmented\_points\_file} field in the \texttt{params\_file}). See also Sec.~\ref{sec:workflow_segment} for more details on the segmentation process.  
-	
-	\item \textit{Match points to target file:} Here we let MyPTV know which of the segmented points corresponds to which point in the target file. To do this, we used the command \texttt{python workflow.py params\_file.yml match\_target\_file}. This will generate a figure, highlighting the target file and the segmented results  by one another. Make sure that the two data match each other (see Fig.~\ref{fig:match_target_file}. If the results are good, save them by quitting the figure and entering 1 when prompted. If the match is not good, then the initial calibration was not good enough; enter 2 when prompted, and return to Sec.~\ref{sec:init_calibration} to improve the initial calibration.
-	
-	\item \textit{Calibrate using all points:} Now that we have segmented the necessary data, we return to the calibration GUI by running \texttt{python workflow.py params\_file.yml calibration} in the command line. Use the GUI to reduce the calibration error as much as possible. Values lower that 0.5 pixels or even 0.3 should be sought.  
-\end{enumerate}
+To start the final calibration gui, use the workflow script with the following command:
+%
+\begin{verbatim}
+python workflow.py params_file.yml final_calibration
+\end{verbatim}
+%
+which should start the interface shown in Fig.~\ref{fig:calibration_gui}. The description of each of the possible functionalities are given in Table~\ref{tab:calibration_gui}. In principal, the lower the calibration error, the results of the measurements will be more reliable, and it will become possible to track a higher number of particles in each frame. A good calibration will have an error lower than about 0.5, or even 0.3 pixels. Once a good error value is achieved, the calibration process is complete. 
 
-Congratulations, this step completes the calibration process. 
+
+
+%
+%
+%For the final calibration, follow these steps:
+%
+%
+%\begin{enumerate}
+%	\item \textit{Prepare a target file:} If there is no target file in the experimental folder, this is the time to generate one. A \textit{target file} is a text file which lists the lab-space coordinates of all the points on our calibration target according to the format shown in Fig.~\ref{fig:target_file}. Prepare such a file and save it in the experiment's calibration folder.
+%	
+%	\item \textit{Segment the calibration points:} To obtain the image space coordinates of all the calibration points we use the segmentation operation of the workflow script. To do so: 1) insert the name of the calibration image under the \texttt{Segmentation -> single\_image\_name} tab; 2) run the segmentation command - \texttt{python workflow.py params\_file.yml segmentation}. If the results are not satisfactory, change the segmentation parameters and re-run the segmentation command until you get it; then save the results (the file name used is the one under the \texttt{segmented\_points\_file} field in the \texttt{params\_file}). See also Sec.~\ref{sec:workflow_segment} for more details on the segmentation process.  
+%	
+%	\item \textit{Match points to target file:} Here we let MyPTV know which of the segmented points corresponds to which point in the target file. To do this, we used the command \texttt{python workflow.py params\_file.yml match\_target\_file}. This will generate a figure, highlighting the target file and the segmented results  by one another. Make sure that the two data match each other (see Fig.~\ref{fig:match_target_file}. If the results are good, save them by quitting the figure and entering 1 when prompted. If the match is not good, then the initial calibration was not good enough; enter 2 when prompted, and return to Sec.~\ref{sec:init_calibration} to improve the initial calibration.
+%	
+%	\item \textit{Calibrate using all points:} Now that we have segmented the necessary data, we return to the calibration GUI by running \texttt{python workflow.py params\_file.yml calibration} in the command line. Use the GUI to reduce the calibration error as much as possible. Values lower that 0.5 pixels or even 0.3 should be sought.  
+%\end{enumerate}
+
 
 
 
@@ -1118,9 +1167,22 @@ The important functionalities are:
 
 
 
-\subsection{The \texttt{cal\_gui.py} file}
+\subsection{The \texttt{gui\_final\_cal.py} file}
 
-The \texttt{cal\_gui.py} script is used to launch a \texttt{tkinter} based graphical user interface that is utilized to run various functionalities of the calibration process. The GUI is shown in  Fig.~\ref{fig:calibration_gui}, and the various buttons are explained in Tab.~\ref{tab:calibration_gui}.
+The \texttt{gui\_final\_cal.py} script is used to launch a \texttt{tkinter} based graphical user interface that is utilized to run various functionalities of the calibration process. The GUI is shown in  Fig.~\ref{fig:calibration_gui}, and the various buttons are explained in Tab.~\ref{tab:calibration_gui}.
+
+
+
+
+\subsection{The \texttt{gui\_initial\_cal.py} file}
+
+The \texttt{gui\_initial\_cal.py} script is used to launch a \texttt{tkinter} based graphical user interface that is utilized to run various functionalities of the calibration process. The GUI is shown in  Fig.~\ref{fig:init_cal_gui} and it is explained in section~\ref{sec:init_calibration}.
+
+
+
+
+
+
 
 
 
