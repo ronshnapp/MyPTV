@@ -245,7 +245,7 @@ class workflow(object):
                     break
         
         # get the blob file and setup the camera instance
-        blob_file = os.path.join(cal_folder, cam_name+'_manualPoints')
+        blob_file = os.path.join(cal_folder, cam_name+'_cal_points')
         
         try:
             cam = camera(cam_name, res, cal_points_fname = blob_file)

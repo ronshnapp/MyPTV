@@ -516,8 +516,9 @@ class initial_cal_gui(object):
     
     def calibrate(self):
         '''Calibrates the camera using marked points'''
-        self.cam = camera(self.cam_name, self.cam_res, 
-                          cal_points_fname = self.cam_name+'_manualPoints')
+        
+        cpf = os.path.join(self.folder, self.cam_name+'_manualPoints')
+        self.cam = camera(self.cam_name, self.cam_res, cal_points_fname = cpf)
         self.cam.load('.')
         print('camera data loaded successfully.')
         cal = calibrate(self.cam, self.cam.lab_points, self.cam.image_points)
@@ -541,6 +542,7 @@ class initial_cal_gui(object):
             err_iminus1 = err
         
         self.error_input.config(text = '%0.3f'%err)
+        self.cam.save('.')
         print('Finished with error: %.3f pixels\n'%(err))
             
             

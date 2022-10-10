@@ -1,5 +1,5 @@
-June 26, 2022
-Version: 0.4.3
+October 10, 2022
+Version: 0.5.0
 
 <img src="./user_manual/figs/logo.png" style="zoom:20%;" />
 
