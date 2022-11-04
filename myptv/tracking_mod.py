@@ -615,3 +615,146 @@ class tracker_nearest_neighbour(object):
         fmt += ['%.3f', '%.3f']
         savetxt(fname , data_to_save,
                 delimiter='\t', fmt=fmt)
+
+
+
+
+
+
+
+
+
+from pandas import read_csv
+
+class dynamic_tracking(tracker_four_frames):
+    '''
+    A tracking method that uses ideas from dynamic programing to
+    solve the tracking problem.
+    
+    For each particle we generate all the possible links
+    that could be connected to it. For each candidate trajectory
+    we associate a cost. We then minimize the total cost over
+    all the trajectory candidates.
+    '''
+    
+    def __init__(self, fname, mean_flow = 0.0, d_max=1e10, dv_max=1e10):
+        '''
+        fname - string, path of the particles containing file to which tracking
+                should be performed.
+                
+        mean_flow - a numpy array of the mean flow vector, in units of the 
+        calibrations spatial units per frame (e.g. mm per frame). The mean 
+        flow is assumed not to change in space and time.
+        
+        d_max - maximum allowable translation between two frames for the 
+                nearest neighbour search, after subtracting the mean flow. 
+                
+        dv_max - maximum allowable change in velocity for the two-frame 
+                 velocity projection search. The radius around the projection
+                 is therefore dv_max/dt (where dt = 1 frame^{-1})
+        '''
+        self.fname = fname
+        self.U = mean_flow
+        self.d_max = d_max
+        self.dv_max = dv_max
+        
+        # a particles dictionary organized by frames
+        data = read_csv(self.fname, sep='\t', header=None)
+        Np, cols = data.shape
+        self.particles = dict([(k, array(g)) for k,g in data.groupby(cols-1)])
+        
+        self.frames = sorted(list(self.particles.keys()))
+        
+        # a dictionary of KDtrees by frames; it shall be updated as we go
+        self.trees = {}
+        
+        # a list of candidate links; each particle is specified as a tuple - 
+        # (frame number, index of particle in the frame), and a link is a list
+        # of two particles. 
+        #self.link_candidates = []
+        
+        # a dictionary whose keys are particle identifiers 
+        # (frame, particle index), and the values are particle identifiers of
+        # the particles to which it could be linked.
+        self.link_candidates_dic = {}
+    
+    
+    def get_particles_links(self, particle):
+        '''
+        Given a particle, this function will search for all the
+        connections it could have into the past and the future.
+        
+        For this, a link is addmissible if the displacement is smaller 
+        than self.d_max
+        '''
+        frame, pIndex = particle
+        
+        # get the particle's coordinates
+        x = self.particles[frame][pIndex][:3]
+        
+        # generate an entry in the link_candidates_dictionary
+        self.link_candidates_dic[(frame, pIndex)] = set([])
+        
+        # add future links:
+        if frame != self.frames[-1]:
+            # finding the nearest neighbours in the next frame
+            try:
+                tree = self.trees[frame+1]
+            
+            except:
+                self.trees[frame+1] = KDTree(self.particles[frame+1][:,:3])
+                tree = self.trees[frame+1]
+            
+            neighbour_index = tree.query_ball_point([x], self.d_max)
+            
+            # adding these links to the list of link_candidates
+            for ind in neighbour_index[0]:
+                #self.link_candidates.append([particle, (frame+1, ind)])
+                self.link_candidates_dic[(frame, pIndex)].add((frame+1, ind))
+                
+        
+        # add past links:
+        if frame != self.frames[0]:
+            # finding the nearest neighbours in the previous frame
+            try:
+                tree = self.trees[frame-1]
+            
+            except:
+                self.trees[frame-1] = KDTree(self.particles[frame-1][:,:3])
+                tree = self.trees[frame-1]
+            
+            neighbour_index = tree.query_ball_point([x], self.d_max)
+            
+            # adding these links to the dictionary of link_candidates
+            for ind in neighbour_index[0]:
+                #self.link_candidates.append([particle, (frame-1, ind)])
+                self.link_candidates_dic[(frame, pIndex)].add((frame-1, ind))
+    
+    
+    
+    def get_frames_links(self, frameList):
+        '''
+        Goes over all the particles in the frames belonging to frame_list
+        and adds their possible links to the list self.link_candidates.
+
+        frameList - a list of frame numbers
+        '''
+        
+        if not all([f in self.frames for f in frameList]):
+            raise ValueError('Not all the given frames are in the file')
+            
+        for frame in frameList:
+            Np = len(self.particles[frame])
+            NL = len(self.link_candidates)
+            for i in range(Np):
+                self.get_particles_links( (frame, i) )
+                
+            newNL = len(self.link_candidates) - NL
+            print('frame: %d, particles: %d, link candidates: %d'%(frame, 
+                                                                   Np, newNL))
+    
+    
+    
+    
+    
+
