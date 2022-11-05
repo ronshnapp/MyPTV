@@ -39,7 +39,8 @@ class match_blob_files(object):
     
     
     def __init__(self, blob_fnames, img_system, RIO, voxel_size, max_blob_dist,
-                 max_err=1e9, reverse_eta_zeta = False):
+                 max_err=1e9, reverse_eta_zeta = False, 
+                 travered_voxel_rep = True):
         '''
         blob_fname - a list of the file names containing the segmented blob
                      data. The list has to be sorted according the order of
@@ -68,6 +69,10 @@ class match_blob_files(object):
                            data points were given where the x, y coordinates
                            are transposed (as happens, e.g., if using 
                            matplotlib.pyplot.imshow).
+                           
+        travered_voxel_rep - If true, this will repeat the segmentation with 
+                             translated voxels to make sure no blobs were 
+                             missed due to an alliasing.
         '''
         self.blobs = []
         for fn in blob_fnames:
@@ -86,8 +91,8 @@ class match_blob_files(object):
             for b in bl:
                 time_lst.append(b[-1])
         self.time_lst = sorted(list(set(time_lst)))
-        
-        
+        self.cam_names = [cam.name for cam in self.imsys.cameras]
+        self.travered_voxel_rep = travered_voxel_rep
         
     def get_particles_dic(self, frame):
         '''
@@ -124,8 +129,6 @@ class match_blob_files(object):
         if frames is None:
             frames = self.time_lst
         
-        self.cam_names = [cam.name for cam in self.imsys.cameras]
-        
         
         # start matching, one frame at a time
         self.particles = []
@@ -139,10 +142,10 @@ class match_blob_files(object):
             # set up a blobs dictionary with camera names as key
             pd = self.get_particles_dic(tm)
             nb = sum([len(pd[k]) for k in pd.keys()]) /len(pd.keys())
-            print('', end='\r')
+            #print('', end='\r')
             
             
-            # for iterations after the first run, use the time
+            # (1) for iterations after the first run, use the time
             # augmented matching
             useTimeMatching = True
             if e>0 and useTimeMatching:
@@ -177,7 +180,7 @@ class match_blob_files(object):
 #                 pd = itm.return_updated_particle_dict()
 # =============================================================================
                                 
-            # match particles using the voxel method
+            # (2) match particles using the voxel method
             M = matching(self.imsys, pd, self.RIO, self.voxel_size,
                          max_err = self.max_err)
             #return M  # <-- used for checks
@@ -189,17 +192,53 @@ class match_blob_files(object):
             for p in M.matched_particles:
                 self.particles.append(p + [tm])
                 countParticlesInThisFrame += 1
+            
+            
+            
+            # (3) match remaining particles using traversed voxels
+            if self.travered_voxel_rep:
+                dv = self.voxel_size/2.0
+                new_ROI = tuple([(self.RIO[i][0]+dv,self.RIO[i][1]-dv) 
+                                  for i in range(3)])
+                # updating the particle dictionary 
+                new_pd = pd.copy()
+                for p in M.matched_particles:
+                    blob_info = p[3] 
+                    for ci, (rayNum, xy) in blob_info:
+                        cn = self.cam_names[ci]
+                        new_pd[cn][rayNum] = [-1,-1]
+                for k in new_pd.keys():
+                    i=0
+                    while i<len(new_pd[k]):
+                        if new_pd[k][i]==[-1,-1]:
+                            del new_pd[k][i]
+                        else:
+                            i+=1
+    
+                M2 = matching(self.imsys, new_pd, new_ROI, self.voxel_size,
+                              max_err = self.max_err)
+                # return M2  # <-- used for checks
+                M2.get_voxel_dictionary()
+                M2.list_candidates()
+                M2.get_particles()
                 
-            # list the particles found in this frame from the next iteration 
-            # of the time matching
+                # extract the matched particles to the list self.particles 
+                for p in M2.matched_particles:
+                    self.particles.append(p + [tm])
+                    countParticlesInThisFrame += 1
+            
+            
+                
+            # (4) list the particles found in this frame from the next  
+            # iteration of the time matching, and print statistics
             previous_particles = self.particles[-countParticlesInThisFrame:]
             
             c4 = sum([1 for p in previous_particles if len(p[3])==4])
             c3 = sum([1 for p in previous_particles if len(p[3])==3])
             c2 = sum([1 for p in previous_particles if len(p[3])==2])
             pc = ' quads. trips. pairs. = (%d, %d, %d)'%(c4, c3, c2)
-            print(' frame: %d ; %.1f blobs/cam ;'%(tm, nb) + pc, end='\r')
-                
+            print(' frame: %d ; %.1f blobs/cam ;'%(tm, nb) + pc)
+
             
         
         # filter particles with large triangulation error
