@@ -262,7 +262,7 @@ class workflow(object):
         print('initial error: %.3f pixels\n'%(cal.mean_squared_err()))
         
         # run the final calibration gui
-        print('starting calibratino GIU\n')
+        print('starting calibration GIU\n')
         gui = cal_gui(cal, cal_image)                                   
             
         
@@ -421,6 +421,7 @@ class workflow(object):
         '''
         This starts the calibrate with particles sequence
         '''
+        from myptv.gui_final_cal import cal_gui
         from myptv.imaging_mod import camera
         from myptv.calibrate_mod import calibrate_with_particles
         from  matplotlib.pyplot import subplots, show
@@ -441,6 +442,8 @@ class workflow(object):
                                       'min_traj_len')
         max_point_number = self.get_param('calibration_with_particles',
                                       'max_point_number')
+        cal_image = self.get_param('calibration_with_particles', 
+                                   'calibration_image')
         print('\n', 'starting calibration with particles')
         
         # setting up a camera instance            
@@ -455,43 +458,49 @@ class workflow(object):
         
         
         cal = cal_with_p.get_calibrate_instance()
-        print('\n', 'ready to calibrate')
-        print('initial error: %.3f pixels'%(cal.mean_squared_err()))
-        print('')
         
-        user = True
-        print('Starting calibration sequence:')
-        while user != '9':
-            print("enter '1' for external parameters calibration")
-            print("enter '2' for internal correction ('fine') calibration")
-            print("enter '3' to show current camera external parameters")
-            print("enter '4' to plot the calibration points' projection")
-            print("enter '8' to save the results")
-            print("enter '9' to quit")
-            user = input('')
+        # run the final calibration gui
+        print('starting calibration GIU using calibration with particles\n')
+        gui = cal_gui(cal, cal_image) 
+        
+        
+        # print('\n', 'ready to calibrate')
+        # print('initial error: %.3f pixels'%(cal.mean_squared_err()))
+        # print('')
+        
+        # user = True
+        # print('Starting calibration sequence:')
+        # while user != '9':
+        #     print("enter '1' for external parameters calibration")
+        #     print("enter '2' for internal correction ('fine') calibration")
+        #     print("enter '3' to show current camera external parameters")
+        #     print("enter '4' to plot the calibration points' projection")
+        #     print("enter '8' to save the results")
+        #     print("enter '9' to quit")
+        #     user = input('')
             
-            if user == '1':
-                print('\n', 'Iterating to minimize external parameters')
-                cal.searchCalibration(maxiter=2000)
-                err = cal.mean_squared_err()
-                print('\n','calibration error: %.3f pixels'%(err),'\n')
+        #     if user == '1':
+        #         print('\n', 'Iterating to minimize external parameters')
+        #         cal.searchCalibration(maxiter=2000)
+        #         err = cal.mean_squared_err()
+        #         print('\n','calibration error: %.3f pixels'%(err),'\n')
             
-            if user == '2':
-                print('\n', 'Iterating to minimize correction terms')
-                cal.fineCalibration()
-                err = cal.mean_squared_err()
-                print('\n','calibration error:', err,'\n')
+        #     if user == '2':
+        #         print('\n', 'Iterating to minimize correction terms')
+        #         cal.fineCalibration()
+        #         err = cal.mean_squared_err()
+        #         print('\n','calibration error:', err,'\n')
                 
-            if user == '3':
-                print('\n', cam, '\n')
+        #     if user == '3':
+        #         print('\n', cam, '\n')
             
-            if user == '4':
-                fig, ax = subplots()
-                cal.plot_proj(ax=ax)
-                show()
-            if user == '8':
-                print('\n', 'Saving results')
-                cam.save('.')
+        #     if user == '4':
+        #         fig, ax = subplots()
+        #         cal.plot_proj(ax=ax)
+        #         show()
+        #     if user == '8':
+        #         print('\n', 'Saving results')
+        #         cam.save('.')
         
     
     
