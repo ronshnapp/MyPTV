@@ -636,7 +636,25 @@ class matching_using_time(object):
         self.max_err = max_err
         
         # we form KDTrees for the nearest neighbour blobs search        
-        self.trees = [KDTree(self.pd[k]) for k in self.pd.keys()]
+        #self.trees = [KDTree(self.pd[k]) for k in self.pd.keys()]
+        
+        
+        # define an object that can take a querry and return an empty list
+        class deadTree():
+            
+            def __init__(self):
+                return None
+            
+            def query(self, p):
+                return [None, None]
+        
+        
+        self.trees = []
+        for k in self.pd.keys():
+            if len(self.pd[k])>0:
+                self.trees.append(KDTree(self.pd[k]))
+            else:
+                self.trees.append(deadTree())
         
     
     def triangulate_candidates(self):
@@ -666,8 +684,9 @@ class matching_using_time(object):
                 ci,(rn, (x, y)) = blb
                 cn = self.imsys.cameras[ci].name
                 bn = self.trees[ci].query((x, y))[1]
-                nearest_blobs_num[ci] = bn
-                nearest_blobs_coords[ci] = self.pd[cn][bn]
+                if bn is not None:
+                    nearest_blobs_num[ci] = bn
+                    nearest_blobs_coords[ci] = self.pd[cn][bn]
              
             # for cameras that weren't used in this particle we project
             # the particle on them and locate the nearest blob in the next 
@@ -681,8 +700,9 @@ class matching_using_time(object):
                 cn = self.imsys.cameras[ci].name
                 projectionI = self.imsys.cameras[ci].projection(p_xyz)
                 bn = self.trees[ci].query(projectionI)[1]
-                nearest_blobs_num[ci] = bn
-                nearest_blobs_coords[ci] = self.pd[cn][bn]
+                if bn is not None:
+                    nearest_blobs_num[ci] = bn
+                    nearest_blobs_coords[ci] = self.pd[cn][bn]
             
                 
             # second, triangulate the nearest blob neighbours:

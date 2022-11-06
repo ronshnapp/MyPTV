@@ -859,6 +859,7 @@ class workflow(object):
         trajectory_file = self.get_param('smoothing', 'trajectory_file')
         window = self.get_param('smoothing', 'window_size')
         polyorder = self.get_param('smoothing', 'polynom_order')
+        repetitions = self.get_param('smoothing', 'repetitions')
         save_name = self.get_param('smoothing', 'save_name')
         
         traj_list = loadtxt(trajectory_file)
@@ -866,7 +867,10 @@ class workflow(object):
         
         # smoothing the trajectories     
         print('Starting to smooth trajectories.')
-        sm = smooth_trajectories(traj_list, window, polyorder)
+        sm = smooth_trajectories(traj_list, 
+                                 window, 
+                                 polyorder,
+                                 repetitions=repetitions)
         sm.smooth()
         
         # saving the data

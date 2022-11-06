@@ -31,7 +31,7 @@ class smooth_trajectories(object):
     velocity and accelerations.
     '''
     
-    def __init__(self, traj_list, window, polyorder):
+    def __init__(self, traj_list, window, polyorder, repetitions=1):
         '''
         Input -
         traj_list - a nested list of NX5 elements. N is the number of samples,
@@ -40,11 +40,14 @@ class smooth_trajectories(object):
         window - odd position integer, window size used in the polynomial
                  fitting
         polyorder - integer, degree of the polynomial used in the smoothing.
+        repetitions - the number of times that the smoothing should be 
+                      repeated for each trajectory.
         '''
         
         self.traj_list = traj_list
         self.window = window
         self.polyorder = polyorder
+        self.repetitions = repetitions
         
         
     def smooth(self):
@@ -94,7 +97,8 @@ class smooth_trajectories(object):
             # smoothing
             p, v, a = smooth_traj_poly(array(traj).T[1:4,:], 
                                              self.window, 
-                                             self.polyorder)
+                                             self.polyorder,
+                                             repetitions=self.repetitions)
             
             # setting a new trajectories
             new_traj = []
@@ -140,7 +144,7 @@ class smooth_trajectories(object):
 
 
 
-def smooth_traj_poly(traj, window, polyorder):
+def smooth_traj_poly(traj, window, polyorder, repetitions=1):
     '''
     will smooth the particle position using a moving polynomial, where
     the velocities and accelerations are calculated by
@@ -152,6 +156,8 @@ def smooth_traj_poly(traj, window, polyorder):
     windows - integer or tuple with length 3. The window sliding size
               used for smoothing.
     polyorder - integer, the order of the polynomial used for the fitting.
+    repetitions - integer, the number of times the smoothing should be 
+                  repeated for the trajectory 
     
     
     returns-
@@ -188,48 +194,50 @@ def smooth_traj_poly(traj, window, polyorder):
         raise ValueError('window cannot be larger than the trajectory length.')
     
     
-    
-    new_pos = [[0.0 for i in range(N)] for j in range(3)] 
-    new_vel = [[0.0 for i in range(N)] for j in range(3)] 
-    new_acc = [[0.0 for i in range(N)] for j in range(3)]
-    
-    sequence = zip(range(3), window, polyorder)
-    for e,win,po in sequence:
-        time_ = range(win)
-        ev_point = [float(win/2)**i for i in range(po + 1)][::-1]
+    for j in range(repetitions):
         
-        Deriv_mat = []
-        for i in range(po+1):
-            a = [0.0 for j in range(po+1)]
-            if i!=0:
-                a[i-1] = po - (i-1)
-            Deriv_mat.append(a)
-        # Deriv_mat = np.array(Deriv_mat)
+        new_pos = [[0.0 for i in range(N)] for j in range(3)] 
+        new_vel = [[0.0 for i in range(N)] for j in range(3)] 
+        new_acc = [[0.0 for i in range(N)] for j in range(3)]
         
-        
-        for i in range(N):
-            if i < win/2:            # get the portion of size widow for
-                p_ = traj[e][:win]   # fitting the polynomial
-            elif N - (1+i) < win/2:
-                p_ = traj[e][-1*win:]
-            else:
-                p_ = traj[e][i-int(win/2) : i+int(win/2)+1]
+        sequence = zip(range(3), window, polyorder)
+        for e,win,po in sequence:
+            time_ = range(win)
+            ev_point = [float(win/2)**i for i in range(po + 1)][::-1]
             
-            C = fit_polynomial(time_, p_, po)      
-            C1 = dot(Deriv_mat, C)
-            C2 = dot(Deriv_mat, C1)
+            Deriv_mat = []
+            for i in range(po+1):
+                a = [0.0 for j in range(po+1)]
+                if i!=0:
+                    a[i-1] = po - (i-1)
+                Deriv_mat.append(a)
             
             
-            if i < win/2: 
-                ev_point = [float(i%(win/2))**k for k in range(po + 1)[::-1]]
-            elif N - (1+i) < win/2:
-                ev_point = [float(win + i - N)**k for k in range(po + 1)[::-1]]
-            else:
-                ev_point = [float(win/2-0.5)**k for k in range(po + 1)[::-1]]
+            for i in range(N):
+                if i < win/2:            # get the portion of size widow for
+                    p_ = traj[e][:win]   # fitting the polynomial
+                elif N - (1+i) < win/2:
+                    p_ = traj[e][-1*win:]
+                else:
+                    p_ = traj[e][i-int(win/2) : i+int(win/2)+1]
+                
+                C = fit_polynomial(time_, p_, po)      
+                C1 = dot(Deriv_mat, C)
+                C2 = dot(Deriv_mat, C1)
+                
+                
+                if i < win/2: 
+                    ev_point = [float(i%(win/2))**k for k in range(po + 1)[::-1]]
+                elif N - (1+i) < win/2:
+                    ev_point = [float(win + i - N)**k for k in range(po + 1)[::-1]]
+                else:
+                    ev_point = [float(win/2-0.5)**k for k in range(po + 1)[::-1]]
+                
+                new_pos[e][i] = dot(ev_point, C)
+                new_vel[e][i] = dot(ev_point, C1)
+                new_acc[e][i] = dot(ev_point, C2)
             
-            new_pos[e][i] = dot(ev_point, C)
-            new_vel[e][i] = dot(ev_point, C1)
-            new_acc[e][i] = dot(ev_point, C2)
+        traj = array(new_pos)
 
     return new_pos, new_vel, new_acc
 
