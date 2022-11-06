@@ -802,7 +802,8 @@ class workflow(object):
             if frame_start>=ts and frame_start <=te:
                 ts = frame_start
             else: 
-                raise ValueError('frame_start outside the available frame range')
+                print('Warning: frame_start outside the available frame range')
+                #raise ValueError('frame_start outside the available frame range')
         
         if N_frames is None:
             frames = range(ts, te)
