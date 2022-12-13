@@ -276,24 +276,25 @@ class particle_segmentation(object):
                 # add final blob to final list
                 blobs.append( [coord, bbox, mass] )
                 
-                
+            
             # search and remove duplicates; duplicates are points that are 
             # closer than self.particle_size/2 away. In this case, we keep the
             # blob with lower mass, 
-            tree = KDTree([b[0] for b in blobs])
-            duplicates = tree.query_pairs(self.p_size/2)
-            to_remove = []
-            for d in duplicates:
-                if blobs[d[0]][-1] < blobs[d[1]][-1]:
-                    to_remove.append(d[1])
-                else:
-                    to_remove.append(d[0])
-                    
-            to_remove = list(set(to_remove))
-                    
-            for i in sorted(to_remove, reverse=True): 
-                del blobs[i] 
-            
+            if len(blobs) > 0: 
+                tree = KDTree([b[0] for b in blobs])
+                duplicates = tree.query_pairs(self.p_size/2)
+                to_remove = []
+                for d in duplicates:
+                    if blobs[d[0]][-1] < blobs[d[1]][-1]:
+                        to_remove.append(d[1])
+                    else:
+                        to_remove.append(d[0])
+                        
+                to_remove = list(set(to_remove))
+                        
+                for i in sorted(to_remove, reverse=True): 
+                    del blobs[i] 
+                
             self.blobs = blobs
             
             
