@@ -70,3 +70,15 @@
     max_distance: 0.4
     save_name: trajecotries_stitched
 
+- 2D_tracking:
+    blob_file: blobs_cam1
+    frame_start: 0
+    N_frames: None
+    camera_name: cam1
+    camera_resolution: 1280, 1024
+    z_particles: 0.0
+    d_max: 1.0
+    dv_max: 1.0
+    save_name: trajectories_2D
+    
+

@@ -51,7 +51,7 @@ class workflow(object):
                                 'segmentation',
                                 'smoothing', 'stitching', 'tracking', 
                                 'calibration', 'calibration_point_gui', 
-                                'match_target_file']
+                                'match_target_file', '2D_tracking']
         
         
         # perform the wanted action:
@@ -82,6 +82,9 @@ class workflow(object):
                 
             elif action == 'tracking':
                 self.do_tracking()
+                
+            elif action == '2D_tracking':
+                self.do_2d_tracking()
                 
             elif action == 'smoothing':
                 self.do_smoothing()
@@ -936,6 +939,73 @@ class workflow(object):
         
         print('\n', 'Done.')
         
+        
+        
+    def do_2d_tracking(self):
+        '''
+        Will perform 2D tracking of segmented blobs using give data.
+        '''
+            
+        from myptv.imaging_mod import camera
+        from myptv.tracking_2D_mod import track_2D
+        
+        # fetchhing the stitching parameters
+        fname = self.get_param('2D_tracking', 'blob_file')
+        frame_start = self.get_param('2D_tracking', 'frame_start')
+        N_frames = self.get_param('2D_tracking', 'N_frames')
+        cam_name = self.get_param('2D_tracking', 'camera_name')
+        res = self.get_param('2D_tracking', 'camera_resolution')
+        res = tuple([float(val) for val in res.split(',')])
+        z_particles = self.get_param('2D_tracking', 'z_particles')
+        d_max = self.get_param('2D_tracking', 'd_max')
+        dv_max = self.get_param('2D_tracking', 'dv_max')
+        save_name = self.get_param('2D_tracking', 'save_name')
+
+        print('\ninitiating 2D tracking...')
+
+        cam = camera(cam_name, res)
+        cam.load('')
+        
+        print('\nloading blobs and transforming to lab-space coordinates')
+        t2d = track_2D(cam, fname, z_particles, d_max=d_max, dv_max = dv_max, 
+                       reverse_eta_zeta=True)
+        
+        t2d.blobs_to_particles()
+        
+        
+        #setting up the frame range
+        ts = int(t2d.times[0])
+        te = int(t2d.times[-1])
+        
+        print('\navailable particles time range: %d -> %d'%(ts,te),'\n')
+        
+        if frame_start is not None:
+            if frame_start>=ts and frame_start <=te:
+                ts = frame_start
+            else: 
+                print('Warning: frame_start outside the available frame range')
+                #raise ValueError('frame_start outside the available frame range')
+        
+        if N_frames is None:
+            frames = range(ts, te)
+        else:
+            try:
+                frames = range(ts, ts+N_frames)
+            except:
+                tp = type(frames)
+                msg = 'N_frames must be an integer or None (given %s).'%tp
+                raise TypeError(msg)
+        
+        
+        print('\ntrackin particles...')
+        
+        t2d.track_all_frames(frames=frames)
+        
+        print('\nsaving results...')
+        
+        t2d.save_results(save_name)
+        
+        print('\nDone!')
         
 #%%
         

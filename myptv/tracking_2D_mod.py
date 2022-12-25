@@ -9,7 +9,7 @@ Contains a class for tracking particles to in 2D.
 
 """
 
-from tracking_mod import tracker_four_frames
+from myptv.tracking_mod import tracker_four_frames
 
 from numpy import loadtxt, array, savetxt
 from scipy.spatial import KDTree
@@ -54,11 +54,13 @@ class track_2D(tracker_four_frames):
         flow is assumed not to change in space and time.
         
         d_max - maximum allowable translation between two frames for the 
-                nearest neighbour search, after subtracting the mean flow. 
+                nearest neighbour search, after subtracting the mean flow. This
+                is in lab-space coordinates (e.g. millimeters)
                 
         dv_max - maximum allowable change in velocity for the two-frame 
                  velocity projection search. The radius around the projection
-                 is therefore dv_max/dt (where dt = 1 frame^{-1})
+                 is therefore dv_max/dt (where dt = 1 frame^{-1}) in lab-space
+                 units.
                  
         reverse_eta_zeta - Should be false if the eta and zeta coordinates 
                            need to be in reverse order so as to match the
@@ -77,7 +79,7 @@ class track_2D(tracker_four_frames):
         self.reverse_eta_zeta = reverse_eta_zeta
         
         self.blobs = dict([(k, array(g)) for k,g in 
-                           read_csv(fname, header=None, sep='\t').groupby(5)])
+                           read_csv(self.fname,header=None,sep='\t').groupby(5)])
         
         self.times = sorted(list(self.blobs.keys()))
         
@@ -145,6 +147,22 @@ class track_2D(tracker_four_frames):
     
 
 
-
+if __name__=='__main__':
+    
+    from imaging_mod import camera
+    
+    fname = '/home/ron/working_PTV_data/blobs_cam1'
+    
+    cam = camera('cam1', (1024,1280))
+    cam.load('/home/ron/working_PTV_data')
+    
+    z = 10.0
+    d_max = 1.0
+    dv_max = 0.25
+    
+    t2d = track_2D(cam, fname, z, d_max=d_max, dv_max = dv_max, 
+                   reverse_eta_zeta=True)
+    
+    t2d.blobs_to_particles()
 
 
