@@ -394,7 +394,7 @@ class loop_segmentation(object):
     and save the results in a file.'''
     
     def __init__(self, dir_name, extension='.tif',
-                 image_start = None,
+                 image_start = 0,
                  N_img = None, sigma=1.0, threshold=10, mask=1.0,
                  local_filter = 15, median = None, particle_size=3,
                  min_xsize=None, max_xsize=None,
