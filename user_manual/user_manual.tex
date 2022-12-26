@@ -66,7 +66,7 @@
 
 \begin{minipage}{14cm}
 	{\small \sffamily
-	Vesrion: 0.5.1 \\
+	Vesrion: 0.6.0 \\
 	Last updated: \today \\
 	Github repository: \url{https://github.com/ronshnapp/MyPTV} \\
 	Get help \& interact with our community: \url{https://github.com/ronshnapp/MyPTV/discussions}\\
@@ -228,7 +228,7 @@ The internal structure of MyPTV is made of separate "modules", each of which dea
 
 
 
-\section{The Workflow}\label{sec:workflow}
+\section{The Workflow: guidelines for a 3D-PTV experiment}\label{sec:workflow}
 
 
 MyPTV can be operated using the \texttt{workflow.py} script. The script is found under the \textit{example} folder under the home directory of the MyPTV package. The workflow is used through command line given instructions and a file that outlines the parameters to be used in each step.
@@ -237,7 +237,7 @@ MyPTV can be operated using the \texttt{workflow.py} script. The script is found
 
 
 
-\subsection{Preparation of an experiment folder}
+\subsection{Preparation of an experiment folder}~\label{sec:workflow_exp_folder}
 
 To begin post processing of the 3D-PTV results, prepare the following directory structure:
 
@@ -250,7 +250,7 @@ To begin post processing of the 3D-PTV results, prepare the following directory 
 
 
 
-\subsubsection{The \texttt{workflow.py} script}
+\subsubsection{The \texttt{workflow.py} script} \label{sec:workflow_commands}
 
 \texttt{workflow.py} is a Python script used by the user to run the various steps of the post-processing. The script is used through the terminal or command line. To use MyPTV's various functions, go to the experiment's directory with:
 \begin{verbatim}
@@ -275,6 +275,7 @@ where \texttt{"command"} should be replaced with one of the following options, d
 	tracking	
 	smoothing
 	stitching
+	2D_tracking
 \end{verbatim}
 %
 Each of these commands initiates one of MyPTVs functionalities, and a detailed explanation on them is found in Sections \ref{sec:cal_guide}--\ref{sec:workflow_stitch}. Use \texttt{help} to print the available list of commands.
@@ -996,6 +997,65 @@ This step is used to re-track trajectories once velocities are known and to "sti
 
 
 
+
+
+
+
+
+
+\subsection{2D tracking guide} \label{sec:2D_tracking}
+
+
+In addition to the 3D particle tracking capabilities, MyPTV can also be used to track particles in 2D, namely using only one camera view of the particles. The main advantages of 2D experiments are that they are easier and since only one camera is needed, and that the tracking is easier in 2D because there are no particle occlusions. Note that 2D particle tracking in MyPTV doesn't simply track the particle's pixel locations, since this might give off errors due to camera aberrations or miss-alignment of the camera with the imaging plane. In practice this is done by making use of the optical model used in the 3D version, so this methodology is advantageous over simpler, pixel location, tracking approaches. 
+
+
+To track particles in 2D in MyPTV, we assume that all the particles shown in the image are located on a two-dimensional plane. In practice, this is done by setting a single $z$ coordinate (given by the user) for all particles and then tracking their motion over the $x$ and $y$ coordinates only (see Fig.~\ref{fig:2D_tracking}).
+
+
+\begin{figure}
+	\centering
+	\includegraphics[width=8cm]{2D_tracking_setup.pdf}
+	\caption{An example for experimental setup for 2D tracking. Note that the camera doesn't have to be perpendicular to the particles' plane and that the particles don't have to be at $z=0$. \label{fig:2D_tracking}}
+\end{figure}
+
+
+The 2D particle tracking procedure requires following these steps:
+%
+\begin{enumerate}
+	\item Prepare a calibration folder as described in Sec.~\ref{sec:workflow_exp_folder}
+	%
+	\item Go through camera calibration as shown in Sec.~\ref{sec:cal_guide}
+	%
+	\item Perform particle segmentation of the particle images, as described in Sec.~\ref{sec:workflow_segment}
+	%
+	\item Track the particles' coordinates using the workflow script using the \texttt{2D\_tracking} command (see Sec.~\ref{sec:workflow_commands}). The various parameters of the \texttt{params\_file} associated with 2D tracking are given in Tab.~\ref{tab:2d_tracking}
+	%
+	\item If needed, follow smoothing (Sec.~\ref{sec:workflow_smooth}) and stitching (Sec.~\ref{sec:workflow_stitch}) of the results
+\end{enumerate}
+%
+
+%
+\begin{table}[!ht]
+	\centering
+	\caption{The \texttt{params\_file.yml} parameters for the 2D tracking step. All paths to files are relative to the \texttt{workflow.py} script. \label{tab:2d_tracking}}
+	\begin{tabular}{l m{10cm}}
+		\hline
+		Parameter & Description\\
+		\hline
+		
+		\texttt{blob\_file} & The name of the file that contains the segmentation results \\
+		\texttt{frame\_start} & The number of the first frame from which we want to perform 2D tracking \\
+		\texttt{N\_frames} & The number of frames to be analyzed; If \texttt{None}, then all the frames will be analyzed \\
+		\texttt{camera\_name} & the name of the camera from which the images were taken (must be a calibrated camera) \\
+		\texttt{camera\_resolution} & A tuple representing the camera resolution, for example, (1280, 1024) \\
+		\texttt{z\_particles} & The value of the z coordinate of the plane on which the particles are found, e.g. 0.0 \\
+		\texttt{d\_max} &  The maximum allowable particle translation between frame in lab-coordinates\\
+		\texttt{dv\_max} & The maximum allowable change of velocity for the particles in lab-space coordinates per frame (e.g. mm/frame) \\
+		\texttt{save\_name} & The name of the file used to save the results \\
+		
+		\hline
+	\end{tabular}
+\end{table}
 
 
 

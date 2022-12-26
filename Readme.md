@@ -1,5 +1,5 @@
-October 10, 2022
-Version: 0.5.1
+December 25, 2022
+Version: 0.6.0
 
 <img src="./user_manual/figs/logo.png" style="zoom:20%;" />
 
@@ -19,16 +19,18 @@ MyPTV builds heavily on the well-proven mathematical framework developed in the 
 
 MyPTV is designed to be used by scientists and engineers who need to track the the three dimensional motion of objects in lab and field experiments. Applications range from fluid mechanics to biology, soft matter, or medicine.  
 
-## What does MyPTV include?
+## What is MyPTV capable of?
 
-1) An imaging module that handles the photogrammetical model
-2) A calibration module that handles the camera calibration
-3) A segmentation module that handles identifying and segmenting objects from images
-4) A particle matching module that handles reconstructing 3D lab space particle coordinate estimation through triangulation
-5) A tracking module for tracking particles in 3D
-6) A trajectory smoothing module that can be used to smooth the results and calculate particle velocities and accelerations.
+1) Combining images of particles from several orientations to give their 3D position
+2) Calibrating cameras based on given input imaeges
+3) Locating and extracting the locations of particles in images
+4) Stereo-matching of numerous particles from 2D images
+5) Tracking particles in 3D 
+6) Tracking particles in 2D
+7) Smoothing particle trajectories while calculating their velocities and accelerations
+8) Re-connecting broken trajectories
 
-## How to install:
+## How to install?
 
 ##### Requirements:
 
@@ -89,7 +91,7 @@ MyPTV was founded in 2022 by Ron Shnapp. In its core, MyPTV is a scientific open
 
 In any case, if you feel the need - please feel free to send Ron an email directly (ronshnapp@gmail.com)!
 
-## How to cite
+## How to cite?
 
 If you found MyPTV useful for your scientific work, you may cite us as:
 
