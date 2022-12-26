@@ -87,7 +87,7 @@ MyPTV was founded in 2022 by Ron Shnapp. In its core, MyPTV is a scientific open
 
 2) Do you wish to contribute to our effort by further developing of MyPTV? Would you like to help debugging and/or test the software? Please leave a post on our Discussion forum - https://github.com/ronshnapp/MyPTV/discussionscontact. 
 
-3) Did you spot a bug? Would like to raise an issue? Please open an issue in our Github repositories' issues section - https://github.com/ronshnapp/MyPTV/issue.
+3) Did you spot a bug? Would like to raise an issue? Please open an issue in our Github repositories' issues section - https://github.com/ronshnapp/MyPTV/issues.
 
 In any case, if you feel the need - please feel free to send Ron an email directly (ronshnapp@gmail.com)!
 
