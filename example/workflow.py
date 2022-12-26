@@ -715,7 +715,7 @@ class workflow(object):
         # setting the frame range to match
         ts = int(mbf.time_lst[0])
         te = int(mbf.time_lst[-1])
-        print('semented particles time range: %d -> %d'%(ts,te),'\n')
+        print('segmented particles time range: %d -> %d'%(ts,te),'\n')
         
         if frame_start is not None:
             if frame_start>=ts and frame_start <=te:
