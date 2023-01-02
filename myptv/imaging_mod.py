@@ -45,7 +45,7 @@ import os
 from math import sin, cos
 from numpy import zeros, array, dot
 from numpy.linalg import inv
-from myptv.utils import line_dist
+from myptv.utils import line_dist, point_line_dist
 
 
 
@@ -60,7 +60,7 @@ class img_system(object):
         self.cameras = camera_list
     
     
-    def stereo_match(self, coords, d_max):
+    def stereo_match(self, coords, d_max, strict_match=False):
         '''
         given n particle images [(eta, zeta) coords in camera space], this will
         determine whereather there is a good candidate point for the intersection
@@ -73,7 +73,9 @@ class img_system(object):
         coords (dic) - keys are camera number, values are the image space 
                        coordinates of each point. Must have at least 2 entries
         d_max (float) - maximum allowable distance separating two lines
-        
+        strict_match (bolean) - If this is True, returns non-None answer only
+                                if the distance from the point to all epipolar
+                                lines is at most d_max.
         
         output - either -
         X (numpy array, 3) - lab space coordinates of the sought point 
@@ -106,10 +108,24 @@ class img_system(object):
                     cams.append(kj)
                     d.append(D)
 
-        if len(x)>=1:
-            return sum(x)/1.0/len(x), set(cams), sum(d)/1.0/len(x)
+
+        if strict_match==True:
+            if len(x)==len(coords):
+                X = sum(x)/1.0/len(x)
+                
+                for ki in keys:
+                    ri = self.cameras[ki].get_r(coords[ki][0],coords[ki][1])
+                    di = point_line_dist(self.cameras[ki].O, ri, X)
+                    if di>d_max:
+                        return None
+                    
+                return sum(x)/1.0/len(x), set(cams), sum(d)/1.0/len(x)
+                
         else:
-            return None
+            if len(x)>=1:
+                return sum(x)/1.0/len(x), set(cams), sum(d)/1.0/len(x)
+            else:
+                return None
 
 
 

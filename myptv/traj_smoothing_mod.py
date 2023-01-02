@@ -31,23 +31,33 @@ class smooth_trajectories(object):
     velocity and accelerations.
     '''
     
-    def __init__(self, traj_list, window, polyorder, repetitions=1):
+    def __init__(self, traj_list, window, polyorder, repetitions=1, 
+                 min_traj_length=4):
         '''
         Input -
-        traj_list - a nested list of NX5 elements. N is the number of samples,
+        traj_list - A nested list of NX5 elements. N is the number of samples,
                     then the following indices are trajectory number, 
                     x position, y position, z position, frame number.
-        window - odd position integer, window size used in the polynomial
-                 fitting
-        polyorder - integer, degree of the polynomial used in the smoothing.
-        repetitions - the number of times that the smoothing should be 
+        window - Odd position integer, window size used in the polynomial
+                 fitting. Trajectories shorter than window but longer
+                 than min_traj_length will be smoothed using a window size that
+                 is equal to the trajectory length.
+        polyorder - Integer, degree of the polynomial used in the smoothing.
+        repetitions - The number of times that the smoothing should be 
                       repeated for each trajectory.
+        min_traj_length - The minial length of trajectory that are smoothed. 
+                          Must be larger than polyorder.
         '''
         
         self.traj_list = traj_list
         self.window = window
         self.polyorder = polyorder
         self.repetitions = repetitions
+        
+        if min_traj_length <= polyorder:
+            raise ValueError('min_traj_length must be larger than polyorder')
+            
+        self.min_traj_length = min_traj_length
         
         
     def smooth(self):
@@ -78,12 +88,25 @@ class smooth_trajectories(object):
         smoothed_traj_list = []
         N = len(traj_dic.keys())
         count = 0
+        total = 0
         for tr_num in traj_dic.keys():
             print('', end='\r')
-            print(' progress: %.1f%%'%(count/N*100), end='\r') 
+            print(' progress: %.1f%%'%(total/N*100), end='\r') 
+            total += 1
             
             # for too short trajectories mark zero velocity and acceleration:
-            if len(traj_dic[tr_num]) < self.window:
+            
+                # if len(traj_dic[tr_num]) < self.window:
+            #     for i in range(len(traj_dic[tr_num])):
+            #         tr = traj_dic[tr_num][i]
+            #         new_tr = [tr[0], tr[1], tr[2], tr[3], 
+            #                   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, tr[-1]]
+            #         short_trajs.append(new_tr)
+            #     continue
+            
+            tr_len = len(traj_dic[tr_num])
+            
+            if tr_len < self.min_traj_length:
                 for i in range(len(traj_dic[tr_num])):
                     tr = traj_dic[tr_num][i]
                     new_tr = [tr[0], tr[1], tr[2], tr[3], 
@@ -91,12 +114,18 @@ class smooth_trajectories(object):
                     short_trajs.append(new_tr)
                 continue
             
+            elif tr_len < self.window:
+                W = tr_len - 1*(tr_len%2==0)
+            
+            else:
+                W = self.window
+            
             # sort samples according to time:
             traj = sorted(traj_dic[tr_num], key=lambda s: s[-1])
             
             # smoothing
             p, v, a = smooth_traj_poly(array(traj).T[1:4,:], 
-                                             self.window, 
+                                             W, 
                                              self.polyorder,
                                              repetitions=self.repetitions)
             

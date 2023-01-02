@@ -66,7 +66,7 @@
 
 \begin{minipage}{14cm}
 	{\small \sffamily
-	Vesrion: 0.6.0 \\
+	Version: 0.6.1 \\
 	Last updated: \today \\
 	Github repository: \url{https://github.com/ronshnapp/MyPTV} \\
 	Get help \& interact with our community: \url{https://github.com/ronshnapp/MyPTV/discussions}\\
@@ -955,10 +955,14 @@ The smoothing step is used to smooth trajectories in time and to calculate the v
 		
 		\texttt{trajectory\_file} & file name of the trajectories file, namely the results of the tracking step \\[.5em]
 		
-		\texttt{window\_size} & window size of the sliding polynomial \\[.5em]
+		\texttt{window\_size} & window size of the sliding polynomial (must be an odd number); if a trajectory is shorter than \texttt{window\_size} but longer than \texttt{min\_traj\_length}, then we use a window the size of the trajectory length \\[.5em]
 		
 		\texttt{polynom\_order} & degree of the polynomial used in the smoothing \\[.5em]
 		
+		\texttt{min\_traj\_length} & the length of the shortest trajectories to be smoothed; has to be larger than \texttt{min\_traj\_length} \\[.5em]
+		
+		\texttt{repetitions} & the smoothing operation will be repeated this many times over each trajectory \\[.5em]
+				
 		\texttt{save\_name} & file name to save the results; if \texttt{None} the results will not be save on the disk \\[.5em]
 		
 		\hline

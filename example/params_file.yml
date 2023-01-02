@@ -61,6 +61,7 @@
     trajectory_file: trajectories
     window_size: 5
     polynom_order: 3
+    min_traj_length: 4
     repetitions: 5
     save_name: smoothed_trajectories
 

@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2021.5.25)  26 DEC 2022 10:40
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2021.5.25)  2 JAN 2023 10:37
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -662,26 +662,26 @@ file by set-ting \T1/cmtt/m/n/10 save_name: /file/name/to/use
  []
 
 [10 <./figs/filters_effect.pdf>] [11] [12] [13]
-<./figs/2D_tracking_setup.pdf, id=506, 359.69543pt x 273.00352pt>
+<./figs/2D_tracking_setup.pdf, id=505, 359.69543pt x 273.00352pt>
 File: ./figs/2D_tracking_setup.pdf Graphic file (type pdf)
 <use ./figs/2D_tracking_setup.pdf>
-Package pdftex.def Info: ./figs/2D_tracking_setup.pdf  used on input line 1017.
+Package pdftex.def Info: ./figs/2D_tracking_setup.pdf  used on input line 1021.
 
 (pdftex.def)             Requested size: 227.62204pt x 172.76378pt.
  [14 <./figs/2D_tracking_setup.pdf>] [15]
 LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <14.4> not available
-(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 1070.
+(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 1074.
 LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <12> not available
-(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 1077.
+(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 1081.
 <./figs/camera_files.pdf, id=542, 508.10204pt x 141.02348pt>
 File: ./figs/camera_files.pdf Graphic file (type pdf)
 <use ./figs/camera_files.pdf>
-Package pdftex.def Info: ./figs/camera_files.pdf  used on input line 1107.
+Package pdftex.def Info: ./figs/camera_files.pdf  used on input line 1111.
 (pdftex.def)             Requested size: 426.79135pt x 118.45676pt.
  [16
 
  <./figs/camera_files.pdf>]
-Overfull \hbox (1.44354pt too wide) in paragraph at lines 1177--1178
+Overfull \hbox (1.44354pt too wide) in paragraph at lines 1181--1182
 []\T1/cmtt/m/n/10 fineCalibration(maxiter=500) \T1/cmr/m/n/10 - This func-tion 
 will solve for the co-ef-fi-cients of the quadratic
  []
@@ -690,16 +690,16 @@ will solve for the co-ef-fi-cients of the quadratic
 <./figs/blob_file.pdf, id=614, 223.10614pt x 155.32921pt>
 File: ./figs/blob_file.pdf Graphic file (type pdf)
 <use ./figs/blob_file.pdf>
-Package pdftex.def Info: ./figs/blob_file.pdf  used on input line 1306.
+Package pdftex.def Info: ./figs/blob_file.pdf  used on input line 1310.
 (pdftex.def)             Requested size: 284.52756pt x 198.10016pt.
  [19] [20 <./figs/blob_file.pdf>]
 <./figs/particle_file.pdf, id=663, 390.14703pt x 291.52518pt>
 File: ./figs/particle_file.pdf Graphic file (type pdf)
 <use ./figs/particle_file.pdf>
-Package pdftex.def Info: ./figs/particle_file.pdf  used on input line 1358.
+Package pdftex.def Info: ./figs/particle_file.pdf  used on input line 1362.
 (pdftex.def)             Requested size: 341.43306pt x 255.13727pt.
 
-Overfull \hbox (18.38263pt too wide) in paragraph at lines 1367--1368
+Overfull \hbox (18.38263pt too wide) in paragraph at lines 1371--1372
 \T1/cmr/m/n/10 we run the rel-e-vant func-tions: \T1/cmtt/m/n/10 get_voxel_dict
 ionary() $\OMS/cmsy/m/n/10 !$ \T1/cmtt/m/n/10 list_candidates() $\OMS/cmsy/m/n/
 10 !$ \T1/cmtt/m/n/10 get_particles()\T1/cmr/m/n/10 ,
@@ -709,23 +709,23 @@ ionary() $\OMS/cmsy/m/n/10 !$ \T1/cmtt/m/n/10 list_candidates() $\OMS/cmsy/m/n/
 <./figs/trajectory_files.pdf, id=684, 470.98941pt x 297.17282pt>
 File: ./figs/trajectory_files.pdf Graphic file (type pdf)
 <use ./figs/trajectory_files.pdf>
-Package pdftex.def Info: ./figs/trajectory_files.pdf  used on input line 1426.
+Package pdftex.def Info: ./figs/trajectory_files.pdf  used on input line 1430.
 (pdftex.def)             Requested size: 284.52756pt x 179.52937pt.
  [22 <./figs/trajectory_files.pdf>]
 <./figs/smoothed_trajfile.pdf, id=712, 514.2885pt x 471.065pt>
 File: ./figs/smoothed_trajfile.pdf Graphic file (type pdf)
 <use ./figs/smoothed_trajfile.pdf>
-Package pdftex.def Info: ./figs/smoothed_trajfile.pdf  used on input line 1472.
+Package pdftex.def Info: ./figs/smoothed_trajfile.pdf  used on input line 1476.
 
 (pdftex.def)             Requested size: 341.43306pt x 312.73677pt.
  [23]
 (./user_manual.bbl [24 <./figs/smoothed_trajfile.pdf>])
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 1524.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 1528.
  [25]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 1524.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 1528.
  (./user_manual.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 1524.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 1524.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 1528.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 1528.
 
 Package rerunfilecheck Info: File `user_manual.out' has not changed.
 (rerunfilecheck)             Checksum: CB557A23F3D05AF7D54613694C4D3F97;3702.
@@ -733,7 +733,7 @@ Package rerunfilecheck Info: File `user_manual.out' has not changed.
 
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 1524.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 1528.
  ) 
 Here is how much of TeX's memory you used:
  10118 strings out of 494847
@@ -760,7 +760,7 @@ fb></usr/share/texmf/fonts/type1/public/cm-super/sfti1000.pfb></usr/share/texmf
 /fonts/type1/public/cm-super/sftt0900.pfb></usr/share/texmf/fonts/type1/public/
 cm-super/sftt1000.pfb></usr/share/texmf/fonts/type1/public/cm-super/sftt1200.pf
 b></usr/share/texmf/fonts/type1/public/cm-super/sftt1440.pfb>
-Output written on user_manual.pdf (28 pages, 3632715 bytes).
+Output written on user_manual.pdf (28 pages, 3633533 bytes).
 PDF statistics:
  856 PDF objects out of 1000 (max. 8388607)
  735 compressed objects within 8 object streams

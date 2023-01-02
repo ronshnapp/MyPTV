@@ -863,9 +863,13 @@ class workflow(object):
         trajectory_file = self.get_param('smoothing', 'trajectory_file')
         window = self.get_param('smoothing', 'window_size')
         polyorder = self.get_param('smoothing', 'polynom_order')
+        min_traj_length = self.get_param('smoothing', 'min_traj_length')
         repetitions = self.get_param('smoothing', 'repetitions')
         save_name = self.get_param('smoothing', 'save_name')
         
+        if min_traj_length <= polyorder:
+            raise ValueError('min_traj_length must be larger than polyorder')
+
         traj_list = loadtxt(trajectory_file)
         
         
@@ -874,7 +878,8 @@ class workflow(object):
         sm = smooth_trajectories(traj_list, 
                                  window, 
                                  polyorder,
-                                 repetitions=repetitions)
+                                 repetitions=repetitions,
+                                 min_traj_length=min_traj_length)
         sm.smooth()
         
         # saving the data
