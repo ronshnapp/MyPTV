@@ -51,7 +51,8 @@ class workflow(object):
                                 'segmentation',
                                 'smoothing', 'stitching', 'tracking', 
                                 'calibration', 'calibration_point_gui', 
-                                'match_target_file', '2D_tracking']
+                                'match_target_file', '2D_tracking', 
+                                'run_extention']
         
         
         # perform the wanted action:
@@ -91,7 +92,10 @@ class workflow(object):
             
             elif action == 'stitching':
                 self.do_stitching()
-                
+            
+            elif action == 'run_extention':
+                self.do_run_extention()    
+            
             elif action == 'help':
                 self.help_me()
                 
@@ -1011,6 +1015,29 @@ class workflow(object):
         t2d.save_results(save_name)
         
         print('\nDone!')
+        
+        
+        
+    def do_run_extention(self):
+        '''
+        This is an option to load extrenal extentions to MyPTV. Get it done
+        by setting the propper parameters in the params_file.
+        '''
+        
+        # fetchhing the stitching parameters
+        path_to_extention = self.get_param('run_extention', 'path_to_extention')
+        action_name = self.get_param('run_extention', 'action_name')
+        extention_params_file = self.get_param('run_extention', 'extention_params_file')
+        
+        # 1) import the script  "path_to_extention"
+        
+        # 2) load the extensions' parameter from extention_params_file
+        
+        # 3) run the class given as action_name, with the parameter given
+        
+        
+        
+        return None
         
 #%%
         
