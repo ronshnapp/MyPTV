@@ -1,11 +1,11 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2021.5.25)  2 JAN 2023 10:37
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2023.3.1)  18 JUN 2023 07:45
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
 **user_manual.tex
 (./user_manual.tex
 LaTeX2e <2017-04-15>
-Babel <3.18> and hyphenation patterns for 7 language(s) loaded.
+Babel <3.18> and hyphenation patterns for 57 language(s) loaded.
 (/usr/share/texlive/texmf-dist/tex/latex/base/article.cls
 Document Class: article 2014/09/29 v1.4h Standard LaTeX document class
 (/usr/share/texlive/texmf-dist/tex/latex/base/size10.clo
@@ -736,12 +736,12 @@ LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 1528.
  ) 
 Here is how much of TeX's memory you used:
- 10118 strings out of 494847
- 147295 string characters out of 6179080
- 261683 words of memory out of 5000000
- 13066 multiletter control sequences out of 15000+600000
+ 10118 strings out of 493756
+ 147295 string characters out of 6152245
+ 264500 words of memory out of 5000000
+ 13253 multiletter control sequences out of 15000+600000
  24146 words of font info for 65 fonts, out of 8000000 for 9000
- 59 hyphenation exceptions out of 8191
+ 645 hyphenation exceptions out of 8191
  36i,13n,49p,1104b,458s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/usr/share/texmf/fonts/enc/dvips/cm-super/cm-super-t1.enc}</usr/share/texliv
 e/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></usr/share/texlive/texm
@@ -760,7 +760,7 @@ fb></usr/share/texmf/fonts/type1/public/cm-super/sfti1000.pfb></usr/share/texmf
 /fonts/type1/public/cm-super/sftt0900.pfb></usr/share/texmf/fonts/type1/public/
 cm-super/sftt1000.pfb></usr/share/texmf/fonts/type1/public/cm-super/sftt1200.pf
 b></usr/share/texmf/fonts/type1/public/cm-super/sftt1440.pfb>
-Output written on user_manual.pdf (28 pages, 3633533 bytes).
+Output written on user_manual.pdf (28 pages, 3633721 bytes).
 PDF statistics:
  856 PDF objects out of 1000 (max. 8388607)
  735 compressed objects within 8 object streams
