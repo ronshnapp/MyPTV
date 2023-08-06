@@ -156,7 +156,7 @@ class tracker_four_frames(object):
     def find_nearest_neighbour(self, particle, frame_num):
         '''For a given particle, this returns the index of its nearest 
         neighbour in the frame number given, adn the distance between them.'''
-        dt_particles = (frame_num - particle[4])
+        dt_particles = (frame_num - particle[-1])
         dX = self.U * dt_particles
         p = particle[1:4] + dX
         
@@ -403,7 +403,7 @@ class tracker_two_frames(object):
     def find_nearest_neighbour(self, particle, frame_num):
         '''For a given particle, this returns the index of its nearest 
         neighbour in the frame number given, adn the distance between them.'''
-        dt_particles = (frame_num - particle[4])
+        dt_particles = (frame_num - particle[-1])
         dX = self.U * dt_particles
         dist_particle = lambda p2 : sum((particle[1:4] - (p2[1:4]-dX))**2)**0.5
         values = []
@@ -584,7 +584,7 @@ class tracker_nearest_neighbour(object):
     def find_nearest_neighbour(self, particle, frame_num):
         '''For a given particle, this returns the index of its nearest 
         neighbour in the frame number given, adn the distance between them.'''
-        dt_particles = (frame_num - particle[4])
+        dt_particles = (frame_num - particle[-1])
         dX = self.U * dt_particles
         p = particle[1:4] + dX
         
