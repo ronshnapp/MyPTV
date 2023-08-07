@@ -11,17 +11,22 @@ easily extract the 3D location of certain features
 in images.  
 """
 
-from myptv.imaging_mod import camera
+from myptv.imaging_mod import camera, img_system
 from myptv.segmentation_mod import particle_segmentation
 from myptv.calibrate_mod import calibrate
 from myptv.utils import match_calibration_blobs_and_points
 from PIL import Image, ImageTk
 from tkinter import Label,Canvas,LabelFrame,Entry,Tk,Scrollbar,Button,Listbox,END
-from numpy import array
+from numpy import array, log10
 import os
 
 
 
+def fmt(a):
+    if log10(abs(a))<3 and -3<log10(abs(a)):
+        return '%.3f'%a
+    else:
+        return '%.3e'%a
 
 
 
@@ -60,6 +65,8 @@ class initial_cal_gui(object):
             cam = camera(cn, self.cam_res[e])
             cam.load(cameras_folder)
             self.cam_list.append(cam)
+            
+        self.imsys = img_system(self.cam_list)
         
         
         # try to find a calibration folder
@@ -71,7 +78,7 @@ class initial_cal_gui(object):
                     self.folder = os.path.join('.', fname)
         
         
-        self.xy_marked = (-1, -1)
+        self.xy_marked = [(-1, -1) for i in range(len(self.cam_names))]
         self.point_list = []      # <-- list of points to save
         self.point_markers = []   # <-- position of crosses
         self.z = 1.0              # <-- Zoom level
@@ -79,7 +86,7 @@ class initial_cal_gui(object):
         # set the window
         self.root = Tk()
         self.root.geometry('1100x700+320+70')
-        self.root.title('MyPTV: Initial Calibration GUI')
+        self.root.title('MyPTV: Manual Matching GUI')
         #self.root.configure(background='#709eba')
 
         
@@ -88,7 +95,6 @@ class initial_cal_gui(object):
         
         # load the image
         photo = ImageTk.PhotoImage(self.images[0])
-        
         
         
         # place the image inside a canvas in a frame
@@ -139,7 +145,7 @@ class initial_cal_gui(object):
         
         
         # ====================================================================
-        # (3) second column
+        # Second column
         
         
         Column3 = LabelFrame(self.root, padx=2, pady=10, width=100, 
@@ -151,19 +157,19 @@ class initial_cal_gui(object):
         # Marking points for initial calibration
         
         # Buttons frame
-        button_frame = LabelFrame(Column3, text='3) mark image points', 
+        button_frame = LabelFrame(Column3, text='Mark image points', 
                                   padx=2, pady=8, width=100)
         button_frame.grid(row=0, column=0, columnspan=2, sticky='nwe', padx=2, 
                           pady=8)
         
-        # add point button
-        add_button = Button(button_frame, text='Mark point', 
-                                command = self.addPoint, padx=2, pady=4)
-        add_button.grid(row=4, column=0, padx=2, pady=2, sticky='ew')
         
-        # forget last point button
-        forget_last_button = Button(button_frame, text='Forget last point', 
-                                command = self.forgetLast, padx=2, pady=4)
+        
+        select_frame = LabelFrame(button_frame, padx=2, pady=2)
+        select_frame.grid(row=1, column=0, columnspan=2, sticky='ew',
+                          padx=2, pady=2)
+        
+        forget_last_button = Button(select_frame, text='Forget point', 
+                                command = self.forgetPoint, padx=2, pady=4)
         forget_last_button.grid(row=5, column=0, padx=2, pady=2, sticky='ew')
         
         
@@ -173,17 +179,19 @@ class initial_cal_gui(object):
         camera_select_frame = LabelFrame(button_frame, padx=2, pady=2)
         camera_select_frame.grid(row=0, column=0, columnspan=2, sticky='ew',
                           padx=2, pady=2)
-        self.listbox = Listbox(camera_select_frame)
+        self.listbox = Listbox(camera_select_frame, selectbackground='blue')
         self.listbox.grid(row=0, column=0, rowspan=1, sticky='w', padx=2, pady=2)
         for cn in self.cam_names:
             self.listbox.insert(END, cn)
         
         
+        self.listbox.bind("<<ListboxSelect>>", self.camera_select)
+        self.listbox.select_set(0)
+        self.current_camera_index = 0
+        
         
         # selection indicators
-        select_frame = LabelFrame(button_frame, padx=2, pady=2)
-        select_frame.grid(row=1, column=0, columnspan=2, sticky='ew',
-                          padx=2, pady=2)
+        
         self.xloc = Label(select_frame, text='x image:', padx=2, pady=2)
         self.yloc = Label(select_frame, text='y image:', padx=2, pady=2)
         self.Xloc = Label(select_frame, text='-', padx=2, pady=2)
@@ -197,7 +205,14 @@ class initial_cal_gui(object):
         # lab space coordinates textboxes
         lab_frame = LabelFrame(button_frame, padx=2, pady=2)
         lab_frame.grid(row=8, column=0, columnspan=2, sticky='ew',
-                       padx=2, pady=2)
+                       padx=2, pady=30)
+        
+        calc_results_button = Button(lab_frame, text='Calculate in 3D', 
+                                command = self.CalcRes, padx=2, pady=4)
+        calc_results_button.grid(row=0, column=0, padx=2, pady=2, sticky='ew',
+                                 columnspan=2)
+        
+        
         self.x_input_label = Label(lab_frame, text='x lab:', padx=2, pady=2)
         self.y_input_label = Label(lab_frame, text='y lab:', padx=2, pady=2)
         self.z_input_label = Label(lab_frame, text='z lab:', padx=2, pady=2)
@@ -208,18 +223,24 @@ class initial_cal_gui(object):
         self.z_input = Entry(lab_frame, width=9)
         self.z_input.insert(0,'0.0')
         
+        self.err_input_label = Label(lab_frame, text='error:', padx=2, pady=2)
+        self.err_input = Entry(lab_frame, width=9)
+        self.err_input.insert(0,'0.0')
+        
         self.x_input_label.grid(row=4, column=0, sticky='w', padx=2, pady=2)
         self.y_input_label.grid(row=5, column=0, sticky='w', padx=2, pady=2)
         self.z_input_label.grid(row=6, column=0, sticky='w', padx=2, pady=2)
+        self.err_input_label.grid(row=7, column=0, sticky='w', padx=2, pady=5)
         self.x_input.grid(row=4, column=1, sticky='w', padx=2, pady=2)
         self.y_input.grid(row=5, column=1, sticky='w', padx=2, pady=2)
         self.z_input.grid(row=6, column=1, sticky='w', padx=2, pady=2)
+        self.err_input.grid(row=7, column=1, sticky='w', padx=2, pady=5)
         
         
         # set the mouse motion printing
         self.canvas.bind("<Motion>", self.motion)
-        Mousepos_frame = LabelFrame(button_frame, padx=2, pady=2)
-        Mousepos_frame.grid(row=3, sticky='we', columnspan=2, padx=2, pady=2)
+        Mousepos_frame = Label(button_frame, padx=2, pady=2)
+        Mousepos_frame.grid(row=9, sticky='we', columnspan=2, padx=2, pady=2)
         self.Mousepos = Label(Mousepos_frame, text=' - , - ', padx=2, pady=2)
         self.Mousepos.grid(row=0, column=0, sticky='e', padx=2, pady=2)
         
@@ -248,289 +269,114 @@ class initial_cal_gui(object):
         Column3.columnconfigure(0, weight=1)
         frame.rowconfigure(0, weight=1)
         frame.columnconfigure(1, weight=1)
-
+        self.canvas.bind("<Button-4>", self.zoomIn)
+        self.canvas.bind("<Button-5>", self.zoomOut)
+        
         self.root.mainloop()
-        
-        
-        
-        
+
     
-    def calibrate(self):
-        '''Calibrates the camera using marked points'''
+
+    
+    def camera_select(self, event):
+        selection = event.widget.curselection()
+        self.current_camera_index = selection[0]
+        print('Selected camera: ', self.cam_names[self.current_camera_index])
         
-        cpf = os.path.join(self.folder, self.cam_name+'_manualPoints')
-        self.cam = camera(self.cam_name, self.cam_res, cal_points_fname = cpf)
-        self.cam.load('.')
-        print('camera data loaded successfully.')
-        cal = calibrate(self.cam, self.cam.lab_points, self.cam.image_points)
-        err = cal.mean_squared_err()
-        print('initial error: %.3f pixels\n'%(err))
-        
-        print('\nAttempting to minimize calibration error...\n')
-        err_iminus1 = err
-        for i in range(10):
-            cal.searchCalibration()
-            err = cal.mean_squared_err()
-            
-            print(i, err)
-            
-            if err<0.5:
-                break
-            
-            if abs(err - err_iminus1)/err_iminus1 < 0.001:
-                break
-        
-            err_iminus1 = err
-        
-        self.error_input.config(text = '%0.3f'%err)
-        self.cam.save('.')
-        print('Finished with error: %.3f pixels\n'%(err))
-            
-            
-        
-        
-    def show_calibration(self):
-        '''Plots the calibration points images on the calibration image'''
-        
-        # refresh the image
-        image = Image.open(self.image_name)
+        image = self.images[self.current_camera_index]
         s = image.size
         image = image.resize((int(s[0]*self.z),int(s[1]*self.z)),
-                             Image.ANTIALIAS)
-        new_bird = ImageTk.PhotoImage(image)
-        self.board.configure(image = new_bird)
-        self.board.image = new_bird
+                             Image.LANCZOS)
+        
+        photo = ImageTk.PhotoImage(image)
+        
+        self.board.configure(image = photo)
+        self.board.image = photo
         self.canvas.delete('all')
-        self.canvas.create_image(0, 0, image=new_bird, anchor='nw')
+        self.canvas.create_image(0, 0, image=photo, anchor='nw')
         self.canvas.configure(scrollregion = self.canvas.bbox("all"))
         
+        x, y = self.xy_marked[self.current_camera_index]
+        if x==-1 and y==-1:
+            self.Xloc.configure(text = '-')
+            self.Yloc.configure(text = '-')
+        else:
+            self.Xloc.configure(text = x)
+            self.Yloc.configure(text = y)
         
-        # plot point projections
-        for p in self.cam.lab_points:
-            proj = self.cam.projection(p)
-            x0 = int(int(proj[0])*self.z) - int(self.hbar.get()[1])
-            y0 = int(int(proj[1])*self.z) - int(self.vbar.get()[1])
-            
-            print(proj)
-            self.canvas.create_oval(x0-4, y0-4, x0+4, y0+4, 
-                                    fill='#cf9417')
-        
-    
-    
-    
-    def saveTargetPoints(self):
-        '''Will save the matched segmented blobs and targets, making a 
-           calibration points file.'''
-        saveName = os.path.join(self.folder, self.cam_name + '_cal_points')
-        self.mtf.save_results(saveName)
-        print('Calibration point file "%s" saved'%saveName)
-        
-        
-        
-        
-    def matchTargetPoints(self):
-        '''Will match the target points to the segmented blobs'''
-        
-        segmented_file = os.path.join(self.folder, self.cam_name + '_CalBlobs')
-        self.mtf = match_calibration_blobs_and_points(self.cam, segmented_file,
-                                                      self.target_fname)
-        self.mtf.pair_points()
-    
-        # plot the pairs
-        self.plot_matched_point_pair()
-      
-        
-      
-            
-    def plot_matched_point_pair(self):
-        '''
-        Will plot the pairs of calibration points (segmented and their 
-        projections).
-        '''
-        self.segmented = []
-        for pair in self.mtf.point_pairs:
-            # the segmented image space calibration points
-            xImg = int(pair[0]*self.z) - int(self.hbar.get()[1]) 
-            yImg = int(pair[1]*self.z) - int(self.vbar.get()[1])
-            
-            wx = 4*self.z; wy = 4*self.z
-            self.canvas.create_rectangle(xImg-wx, yImg-wy, xImg+wx, yImg+wy, 
-                                         outline="#2bcf0e", width=1)
-            
-            # the projection of the lab space points 
-            eta, zeta = self.cam.projection(pair[2:])
-            xProj = int(eta*self.z) - int(self.hbar.get()[1])
-            yProj = int(zeta*self.z) - int(self.vbar.get()[1])
-            
-            wx = 2*self.z; wy = 2*self.z
-            self.canvas.create_oval(xProj-wx, yProj-wy, xProj+wx, yProj+wy, 
-                                         fill="#d94559", width=0)
-            
-            # connect the pairs
-            self.canvas.create_line(xImg, yImg, xProj, yProj, 
-                                    fill="#991527", width=1)
-            
-            
-
-
-    def genCamFile(self):
-        '''
-        Generates a camera file with the given initial guess
-        '''
-        ox = float(self.Ox_input.get()) 
-        oy = float(self.Oy_input.get()) 
-        oz = float(self.Oz_input.get())
-        tx = float(self.xori_input.get()) 
-        ty = float(self.yori_input.get()) 
-        tz = float(self.zori_input.get()) 
-        f = float(self.f_input.get()) 
-        #xh = float(self.xh_input.get()) 
-        #yh = float(self.yh_input.get()) 
-        
-        self.cam.O = [ox,oy,oz]
-        self.cam.theta = [tx,ty,tz]
-        self.cam.f = f
-        #self.cam.xh = xh
-        #self.cam.yh = yh
-        self.cam.calc_R()
-        self.cam.save('.')
-        
-        print(self.cam)
-        print('\nCamera file generated. \n')
-        return None
-
-
-
-
-    def sementImage(self):
-        '''Segments the image and save the blob file'''
-        from numpy import zeros
-        
-        x0,y0 = int(self.ROIx0.get()), int(self.ROIy0.get())
-        x1,y1 = int(self.ROIx1.get()), int(self.ROIy1.get())
-        mask = zeros((self.cam_res[1], self.cam_res[0]))
-        mask[y0:y1,x0:x1] = 1
-        
-        self.segmentationParams ={'image': array(self.image),
-                                  'threshold': float(self.threshold_input.get()), 
-                                  'max_xsize': float(self.xmax_input.get()), 
-                                  'max_ysize': float(self.ymax_input.get()), 
-                                  'min_xsize': float(self.xmin_input.get()), 
-                                  'min_ysize': float(self.ymin_input.get()),
-                                  'min_mass': float(self.minMass_input.get()),
-                                  'max_mass': float(self.maxMass_input.get()),
-                                  'sigma': float(self.sigma_input.get()), 
-                                  'median': int(self.median_input.get()),
-                                  'local_filter': int(self.local_input.get()), 
-                                  'mask': mask,
-                                  'method': 'labeling',
-                                  'particle_size':8}
-        
-        for k in ['sigma', 'median', 'local_filter']:
-            if self.segmentationParams[k] == 0.0:
-                self.segmentationParams[k] = None
-        
-        self.particleSegment = particle_segmentation(**self.segmentationParams)
-        self.particleSegment.get_blobs()
-        self.particleSegment.apply_blobs_size_filter()
-        
-        print('\nSegmenting image...\n')
-        print('blobs found:', len(self.particleSegment.blobs))
-        
-        self.segmented = []
-        for b in self.particleSegment.blobs:
-            self.segmented.append((b[0][1], b[0][0], b[1][1], b[1][0]))
-            
-        # plot the segmented particles over a refreshed image
-        image = Image.open(self.image_name)
-        s = image.size
-        image = image.resize((int(s[0]*self.z),int(s[1]*self.z)),
-                             Image.ANTIALIAS)
-        new_bird = ImageTk.PhotoImage(image)
-        self.board.configure(image = new_bird)
-        self.board.image = new_bird
-        self.canvas.delete('all')
-        self.canvas.create_image(0, 0, image=new_bird, anchor='nw')
-        self.canvas.configure(scrollregion = self.canvas.bbox("all"))
-
-        self.plotSegmented()
-        
-        return None
-    
-    
-    def save_blobs(self):
-        '''
-        Saves the results of the segmentation
-        '''
-        saveName = os.path.join(self.folder, self.cam_name + '_CalBlobs')
-        self.particleSegment.save_results(saveName)
-        print('\nFile saved. Done.\n')
-    
-    
-    def plotSegmented(self):
-        for x_, y_, wx, wy in self.segmented:
-            x_ = int(x_*self.z) - int(self.hbar.get()[1])
-            y_ = int(y_*self.z) - int(self.vbar.get()[1])
-            wx = wx/2*self.z; wy = wy/2*self.z
-            self.canvas.create_rectangle(x_-wx, y_-wy, x_+wx, y_+wy, 
-                                         outline="#2bcf0e", width=1)
-    
-
-    def addPoint(self):
-        '''add marked point to list'''
-        x_im, y_im = self.xy_marked
-        x_lab = float(self.x_input.get())
-        y_lab = float(self.y_input.get())
-        z_lab = float(self.z_input.get())
-        self.point_list.append([x_im, y_im, x_lab, y_lab, z_lab])
-        
-        print('Added to list: ', self.point_list[-1])
-        self.xy_marked = (-1, -1)
         self.mark_points()
+    
+
+
+    def CalcRes(self):
+        '''add marked point to list'''
+        coords = {}
+        for i in range(len(self.cam_names)):
+            if self.xy_marked[i][0] != -1 and self.xy_marked[i][1] != -1:
+                coords[i] = self.xy_marked[i]
+        res = self.imsys.stereo_match(coords, d_max = 1e10)
+        print(res)
+        
+        xyz = res[0]
+        err = res[-1]
+        print(( fmt(xyz[0]), fmt(xyz[1]), fmt(xyz[2])))
+        
+        self.x_input.delete(0, END)
+        self.x_input.insert(0, fmt(xyz[0]))
+        self.y_input.delete(0, END)
+        self.y_input.insert(0, fmt(xyz[1]))
+        self.z_input.delete(0, END)
+        self.z_input.insert(0, fmt(xyz[2]))
+        self.err_input.delete(0, END)
+        self.err_input.insert(0, fmt(err))
             
         
-    def forgetLast(self):
-        p = self.point_list.pop(-1)
-        print('Deleted: ', p)
+    def forgetPoint(self):
+        self.xy_marked[self.current_camera_index] = (-1, -1)
+        self.Xloc.configure(text = '-')
+        self.Yloc.configure(text = '-')
         self.mark_points()
         
         
     def rightKey(self, event):
         '''right key = move cross'''
-        self.xy_marked = (self.xy_marked[0]+1, self.xy_marked[1])
+        i = self.current_camera_index
+        self.xy_marked[i] = (self.xy_marked[i][0]+1, self.xy_marked[i][1])
         self.mark_points()
-        self.Xloc.configure(text = self.xy_marked[0]) 
+        self.Xloc.configure(text = self.xy_marked[i][0]) 
         
         
     def leftKey(self, event):
         '''left key = move cross'''
-        self.xy_marked = (self.xy_marked[0]-1, self.xy_marked[1])
+        i = self.current_camera_index
+        self.xy_marked[i] = (self.xy_marked[i][0]-1, self.xy_marked[i][1])
         self.mark_points()
-        self.Xloc.configure(text = self.xy_marked[0])
+        self.Xloc.configure(text = self.xy_marked[i][0])
         
     
     def downKey(self, event):
         '''left key = move cross'''
-        self.xy_marked = (self.xy_marked[0], self.xy_marked[1]+1)
+        i = self.current_camera_index
+        self.xy_marked[i] = (self.xy_marked[i][0], self.xy_marked[i][1]+1)
         self.mark_points()
-        self.Yloc.configure(text = self.xy_marked[1])
+        self.Yloc.configure(text = self.xy_marked[i][1])
         
         
     def upKey(self, event):
         '''left key = move cross'''
-        self.xy_marked = (self.xy_marked[0], self.xy_marked[1]-1)
+        i = self.current_camera_index
+        self.xy_marked[i] = (self.xy_marked[i][0], self.xy_marked[i][1]-1)
         self.mark_points()
-        self.Yloc.configure(text = self.xy_marked[1])
+        self.Yloc.configure(text = self.xy_marked[i][1])
         
     
     
     def zoomIn(self, event):
         '''zoom in the image with + key'''
         self.z = self.z*1.15
-        image = Image.open(self.image_name)
+        image = self.images[self.current_camera_index]
         s = image.size
         image = image.resize((int(s[0]*self.z),int(s[1]*self.z)),
-                             Image.ANTIALIAS)
+                             Image.LANCZOS)
         new_bird = ImageTk.PhotoImage(image)
         self.board.configure(image = new_bird)
         self.board.image = new_bird
@@ -540,21 +386,15 @@ class initial_cal_gui(object):
         
         self.mark_points()
         
-        if hasattr(self, 'mtf'):
-            self.plot_matched_point_pair()
-        
-        else:
-            self.plotSegmented()
-            
     
         
     def zoomOut(self, event):
         '''zoom out with - key'''
         self.z = self.z*(1/1.15)
-        image = Image.open(self.image_name)
+        image = self.images[self.current_camera_index]
         s = image.size
         image = image.resize((int(s[0]*self.z),int(s[1]*self.z)),
-                             Image.ANTIALIAS)
+                             Image.LANCZOS)
         new_bird = ImageTk.PhotoImage(image)
         self.board.configure(image = new_bird)
         self.board.image = new_bird
@@ -564,11 +404,6 @@ class initial_cal_gui(object):
         
         self.mark_points()
         
-        if hasattr(self, 'mtf'):
-            self.plot_matched_point_pair()
-        
-        else:
-            self.plotSegmented()
         
         
     def location_handler(self, event):
@@ -580,7 +415,7 @@ class initial_cal_gui(object):
         
         self.Xloc.configure(text = x) 
         self.Yloc.configure(text = y)
-        self.xy_marked = (x, y)
+        self.xy_marked[self.current_camera_index] = (x, y)
         #tracking_dic[i%len(imagelist)]=(x,y)
         self.mark_points()
         print( x,y )
@@ -600,14 +435,14 @@ class initial_cal_gui(object):
         # delete the old cross
         for c in self.point_markers:
             self.canvas.delete(c)
-        
-        x, y = self.xy_marked
+
+        x, y = self.xy_marked[self.current_camera_index]
         x_ = int(x*self.z) - int(self.hbar.get()[1])
         y_ = int(y*self.z) - int(self.vbar.get()[1])
-        c1 = self.canvas.create_line(x_-4, y_, x_+4, y_, 
-                                     fill="#e31010", width=1)
-        c2 = self.canvas.create_line(x_, y_-4, x_, y_+4, 
-                                     fill="#e31010", width=1)    
+        c1 = self.canvas.create_line(x_-5, y_, x_+5, y_, 
+                                     fill="#e31010", width=2)
+        c2 = self.canvas.create_line(x_, y_-5, x_, y_+5, 
+                                     fill="#e31010", width=2)    
         self.point_markers.append(c1)
         self.point_markers.append(c2)
         
@@ -621,17 +456,8 @@ class initial_cal_gui(object):
                                          fill="#001ced", width=1)    
             self.point_markers.append(c1)
             self.point_markers.append(c2)
-        
-    
-    def Save(self):
-        '''save the manually selected calibration points'''
-        from numpy import savetxt
-        saveName = os.path.join(self.folder, self.cam_name+'_manualPoints')
-        savetxt(saveName, self.point_list, 
-                fmt='%.1f', delimiter='\t')
-        print('Points saved at: %s'%saveName)
-        
-        
+
+
     def Quit(self):
         '''quit the app'''
         self.root.destroy()
