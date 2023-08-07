@@ -791,13 +791,15 @@ class workflow(object):
         N_frames = self.get_param('tracking', 'N_frames')
         d_max = self.get_param('tracking', 'd_max')
         dv_max = self.get_param('tracking', 'dv_max')
+        mean_flow = self.get_param('tracking', 'mean_flow')
         save_name = self.get_param('tracking', 'save_name')
         
         
         # initiate the tracker
         t4f = tracker_four_frames(particles_fm, 
                                   d_max=d_max, 
-                                  dv_max=dv_max)
+                                  dv_max=dv_max,
+                                  mean_flow=array(mean_flow))
         
         #setting up the frame range
         ts = int(t4f.times[0])

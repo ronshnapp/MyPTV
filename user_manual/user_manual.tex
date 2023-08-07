@@ -66,7 +66,7 @@
 
 \begin{minipage}{14cm}
 	{\small \sffamily
-	Version: 0.6.1 \\
+	Version: 0.6.2 \\
 	Last updated: \today \\
 	Github repository: \url{https://github.com/ronshnapp/MyPTV} \\
 	Get help \& interact with our community: \url{https://github.com/ronshnapp/MyPTV/discussions}\\
@@ -878,15 +878,18 @@ The tracking step is used to link particle in the lab space coordinates in time,
 		Parameter & Description\\
 		\hline
 		
-		\texttt{particles\_file\_name} & path name of the file which holds the 3D coordinates of particles, namely the results of the matching step  \\
+		\texttt{particles\_file\_name} & path name of the file which holds the 3D coordinates of particles, namely the results of the matching step  \\[.2cm]
 		
-		\texttt{frame\_start} & if \texttt{None} will start tracking from the first available frame. If an integer it will start the tracking from this given number. \\
+		\texttt{frame\_start} & if \texttt{None} will start tracking from the first available frame. If an integer it will start the tracking from this given number. \\[.2cm]
 		
-		\texttt{N\_frames} & if \texttt{None} will iterate over particles in all frames; if an integer will only track particles in the first \texttt{N} frames of the particles file\\
+		\texttt{N\_frames} & if \texttt{None} will iterate over particles in all frames; if an integer will only track particles in the first \texttt{N} frames of the particles file\\[.2cm]
 		
-		\texttt{d\_max} & the maximum translation in lab space coordinates \\
+		\texttt{d\_max} & the maximum translation in lab space coordinates \\[.2cm]
 		
-		\texttt{dv\_max} & the maximum allowable change in velocity in lab space coordinates per frame (e.g. mm/frame) \\
+		\texttt{dv\_max} & the maximum allowable change in velocity in lab space coordinates per frame (e.g. mm/frame) \\[.2cm]
+		
+		\texttt{mean\_flow} & Adds a constant mean flow parameter that
+		helps the tracking algorithm to track particles in flows with a constant drift; the format is [vx, vy, vz] in e.g. mm/frame. \\[.2cm]
 		
 		\texttt{save\_name} & name of the file in which the results shall be saved; if \texttt{None} the results are not saved on the drive\\
 		
