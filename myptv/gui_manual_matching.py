@@ -30,7 +30,7 @@ def fmt(a):
 
 
 
-class initial_cal_gui(object):
+class man_match_gui(object):
     '''
     This is a Tkinter based graphical user interface that can be used to mark
     points on a static image, give their lab space coordinates, and then save
@@ -474,6 +474,6 @@ if __name__ == '__main__':
     
     camera_names = ['cam1', 'cam2', 'cam3']
     
-    gui = initial_cal_gui(camera_names, im_fname, cameras_folder=cameras_folder)
+    gui = man_match_gui(camera_names, im_fname, cameras_folder=cameras_folder)
 
 

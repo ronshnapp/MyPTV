@@ -52,6 +52,7 @@ class workflow(object):
                                 'smoothing', 'stitching', 'tracking', 
                                 'calibration', 'calibration_point_gui', 
                                 'match_target_file', '2D_tracking', 
+                                'manual_matching',
                                 'run_extention']
         
         
@@ -92,6 +93,9 @@ class workflow(object):
             
             elif action == 'stitching':
                 self.do_stitching()
+            
+            elif action == 'manual_matching':
+                self.do_manual_matching()
             
             elif action == 'run_extention':
                 self.do_run_extention()    
@@ -1018,6 +1022,22 @@ class workflow(object):
         
         print('\nDone!')
         
+        
+    
+    def do_manual_matching(self):
+        '''
+        Runs a GUI that helps performing manual stereo-matching of
+        points from images. You simply click on the images from different
+        cameras and the GUI gives back the 3D coordinates of this point. 
+        '''
+        from myptv.gui_manual_matching import man_match_gui
+        
+        # fetchhing the stitching parameters
+        camera_names = self.get_param('manual_matching_GUI', 'cameras')
+        im_fname = self.get_param('manual_matching_GUI', 'images')
+        
+        gui = man_match_gui(camera_names, im_fname, cameras_folder='.')
+    
         
         
     def do_run_extention(self):
