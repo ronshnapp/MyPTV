@@ -1036,6 +1036,9 @@ class workflow(object):
         camera_names = self.get_param('manual_matching_GUI', 'cameras')
         im_fname = self.get_param('manual_matching_GUI', 'images')
         
+        print(camera_names)
+        print(im_fname)
+        
         gui = man_match_gui(camera_names, im_fname, cameras_folder='.')
     
         

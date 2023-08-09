@@ -66,7 +66,7 @@
 
 \begin{minipage}{14cm}
 	{\small \sffamily
-	Version: 0.6.2 \\
+	Version: 0.6.3 \\
 	Last updated: \today \\
 	Github repository: \url{https://github.com/ronshnapp/MyPTV} \\
 	Get help \& interact with our community: \url{https://github.com/ronshnapp/MyPTV/discussions}\\
@@ -276,6 +276,7 @@ where \texttt{"command"} should be replaced with one of the following options, d
 	smoothing
 	stitching
 	2D_tracking
+	manual_matching
 \end{verbatim}
 %
 Each of these commands initiates one of MyPTVs functionalities, and a detailed explanation on them is found in Sections \ref{sec:cal_guide}--\ref{sec:workflow_stitch}. Use \texttt{help} to print the available list of commands.
@@ -790,6 +791,8 @@ In this step we extract the particles' image-space coordinates from the images a
 
 In the matching step, particles images in the various images are used to stereo-locate (triangulate) the 3D positions of particles in the lab-space coordinates. As before, run first only on several images to find optimal parameter values, and only then iterate over all frames by setting \texttt{N\_frames: None} and save the results. 
 
+Note: to perform easy stereo matching of points in images, use the manual matching GUI. See Section~\ref{sec:man_match} and Fig.~\ref{fig:man_match}.
+
 
 \begin{table}[!ht]
 	\centering
@@ -1063,6 +1066,47 @@ The 2D particle tracking procedure requires following these steps:
 		\hline
 	\end{tabular}
 \end{table}
+
+
+
+
+
+
+
+
+
+
+
+\subsection{Manual Matching GUI} \label{sec:man_match}
+
+In certain applications a user might wish to probe the 3D positions of elements in the images manually. Examples might be, to test the quality of the calibration on regions outside of the calibration target, or to measure certain geometrical features of objects in the images. For that purpose MyPTV features a graphical user interface dedicated to doing this easily. To run the GUI, use the \texttt{manual\_matching} command of the \texttt{workflow.py} script. 
+
+
+To match a point we need to identify it from the different camera views. In the GUI we do this by clicking on the point we are after in the various images. See Fig.~\ref{fig:man_match} for instructions.
+
+%
+\begin{table}[!ht]
+	\centering
+	\caption{The \texttt{params\_file.yml} parameters for the manual matching operation. All paths to files are relative to the \texttt{workflow.py} script. \label{tab:man_match}}
+	\begin{tabular}{l m{10cm}}
+		\hline
+		Parameter & Description\\
+		\hline
+		%
+		\texttt{cameras} & a list that holds the names of the cameras used; for example [cam1, cam2, cam3]. Note that the camera files need to be in the same folder where we are running the workflow script\\
+		%
+		\texttt{images} & the paths of the images from which matching should be performed. \\
+		\hline
+	\end{tabular}
+\end{table}
+
+
+
+\begin{figure}
+	\centering
+	\includegraphics[width=12cm]{man_match.pdf}
+	\caption{Instructions of how to use the manual matching GUI \label{fig:man_match}}
+\end{figure}
 
 
 
