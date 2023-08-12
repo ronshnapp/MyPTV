@@ -757,4 +757,117 @@ class dynamic_tracking(tracker_four_frames):
     
     
     
+    
+    
+#%%
+
+    
+    
+def future_cost(link, i, link_dictionary):
+    '''
+    This function takes in a link and calculates its future_cost. Along the way
+    is calculates all the future costs of the links to which link is connected 
+    to. In addition if there is a link that has a future branch, this function 
+    removes from the link_dicionary the candidates with lowest future_cost. 
+    
+    input -
+        
+    link - a list that represents a possible link
+    i - the frame from which the link starts
+    link_dictionary - a dictionary that holds the list of links for all the
+                      frames.
+    '''
+    # a list of the links in frame i+1 that are connected to link
+    candidates = [l for l in link_dictionary[i+1] if l[0]==link[1]]
+    
+    if len(candidates)>0:   #  if there are future candidates, find the best...
+        # finding the best candidate
+        best = max(candidates, key=lambda x: future_cost(x, i+1, link_dictionary))
+        
+        # removing non-best future candidates:
+        for cand in candidates:
+            if cand != best:
+                link_dictionary[i+1].remove(cand)
+                
+        # writing the future cost of the best candidate and returning it
+        if len(link) == 3: link.append(link[2] + best[3])
+        return link[2] + best[3]
+    
+    
+    else: #  if this is the last link in the chain its future_cost = its cost
+        if len(link) == 3: link.append(link[2])
+        return link[2]
+    
+    
+    
+
+def past_cost(link, i, link_dictionary):
+    '''
+    Like future cost but in the past direction
+    '''
+    # a list of the links in frame i+1 that are connected to link
+    if i == 0:
+        candidates = []
+    else:
+        candidates = [l for l in link_dictionary[i-1] if l[1]==link[0]]
+    
+    if len(candidates)>0:   #  if there are future candidates, find the best...
+        # finding the best candidate
+        best = max(candidates, key=lambda x: past_cost(x, i-1, link_dictionary))
+        
+        # removing non-best future candidates:
+        for cand in candidates:
+            if cand != best:
+                link_dictionary[i-1].remove(cand)
+                
+        # writing the future cost of the best candidate and returning it
+        if len(link) == 4: link.append(link[2] + best[4])
+        return link[2] + best[4]
+    
+    
+    else: #  if this is the last link in the chain its future_cost = its cost
+        if len(link) == 4: link.append(link[2])
+        return link[2]
+    
+    
+    
+    
+
+
+if __name__ == '__main__':
+    
+    link_dictionary = {
+        0: [[0,0,5], [1,1,7]],
+        1: [[0,0,4], [1,0,6], [1,1,2]],
+        2: [[0,0,10], [1,1,2]],
+        3: []
+        }
+    
+    
+    i = 0
+    
+    for link in link_dictionary[i]:
+        future_cost(link, i, link_dictionary)
+    
+    for k in link_dictionary.keys():
+        print(k, link_dictionary[k])
+    
+        
+    
+    i = 2
+    
+    for link in link_dictionary[i]:
+        past_cost(link, i, link_dictionary)
+    
+    
+    for k in link_dictionary.keys():
+        print(k, link_dictionary[k])    
+    
+    
+    
+    
+    
+    
+    
+    
 
