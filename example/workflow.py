@@ -796,6 +796,7 @@ class workflow(object):
         d_max = self.get_param('tracking', 'd_max')
         dv_max = self.get_param('tracking', 'dv_max')
         mean_flow = self.get_param('tracking', 'mean_flow')
+        candidate_graph = self.get_param('tracking', 'plot_candidate_graph')
         save_name = self.get_param('tracking', 'save_name')
         
         
@@ -803,13 +804,27 @@ class workflow(object):
         t4f = tracker_four_frames(particles_fm, 
                                   d_max=d_max, 
                                   dv_max=dv_max,
-                                  mean_flow=array(mean_flow))
+                                  mean_flow=array(mean_flow),
+                                  store_candidates = candidate_graph)
         
         #setting up the frame range
         ts = int(t4f.times[0])
         te = int(t4f.times[-1])
         
         print('available particles time range: %d -> %d'%(ts,te),'\n')
+        
+        if candidate_graph and (te-ts)>100:
+            print('Warning: you are about to plot a candidate graph with')
+            print('more than 100 frames.')
+            ans = input('Do you wish to proceed (1 = Yes , else = No)?  ')
+            
+            if ans=='1':
+                pass
+            
+            else:
+                print('quitting ')
+                return None
+            
         
         if frame_start is not None:
             if frame_start>=ts and frame_start <=te:
@@ -838,7 +853,10 @@ class workflow(object):
         tot = len(tr)
         print('untracked fraction:', untracked/tot)
         print('tracked per frame:', (tot-untracked)/len(set(tr[:,-1])))
-
+        
+        if candidate_graph:
+            t4f.plot_candidate_graph()
+        
         # save the results
         if save_name is not None:
             cwd_ls = listdir(getcwd())

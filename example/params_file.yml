@@ -46,6 +46,7 @@
     d_max: 1.0
     dv_max: 1.0
     mean_flow: [0.0, 0.0, 0.0]
+    plot_candidate_graph: False
     save_name: trajectories
 
 - calibration_with_particles:

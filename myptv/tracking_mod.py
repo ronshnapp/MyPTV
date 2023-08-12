@@ -331,7 +331,10 @@ class tracker_four_frames(object):
         After tracking with store_candidates turned on, this function will plot
         a graph showing the network of all possible candidates.
         '''
-        from matplotlib.pyplot import figure, plot, show, xlabel, ylabel
+        if self.store_candidates == False:
+            raise ValueError('store_candidate must be True to plot candidate_graph')
+        
+        from matplotlib.pyplot import figure, plot, show, xlabel, ylabel, title
         fig = figure()
         fig.add_subplot(111)
         
@@ -340,13 +343,22 @@ class tracker_four_frames(object):
             y = list(range(len(self.particles[tm])))
             plot(x, y, 'ok', ms=2.5, alpha=0.5)
                 
-        
         for k in self.candidate_links.keys():
             for cl in self.candidate_links[k]:
                 plot([cl[0][1], cl[1][1]], [cl[0][0], cl[1][0]], '-b',
                      lw=0.7)
+                
+        for tm in self.times:
+            for i in range(len(self.particles[tm])):
+                p = self.particles[tm][i]
+                if p[0] != -1 and tm < self.times[-1]:
+                    whr = where(self.particles[tm+1][:,0] == p[0])[0]
+                    if len(whr)>0:
+                        plot([tm,tm+1], [i,whr[0]], '-r')
+                    
         xlabel('frame number')
-        xlabel('particle index')
+        ylabel('particle index')
+        title('tracking candidate graph: red = link, blue = regected candidate link')
         show()
         
         
