@@ -66,7 +66,7 @@
 
 \begin{minipage}{14cm}
 	{\small \sffamily
-	Version: 0.6.3 \\
+	Version: 0.6.4 \\
 	Last updated: \today \\
 	Github repository: \url{https://github.com/ronshnapp/MyPTV} \\
 	Get help \& interact with our community: \url{https://github.com/ronshnapp/MyPTV/discussions}\\
@@ -724,7 +724,7 @@ In this step we extract the particles' image-space coordinates from the images a
 
 \begin{table}[!ht]
 	\centering
-	\caption{The \texttt{params\_file.yml} parameters for the segmentation step. All paths to files are relative to the \texttt{workflow.py} script. \label{tab:segment_params}}
+	\caption{The \texttt{params\_file.yml} parameters for the \textbf{segmentation} step. All paths to files are relative to the \texttt{workflow.py} script. \label{tab:segment_params}}
 	\begin{tabular}{l m{10cm}}
 		\hline
 		Parameter & Description\\
@@ -796,7 +796,7 @@ Note: to perform easy stereo matching of points in images, use the manual matchi
 
 \begin{table}[!ht]
 	\centering
-	\caption{The \texttt{params\_file.yml} parameters for the matching step. All paths to files are relative to the \texttt{workflow.py} script.}
+	\caption{The \texttt{params\_file.yml} parameters for the \textbf{matching} step. All paths to files are relative to the \texttt{workflow.py} script.}
 	\begin{tabular}{l m{10cm}}
 		\hline
 		Parameter & Description\\
@@ -875,7 +875,7 @@ The tracking step is used to link particle in the lab space coordinates in time,
 
 \begin{table}[!ht]
 	\centering
-	\caption{The \texttt{params\_file.yml} parameters for the tracking step. All paths to files are relative to the \texttt{workflow.py} script.}
+	\caption{The \texttt{params\_file.yml} parameters for the \textbf{tracking} step. All paths to files are relative to the \texttt{workflow.py} script.}
 	\begin{tabular}{l m{10cm}}
 		\hline
 		Parameter & Description\\
@@ -893,6 +893,9 @@ The tracking step is used to link particle in the lab space coordinates in time,
 		
 		\texttt{mean\_flow} & Adds a constant mean flow parameter that
 		helps the tracking algorithm to track particles in flows with a constant drift; the format is [vx, vy, vz] in e.g. mm/frame. \\[.2cm]
+		
+		\texttt{plot\_candidate\_graph} & If this is set to \verb|True|, once tracking is done, it will show a graph of all the linking candidates. Red lines are links that were made and blue lines were candidates to be linked but they were rejected. \\[.2cm]
+		
 		
 		\texttt{save\_name} & name of the file in which the results shall be saved; if \texttt{None} the results are not saved on the drive\\
 		
@@ -1459,6 +1462,7 @@ An object used to perform tracking through the 4-frame best estimate method \cit
 	\item \texttt{mean\_flow=0.0} - either zero (default) of a numpy array of the mean flow vector, in units of the calibrations spatial units per frame (e.g. mm per frame). The mean flow is assumed not to change in space and time.
 	\item \texttt{d\_max\_=1e10} - maximum allowable translation between two frames for the nearest neighbour search, after subtracting the mean flow. 
 	\item \texttt{dv\_max\_=1e10} - maximum allowable change in velocity for the two-frame velocity projection search. The radius around the projection is therefore dv\_max/dt (where dt = 1 frame$^{-1}$)
+	\item \texttt{store\_candidates = False} - Boolean indicator. If it is true, then the tracker stores all the possible links that correspond to the tracking thresholds. In this case we can then plot a particle linking graph to analyze the tracking quality. If it is False, the tracker does not keep this information.  
 \end{enumerate}
 
 
@@ -1470,6 +1474,8 @@ The important functionality is:
 	\item \texttt{return\_connected\_particles()} - Will retun the list of trajectories that were established.
 	
 	\item \texttt{save\_results(fname)} - Will save the results on the hard drive. The results are saved in a text file, where each row is a sample of a trajectory. The columns are specified as follows: [trajectory number, x, y, z, frame number], see Fig~\ref{fig:trajfile}.  
+	
+	\item \texttt{plot\_candidate\_graph()} - If the candidate links were stored, this method will plot a graph that shows the links that were made and the candidate links that could have been made but were eventually not made due to duplicate links for the same particle. 
 \end{enumerate}
 
 \begin{figure}
