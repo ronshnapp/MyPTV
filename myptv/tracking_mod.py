@@ -9,9 +9,9 @@ Contains classes for tracking particles to form trajectories.
 
 """
 
-from numpy import loadtxt, array, savetxt
+from numpy import loadtxt, array, savetxt, hstack, ones, where
 from scipy.spatial import KDTree
-
+from pandas import read_csv
 
 
 
@@ -22,7 +22,8 @@ class tracker_four_frames(object):
     https://doi.org/10.1007/s00348-005-0068-7.
     '''
     
-    def __init__(self, fname, mean_flow = 0.0, d_max=1e10, dv_max=1e10):
+    def __init__(self, fname, mean_flow = 0.0, d_max=1e10, dv_max=1e10,
+                 store_candidates=False):
         '''
         fname - string, path of the particles containing file to which tracking
                 should be performed.
@@ -37,27 +38,39 @@ class tracker_four_frames(object):
         dv_max - maximum allowable change in velocity for the two-frame 
                  velocity projection search. The radius around the projection
                  is therefore dv_max/dt (where dt = 1 frame^{-1})
+                 
+        store_candidates - boolean indicator, defaul on False. If True, the 
+                           tracker will store all the candidate links that were 
+                           considered in the tracking process for future 
+                           analysis.
         '''
         self.fname = fname
         self.U = mean_flow
         self.d_max = d_max
         self.dv_max = dv_max
         
-        self.particles = {}
+        # particles are stored in a dictionary. Keys are frame numbers, values
+        # are lists of arrays, each array representing a particle
         
-        data = loadtxt(self.fname)
-        self.times = sorted(list(set(data[:,-1])))
+        # =========== old method for reading the matched particles =========
+        # self.particles = {}
+        # data = loadtxt(self.fname)
+        # for tm in self.times:
+        #     self.particles[tm] = []
+        #     p_ = data[data[:,-1]==tm]
+        #     for i in range(p_.shape[0]):
+        #         #p = array([-1] + list(p_[i,[0,1,2,-1]]))
+        #         p = array([-1] + list(p_[i,:]))
+        #         self.particles[tm].append(p)
         
-        for tm in self.times:
-            self.particles[tm] = []
-            p_ = data[data[:,-1]==tm]
-            for i in range(p_.shape[0]):
-                #p = array([-1] + list(p_[i,[0,1,2,-1]]))
-                p = array([-1] + list(p_[i,:]))
-                self.particles[tm].append(p)
-        
-        for k in self.particles.keys():
-            self.particles[k] = array(self.particles[k])
+        # for k in self.particles.keys():
+        #     self.particles[k] = array(self.particles[k])
+        # ==================================================================
+            
+        data = read_csv(self.fname, header=None, sep='\t')
+        self.particles = dict([(g, hstack([ones((len(k),1))*-1, k.values])) 
+                               for g,k in data.groupby(6)])
+        self.times = sorted(list(self.particles.keys()))
         
         self.trees = {}
         
@@ -65,6 +78,11 @@ class tracker_four_frames(object):
         self.traj_lengths = {}
         self.N_four_frames = 0
         self.N_nearest_neighbour = 0
+        
+        # setting up a dictionary to store the data on all candidate links
+        self.store_candidates = store_candidates
+        if store_candidates:
+            self.candidate_links = dict((tm, []) for tm in self.times)
     
     
     def track_all_frames(self, frames=None):
@@ -117,9 +135,9 @@ class tracker_four_frames(object):
             best_estimate = self.find_best_estimate_link(p1)
             if best_estimate is None: continue
             # ===================================================
-            condition = True             # <-- Make up best estimate threshold
+            cond = True             # <-- Make up best estimate threshold
             # ===================================================
-            if condition:
+            if cond:
                 p2 = p2_lst[best_estimate[1]]
                 if p2[0] == -1:
                     id_ = p1[0]
@@ -137,7 +155,16 @@ class tracker_four_frames(object):
             if nn_val[0] < self.d_max:
                 p2 = p2_lst[nn_val[1]]
                 if p2[0] != -1: continue
-                if i == self.find_nearest_neighbour(p2, frame_num)[1]:
+                
+                # ============================================================
+                # optional - check also if p1 is the nearest neighbour of
+                # p2 in p1's frame
+                
+                # cond = i == self.find_nearest_neighbour(p2, frame_num)[1]
+                cond = True
+                # ============================================================
+                
+                if cond:
                     
                     if len(self.traj_ids)==0:
                         self.traj_ids.append(0)
@@ -153,9 +180,10 @@ class tracker_four_frames(object):
         return None
         
         
+        
     def find_nearest_neighbour(self, particle, frame_num):
         '''For a given particle, this returns the index of its nearest 
-        neighbour in the frame number given, adn the distance between them.'''
+        neighbour in the frame number given, and the distance between them.'''
         dt_particles = (frame_num - particle[-1])
         dX = self.U * dt_particles
         p = particle[1:4] + dX
@@ -166,10 +194,18 @@ class tracker_four_frames(object):
             tree = KDTree(self.particles[frame_num][:,1:4])
             self.trees[frame_num] = tree
         
+        # store all possible candidates if storing option is True
+        if self.store_candidates:
+            colls = (self.particles[particle[-1]] == particle).all(axis=1)
+            particle_index = where(colls)[0][0]
+            candidates = tree.query_ball_point(p, self.d_max)
+            for cand in candidates:
+                cl = [(particle_index, particle[-1]), (cand, frame_num)]
+                self.candidate_links[particle[-1]].append(cl)
+        
         return tree.query(p, k=1)
         
 
-    
     
     def get_particle_by_id(self, id_, frame_num):
         '''Returns the particle with the given id=id_ at the given 
@@ -221,7 +257,16 @@ class tracker_four_frames(object):
         dist = lambda p: sum((x_proj - p[1:4])**2)**0.5 
         proj_neighbours = [(dist(self.particles[frame_num][i]), i) for i in 
                            tree.query_ball_point(x_proj, self.dv_max, )]
-
+        
+        
+        # if storing option is True, store all possible candidates
+        if self.store_candidates:
+            colls = (self.particles[particle[-1]] == particle).all(axis=1)
+            particle_index = where(colls)[0][0]
+            candidates = [pn[1] for pn in proj_neighbours]
+            for cand in candidates:
+                cl = [(particle_index, particle[-1]), (cand, frame_num)]
+                self.candidate_links[particle[-1]].append(cl)
         
         
         # 2.1: if there are no projection neighbours, return None
@@ -279,6 +324,31 @@ class tracker_four_frames(object):
         fmt += ['%.3f', '%.3f']
         savetxt(fname , data_to_save,
                 delimiter='\t', fmt=fmt)
+        
+        
+    def plot_candidate_graph(self):
+        '''
+        After tracking with store_candidates turned on, this function will plot
+        a graph showing the network of all possible candidates.
+        '''
+        from matplotlib.pyplot import figure, plot, show, xlabel, ylabel
+        fig = figure()
+        fig.add_subplot(111)
+        
+        for tm in self.times:
+            x = ones(len(self.particles[tm]))*tm
+            y = list(range(len(self.particles[tm])))
+            plot(x, y, 'ok', ms=2.5, alpha=0.5)
+                
+        
+        for k in self.candidate_links.keys():
+            for cl in self.candidate_links[k]:
+                plot([cl[0][1], cl[1][1]], [cl[0][0], cl[1][0]], '-b',
+                     lw=0.7)
+        xlabel('frame number')
+        xlabel('particle index')
+        show()
+        
         
 
 
