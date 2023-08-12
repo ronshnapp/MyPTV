@@ -68,8 +68,9 @@ class tracker_four_frames(object):
         # ==================================================================
             
         data = read_csv(self.fname, header=None, sep='\t')
+        timeIndex = data.shape[1] - 1
         self.particles = dict([(g, hstack([ones((len(k),1))*-1, k.values])) 
-                               for g,k in data.groupby(6)])
+                               for g,k in data.groupby(timeIndex)])
         self.times = sorted(list(self.particles.keys()))
         
         self.trees = {}
