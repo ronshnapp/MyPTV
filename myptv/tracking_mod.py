@@ -631,7 +631,7 @@ class dynamic_tracking(tracker_four_frames):
     A tracking method that uses ideas from dynamic programing to
     solve the tracking problem.
     
-    For each particle we generate all the possible links
+    For each particle we generate all the possible future links
     that could be connected to it. For each candidate trajectory
     we associate a cost. We then minimize the total cost over
     all the trajectory candidates.
@@ -643,8 +643,8 @@ class dynamic_tracking(tracker_four_frames):
                 should be performed.
                 
         mean_flow - a numpy array of the mean flow vector, in units of the 
-        calibrations spatial units per frame (e.g. mm per frame). The mean 
-        flow is assumed not to change in space and time.
+                    calibrations spatial units per frame (e.g. mm per frame). 
+                    The mean flow is assumed not to change in space and time.
         
         d_max - maximum allowable translation between two frames for the 
                 nearest neighbour search, after subtracting the mean flow. 
@@ -677,12 +677,17 @@ class dynamic_tracking(tracker_four_frames):
         # (frame, particle index), and the values are particle identifiers of
         # the particles to which it could be linked.
         self.link_candidates_dic = {}
+        
+        # also holds information on link candidates, but here we look at the
+        # past links. The keys are particle identifiers and the values are all
+        # the link candidates it has going backwards one frame.
+        self.past_link_dic = {}
     
     
     def get_particles_links(self, particle):
         '''
         Given a particle, this function will search for all the
-        connections it could have into the past and the future.
+        connections it could have into the future.
         
         For this, a link is addmissible if the displacement is smaller 
         than self.d_max
@@ -695,7 +700,7 @@ class dynamic_tracking(tracker_four_frames):
         # generate an entry in the link_candidates_dictionary
         self.link_candidates_dic[(frame, pIndex)] = set([])
         
-        # add future links:
+        # add nearest neighbour links:
         if frame != self.frames[-1]:
             # finding the nearest neighbours in the next frame
             try:
@@ -705,56 +710,51 @@ class dynamic_tracking(tracker_four_frames):
                 self.trees[frame+1] = KDTree(self.particles[frame+1][:,:3])
                 tree = self.trees[frame+1]
             
-            neighbour_index = tree.query_ball_point([x], self.d_max)
+            X = x + self.U
+            neighbour_index = tree.query_ball_point([X], self.d_max)
             
             # adding these links to the list of link_candidates
             for ind in neighbour_index[0]:
                 #self.link_candidates.append([particle, (frame+1, ind)])
                 self.link_candidates_dic[(frame, pIndex)].add((frame+1, ind))
-                
-        
-        # add past links:
-        if frame != self.frames[0]:
-            # finding the nearest neighbours in the previous frame
-            try:
-                tree = self.trees[frame-1]
-            
-            except:
-                self.trees[frame-1] = KDTree(self.particles[frame-1][:,:3])
-                tree = self.trees[frame-1]
-            
-            neighbour_index = tree.query_ball_point([x], self.d_max)
-            
-            # adding these links to the dictionary of link_candidates
-            for ind in neighbour_index[0]:
-                #self.link_candidates.append([particle, (frame-1, ind)])
-                self.link_candidates_dic[(frame, pIndex)].add((frame-1, ind))
-    
-    
-    
-    def get_frames_links(self, frameList):
-        '''
-        Goes over all the particles in the frames belonging to frame_list
-        and adds their possible links to the list self.link_candidates.
+                try:
+                    self.past_link_dic[(frame+1, ind)].add((frame, pIndex))
+                except:
+                    self.past_link_dic[(frame+1, ind)] = set([(frame, pIndex)])
 
-        frameList - a list of frame numbers
-        '''
-        
-        if not all([f in self.frames for f in frameList]):
-            raise ValueError('Not all the given frames are in the file')
+    
+        # add projection nearest neighbour links:
+        if frame != self.frames[-1]:
             
-        for frame in frameList:
-            Np = len(self.particles[frame])
-            NL = len(self.link_candidates)
-            for i in range(Np):
-                self.get_particles_links( (frame, i) )
+            if (frame,pIndex) in self.past_link_dic:
                 
-            newNL = len(self.link_candidates) - NL
-            print('frame: %d, particles: %d, link candidates: %d'%(frame, 
-                                                                   Np, newNL))
+                for past_link in self.past_link_dic[(frame,pIndex)]:
+                    
+                    x_past = self.particles[past_link[0]][past_link[1]][:3]
+                    v = x - x_past
+                    X_proj = x + v 
+                    neighbour_index = tree.query_ball_point([X_proj], self.dv_max)
+                    
+                    # adding these links to the list of link_candidates
+                    for ind in neighbour_index[0]:
+                        #self.link_candidates.append([particle, (frame+1, ind)])
+                        self.link_candidates_dic[(frame, pIndex)].add((frame+1, ind))
+                        try:
+                            self.past_link_dic[(frame+1, ind)].add((frame, pIndex))
+                        except:
+                            self.past_link_dic[(frame+1, ind)] = set([(frame, pIndex)])
+                
+        
+        # Now, for each candidate we found, we search for their candidates
+        for link_cand in self.link_candidates_dic[(frame, pIndex)]:
+            self.get_particles_links(link_cand)
+            
+        
     
-    
-    
+if __name__=='__main__':
+    #dt = dynamic_tracking('../example/particles', d_max = 5.0, dv_max=5.0)
+    dt = dynamic_tracking('/home/ron/Desktop/myPTV_HW_files/filesforRon/matched_ron.txt', 
+                          d_max = 0.3, dv_max=0.3, mean_flow=[0.15, 0.0, 0.0])
     
     
     
@@ -834,34 +834,34 @@ def past_cost(link, i, link_dictionary):
     
 
 
-if __name__ == '__main__':
+# if __name__ == '__main__':
     
-    link_dictionary = {
-        0: [[0,0,5], [1,1,7]],
-        1: [[0,0,4], [1,0,6], [1,1,2]],
-        2: [[0,0,10], [1,1,2]],
-        3: []
-        }
+#     link_dictionary = {
+#         0: [[0,0,5], [1,1,7]],
+#         1: [[0,0,4], [1,0,6], [1,1,2]],
+#         2: [[0,0,10], [1,1,2]],
+#         3: []
+#         }
     
     
-    i = 0
+#     i = 0
     
-    for link in link_dictionary[i]:
-        future_cost(link, i, link_dictionary)
+#     for link in link_dictionary[i]:
+#         future_cost(link, i, link_dictionary)
     
-    for k in link_dictionary.keys():
-        print(k, link_dictionary[k])
+#     for k in link_dictionary.keys():
+#         print(k, link_dictionary[k])
     
         
     
-    i = 2
+#     i = 2
     
-    for link in link_dictionary[i]:
-        past_cost(link, i, link_dictionary)
+#     for link in link_dictionary[i]:
+#         past_cost(link, i, link_dictionary)
     
     
-    for k in link_dictionary.keys():
-        print(k, link_dictionary[k])    
+#     for k in link_dictionary.keys():
+#         print(k, link_dictionary[k])    
     
     
     
