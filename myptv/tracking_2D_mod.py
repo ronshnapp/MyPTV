@@ -40,7 +40,8 @@ class track_2D(tracker_four_frames):
     '''
     
     def __init__(self, camera, blob_fnames, z_particles, mean_flow = 0.0, 
-                 d_max=1e10, dv_max=1e10, reverse_eta_zeta = False):
+                 d_max=1e10, dv_max=1e10, reverse_eta_zeta = False,
+                 store_candidates=False):
         '''
         inputs -
         
@@ -68,6 +69,11 @@ class track_2D(tracker_four_frames):
                            data points were given where the x, y coordinates
                            are transposed (as happens, e.g., if using 
                            matplotlib.pyplot.imshow).
+        
+        store_candidates - boolean indicator, defaul on False. If True, the 
+                           tracker will store all the candidate links that were 
+                           considered in the tracking process for future 
+                           analysis.
         '''
         
         self.cam = camera
@@ -89,6 +95,7 @@ class track_2D(tracker_four_frames):
         self.traj_lengths = {}
         self.N_four_frames = 0
         self.N_nearest_neighbour = 0
+        self.store_candidates = store_candidates
     
     
     
