@@ -45,7 +45,9 @@ class track_2D(tracker_four_frames):
         '''
         inputs -
         
-        camera - a calibrated camera instance.
+        camera - a calibrated camera instance. If this is None, then 
+                 the tracking will be performed in image space directly 
+                 without any calibration.
         
         blob_fname -  the file name that containes the coordinates of 
                       segmented blobs.
@@ -110,17 +112,22 @@ class track_2D(tracker_four_frames):
         eta - pixel "x" coordinate in camera space
         zeta - pixel "y" coordinate in camera space
         '''
-        if self.reverse_eta_zeta==False:
-            r = self.cam.get_r(eta, zeta)
         
+        if self.cam is None:
+            return eta, zeta
+            
         else:
-            r = self.cam.get_r(zeta, eta)
-        
-        O = self.cam.O
-        a = (self.z_particles - O[2])/r[2]
-        
-        x, y = O[:2]+r[:2]*a
-        return x, y
+            if self.reverse_eta_zeta==False:
+                r = self.cam.get_r(eta, zeta)
+            
+            else:
+                r = self.cam.get_r(zeta, eta)
+            
+            O = self.cam.O
+            a = (self.z_particles - O[2])/r[2]
+            
+            x, y = O[:2]+r[:2]*a
+            return x, y
     
     
     
