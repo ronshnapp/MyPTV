@@ -319,7 +319,7 @@ The calibration in MyPTV is performed in two steps: \textit{initial calibration}
 
 
 
-\subsubsection{Preparing a \texttt{target\_file}}
+\subsubsection{Preparing a \texttt{target\_file}}\label{sec:target_file}
 
 The target file is a text file (tab separated values), in which each row shows the lab space coordinates of a calibration point.  An example for the format is shown in Fig.~\ref{fig:target_file}. If there is no target file in the experimental folder, this is the time to generate one. Prepare such a file and save it in the experiment's calibration folder.
 
@@ -675,6 +675,44 @@ which should start the interface shown in Fig.~\ref{fig:calibration_gui}. The de
 	%
 	\caption{(a) An example of a calibration image. The points on the target have known lab space coordinates. Not also that the points are distributed over several plains (3 different $z$ values in this case). (b) An example plot of a calibration error estimation. The red crosses represent the known positions of the calibration points given in the target file, and the black circles mark the positions of the stereo-matched segmented calibration points. In this case, the root mean square of the static calibration error was 84$\mu m$.}
 \end{figure}
+
+
+
+
+
+
+
+\subsubsection{How to perform calibration with several images (sometimes called multiplane calibration)}\label{sec:multiplane_cal}
+
+
+
+Calibrating the PTV cameras requires having calibration points spanning a full 3D volume, with points being positioned on different planes. Traditionally, this is done by constructing the calibration target with multiple planes (Fig.~\ref{fig:cal_img}).
+However, in some PTV systems another solution is taken such that the calibration target is moved to different locations and images of the target are taken there. In OpenPTV, this is called multiplane calibration. The following steps outline the procedure to follow when using such a multiplane calibration in MyPTV:
+
+\begin{enumerate}
+	\item Place the calibration target in its first position; make sure you the location of the target and take an image of it. Then, move the target to another position and take an image of it. Repeat until the whole domain is covered by your calibration points, and save the sequence of images you just took. 
+	
+	\item Prepare a target file for each one of the images in the calibration sequence (see Seq.~\ref{sec:target_file}). Note that the target file for each image needs to hold only the information for the points that are seen in its particular image. 
+	
+	\item Perform an initial calibration for each of the calibration images, each with respect to its own target file. When you do so, make sure that the you are using a different "camera name" in the params\_file (for example, "cam1\_1", "cam1\_2", "cam1\_3", ..., cam1\_i).
+	
+	\item After finishing the previous step, for each calibration image you should have a file called "XXXXX\_i\_cal\_points" where "XXXXX\_i" stands for the camera names you put in the params file. 
+	
+	\item Make a new empty file called as the base name of the previous files (the "XXXXX" part of the "XXXXX\_i"); in the params\_file, change the camera name to the same value ("XXXXX"). Inside the new file just generated, copy and paste the data from all the "XXXXX\_i\_cal\_points" files.
+	
+	\item Make a copy of one of the camera files, and change its name to "XXXXX". This will make sure you have a camera file from which we start the final calibration.
+	
+	\item Run the final calibration as done in the regular calibration procedure. 
+\end{enumerate}
+
+
+  
+
+
+
+
+
+
 
 
 
