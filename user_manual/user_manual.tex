@@ -720,17 +720,32 @@ However, in some PTV systems another solution is taken such that the calibration
 \subsection{Segmentation}\label{sec:workflow_segment}
 
 
+Segmentation is essentially the image analysis step of the PTV method, in which we extract the particles' image-space coordinates from the experiment images and save the coordinates in dedicated files. 
 
 
-\subsubsection{How segmentation works} In the segmentation step, the program extracts the location of particles in the image. Segmentation in MyPTV is performed in one of two methods: \textit{labeling}, or \textit{dilation}, and includes several optional image processing steps. 
+\subsubsection{How to segment in MyPTV}
 
+The basics of the segmentation step are done via the \texttt{workflow.py} script with the \texttt{segmentation} command. To run the process follow these steps:
 
 \begin{enumerate}
-	\item In the labeling method, we first choose all pixels in an image whose grey value is higher than a given threshold. Then, such pixels that are touching each other are considered to be "blobs", so we group them together. For each blob, we calculate a \textit{center of mass}, being the grey value weighted average of the blob, a \textit{bounding box} size, and a \textit{mass}, being the sum of grey values of the blobs' pixels.
+	\item We perform the segmentation first on a single image by specifying \texttt{Number\_of\_images: 1}, and giving an image name with \texttt{single\_image\_name}. We then tune the segmentation parameters and the image processing filters used (e.g. \texttt{ROI}, \texttt{threshold}, \texttt{blur\_sigma}, \texttt{method} etc (details below); the full list is given in Table~\ref{tab:segment_params}) to obtain optimal results; optionally repeat over several more images to ensure the results are satisfactory. To view the segmented particles over the image, use \texttt{plot\_result: True}, and make sure the results are not saved by using \texttt{save\_name: None}. 
 	
-	\item In the dilation method, we are looking for pixels that their grey value is higher than that of all their neghbours within a box of a given size (\texttt{particle\_size}), and thet their grey value is higher than a given threshold. After that, all the neighbouring pixels inside the particle size box are considered to be a blob. We then calculate the center of mass of the blob to achieve a better estimation of its position, thus redifining the blob. This process is iterated a maxinum of 3 times untill convergence is obtained. Finally, we calculate the same blob's \textit{center of mass}, \textit{bounding box} size, \textit{mass}.
+	\item Once the parameters are determined, we set \texttt{Number\_of\_images: None}, and run the segmentation workflow again. This will then loop over all the images in the given folder (under \texttt{images\_folder}), and save the results in a text file by setting \texttt{save\_name: /file/name/to/use}
 \end{enumerate}
 
+
+
+
+
+\subsubsection{Two methods of segmentation} In the segmentation step, the program extracts the location of particles in the image. Segmentation in MyPTV is performed in one of two methods: \textbf{\textit{labeling}}, or \textbf{\textit{dilation}}, and includes several optional image processing steps. 
+%
+\begin{itemize}
+	\item \textbf{Labeling:} In this method, we first choose all pixels in an image whose gray value is higher than a given threshold. Then, such pixels that are touching each other are considered to be "blobs", so we group them together. For each blob, we calculate a \textit{center of mass}, being the gray value weighted average of the blob, a \textit{bounding box} size, and a \textit{mass}, being the sum of gray values of the blobs' pixels.
+	
+	\item \textbf{Dilation:} Searching for objects of a certain size. In this method, we are looking for pixels that their gray value is higher than that of all their neighbors within a box of a given size (\texttt{particle\_size}), and that their gray value is higher than a given threshold. After that, all the neighboring pixels inside the particle size box are considered to be a blob. We then calculate the center of mass of the blob to achieve a better estimation of its position, thus redefining the blob. This process is iterated a maximum of 3 times until convergence is obtained. Finally, we calculate the same blob's \textit{center of mass}, \textit{bounding box} size, \textit{mass}.
+\end{itemize}
+%
+While the dilation method can take more computational time, it can sometimes be used to solve segmentation of large objects where overlap is an issue (see Fig.~\ref{fig:Labeling_vs_Dilation}). 
 
 
 To improve the results of segmenting over non-ideal images, MyPTV can be set to apply image processing before the blob extraction. The filters that can be used are a Gaussian blur filter, a median noise removal filter, local mean subtraction filter, and a mask. The first three filters may increase the computational time, however they may be necessary depending on the experimental conditions, such as uneven illumination or noisy images. Examples of the results of using several combinations of the filters on a calibration image is shown in Fig.~\ref{fig:image_filters}. 
@@ -744,14 +759,13 @@ To improve the results of segmenting over non-ideal images, MyPTV can be set to 
 
 
 
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=9cm]{Labeling_vs_Dilation.pdf}
+	\caption{An example showing that segmentation using the dilation method can be very useful when segmenting large objects as it can resolve overlap issues.\label{fig:Labeling_vs_Dilation}}
+\end{figure}
 
-In this step we extract the particles' image-space coordinates from the images and save the coordinates in dedicated files. Use the \texttt{workflow.py} script with the \texttt{segmentation} command to start the process:
 
-\begin{enumerate}
-	\item We perform the segmentation first on a single image by specifying \texttt{Number\_of\_images: 1}, and giving an image name with \texttt{single\_image\_name}. We then tune the segmentation parameters and the image processing filters used (e.g. \texttt{ROI}, \texttt{threshold}, \texttt{blur\_sigma}, \texttt{method} etc; the full list is given in Table~\ref{tab:segment_params}) to obtain optimal results; optionally repeat over several more images to ensure the results are satisfactory. To view the segmented particles over the image, use \texttt{plot\_result: True}, and make sure the results are not saved by using \texttt{save\_name: None}. 
-	
-	\item Once the parameters are determined, we set \texttt{Number\_of\_images: None}, and run the segmentation workflow again. This will then loop over all the images in the given folder (under \texttt{images\_folder}), and save the results in a text file by setting \texttt{save\_name: /file/name/to/use}
-\end{enumerate}
 
 
 
