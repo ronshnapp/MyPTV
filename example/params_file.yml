@@ -73,6 +73,7 @@
     max_distance: 0.4
     save_name: trajecotries_stitched
 
+
 - 2D_tracking:
     blob_file: blobs_cam1
     frame_start: 0
@@ -83,11 +84,24 @@
     d_max: 1.0
     dv_max: 1.0
     save_name: trajectories_2D
+
     
 - manual_matching_GUI:
     cameras: [cam1, cam2, cam3]
     images: [./Images_cam1/01.tif, ./Images_cam2/01.tif, ./Images_cam3/01.tif]
+
+
+# This is for fiber orientations, developed by Eric Aschari
+- orientations:
+    camera_names: cam1, cam2
+    cam_resolution: 1248, 1248
+    blob_files: blobs_cam1_direction, blobs_cam2_direction
+    fibers_file: particles
+    trajectory_file: trajectories
+    save_name: fiber_orientations
     
+
+# Future preparation for adding external functionalities
 - run_extension:
     path_to_extention: the_absolute_path_to_the_script_containing_the_code 
     action_name: the_name_of_the_class_that_needs_to_run  

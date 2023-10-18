@@ -53,6 +53,7 @@ class workflow(object):
                                 'calibration', 'calibration_point_gui', 
                                 'match_target_file', '2D_tracking', 
                                 'manual_matching',
+                                ,'orientations',
                                 'run_extention']
         
         
@@ -96,6 +97,9 @@ class workflow(object):
             
             elif action == 'manual_matching':
                 self.do_manual_matching()
+                
+            elif action == 'orientations':
+                self.do_orientations()
             
             elif action == 'run_extention':
                 self.do_run_extention()    
@@ -1060,6 +1064,132 @@ class workflow(object):
         gui = man_match_gui(camera_names, im_fname, cameras_folder='.')
     
         
+    
+    
+    
+    
+    def do_orientations(self):
+        '''
+        A part of Eric Aschari's Fiber tracking extension (MyFTV):
+            
+        Will perform a fiber orientation analysis
+        '''
+        from numpy import loadtxt
+        from myptv.fiber_orientation_mod import FiberOrientation
+        from myptv.imaging_mod import camera, img_system
+        # from myptv.particle_matching_mod import match_blob_files
+    
+        
+        # fetching the parameters
+        blob_fn = self.get_param('orientations', 'blob_files')
+        blob_fn = [val.strip() for val in blob_fn.split(',')]
+        cam_names = self.get_param('orientations', 'camera_names')
+        cam_names = [val.strip() for val in cam_names.split(',')]
+        res = self.get_param('orientations', 'cam_resolution')
+        res = tuple([float(val) for val in res.split(',')])
+        trajectory_file = self.get_param('orientations','trajectory_file')
+        
+        save_name = self.get_param('orientations', 'save_name')
+        print(save_name)
+        # setting up the img_system 
+        cams = [camera(cn, res) for cn in cam_names]
+        for cam in cams:
+            try:
+                cam.load('')
+            except:
+                raise ValueError('camera file %s not found'%cam.name)
+        imsys = img_system(cams)
+        # fibers = loadtxt(fibers_file)
+        trajectories = loadtxt(trajectory_file)
+        
+        oris = np.empty((len(trajectories[:,0]),8))
+        shape = (3,1)
+        blobs = []
+        for fn in blob_fn:
+            blobs.append(np.array(read_csv(fn, sep='\t', header=None)))
+
+        count = 0
+        for frame in range(int(trajectories[-1,-1])+1):
+            
+            frame_trajectories = [line for line in trajectories if line[7] == frame]
+
+            for line in range(len(frame_trajectories)):    
+                X = np.array([np.zeros(shape),np.zeros(shape)])
+                B = np.array([np.zeros(shape),np.zeros(shape)])
+                
+                n_x_prev = 0
+                n_y_prev = 0
+                n_z_prev = 0
+                
+                for cam in range(2):
+                    
+                    frame_blobs = [line for line in blobs[cam] if line[5] == frame]
+                    reso = cams[cam].resolution[0]
+                    index = int(frame_trajectories[line][4+cam])
+                    
+                    x_corr = cams[cam].xh
+                    y_corr = cams[cam].yh
+                    
+                    temp1_x = (frame_blobs[index][0]) - (reso/2. + x_corr)
+                    temp1_b = temp1_x + frame_blobs[index][6]*100
+                    
+                    temp2_x = (frame_blobs[index][1]) - (reso/2. + y_corr)
+                    temp2_b = temp2_x + frame_blobs[index][7]*100
+                    
+                    # coordinate transformation
+                    X[cam][0,0] = temp2_x
+                    B[cam][0,0] = temp2_b
+                    
+                    X[cam][1,0] = temp1_x
+                    B[cam][1,0] = temp1_b
+                    
+                # get orientations
+                o = FiberOrientation(X, B)
+                c,u,ori = o.image2fiber(imsys.cameras)
+                ori = ori/np.pi*180
+                u /= np.linalg.norm(u)
+                
+                if line == 0:
+                    n_x_prev = u[0]
+                    n_y_prev = u[1]
+                    n_z_prev = u[2]
+                
+                # correct sign
+                value = 0.2
+                if np.abs(np.abs(u[0]) - np.abs(n_x_prev)) < value and np.sign(u[0]) != np.sign(n_x_prev):
+                    u[0] *= -1
+                if np.abs(np.abs(u[1]) - np.abs(n_y_prev)) < value and np.sign(u[1]) != np.sign(n_y_prev):
+                    u[1] *= -1
+                if np.abs(np.abs(u[2]) - np.abs(n_z_prev)) < value and np.sign(u[2]) != np.sign(n_z_prev):
+                    u[2] *= -1
+                
+                n_x_prev = u[0]
+                n_y_prev = u[1]
+                n_z_prev = u[2]
+            
+                temp = frame_trajectories[line]
+
+                temp[1] = u[0]
+                temp[2] = u[1]
+                temp[3] = u[2]
+
+                oris[count] = temp
+                count += 1
+
+                
+                
+        # saving the data
+        if save_name is not None:
+            print('\n', 'Saving the data.')    
+            # o.save_results(save_name, oris)
+            np.savetxt(save_name, oris, fmt = 
+                       ['%d', '%.3f', '%.3f', '%.3f', '%d', '%d', '%.2f', '%.2f'], delimiter='\t')
+        print('\n', 'Done.')
+    
+    
+    
+    
+    
         
     def do_run_extention(self):
         '''
