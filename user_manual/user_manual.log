@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2023.7.13)  18 OCT 2023 08:48
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2023.7.13)  20 OCT 2023 15:23
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -497,7 +497,7 @@ LaTeX Info: Redefining \nameref on input line 50.
 \@outlinefile=\write3
 \openout3 = `user_manual.out'.
 
-<./figs/logo.png, id=209, 695.7192pt x 152.0079pt>
+<./figs/logo.png, id=213, 695.7192pt x 152.0079pt>
 File: ./figs/logo.png Graphic file (type png)
 <use ./figs/logo.png>
 Package pdftex.def Info: ./figs/logo.png  used on input line 57.
@@ -524,7 +524,7 @@ LaTeX Font Info:    Try loading font information for U+msb on input line 57.
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
-<./figs/traj_image.jpg, id=211, 559.8516pt x 465.4188pt>
+<./figs/traj_image.jpg, id=215, 559.8516pt x 465.4188pt>
 File: ./figs/traj_image.jpg Graphic file (type jpg)
 <use ./figs/traj_image.jpg>
 Package pdftex.def Info: ./figs/traj_image.jpg  used on input line 62.
@@ -543,24 +543,24 @@ Overfull \hbox (1.54723pt too wide) in paragraph at lines 67--75
 {/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map} <./figs/logo.png> <./figs/t
 raj_image.jpg>] (./user_manual.toc
 LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <10> not available
-(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 29.
+(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 30.
  [2])
 \tf@toc=\write4
 \openout4 = `user_manual.toc'.
 
  [1]
-<./figs/3D_PTV_acquisition.pdf, id=292, 285.7208pt x 142.99469pt>
+<./figs/3D_PTV_acquisition.pdf, id=297, 285.7208pt x 142.99469pt>
 File: ./figs/3D_PTV_acquisition.pdf Graphic file (type pdf)
 <use ./figs/3D_PTV_acquisition.pdf>
 Package pdftex.def Info: ./figs/3D_PTV_acquisition.pdf  used on input line 111.
 
 (pdftex.def)             Requested size: 184.9429pt x 92.55705pt.
-<./figs/pinhole_model.pdf, id=293, 305.83075pt x 132.51534pt>
+<./figs/pinhole_model.pdf, id=298, 305.83075pt x 132.51534pt>
 File: ./figs/pinhole_model.pdf Graphic file (type pdf)
 <use ./figs/pinhole_model.pdf>
 Package pdftex.def Info: ./figs/pinhole_model.pdf  used on input line 115.
 (pdftex.def)             Requested size: 184.9429pt x 80.1346pt.
-<./figs/steps.pdf, id=295, 351.73837pt x 150.82877pt>
+<./figs/steps.pdf, id=300, 351.73837pt x 150.82877pt>
 File: ./figs/steps.pdf Graphic file (type pdf)
 <use ./figs/steps.pdf>
 Package pdftex.def Info: ./figs/steps.pdf  used on input line 128.
@@ -587,35 +587,35 @@ l.227 \clearpage
                  [2] [3
 
 ] [4]
-<./figs/initial_calibration.pdf, id=376, 1348.39464pt x 764.22066pt>
+<./figs/initial_calibration.pdf, id=381, 1348.39464pt x 764.22066pt>
 File: ./figs/initial_calibration.pdf Graphic file (type pdf)
 <use ./figs/initial_calibration.pdf>
 Package pdftex.def Info: ./figs/initial_calibration.pdf  used on input line 371
 .
 (pdftex.def)             Requested size: 426.79135pt x 241.88522pt.
  [5 <./figs/initial_calibration.pdf>]
-<./figs/calibration_gui.png, id=396, 393.47pt x 533.995pt>
+<./figs/calibration_gui.png, id=401, 393.47pt x 533.995pt>
 File: ./figs/calibration_gui.png Graphic file (type png)
 <use ./figs/calibration_gui.png>
 Package pdftex.def Info: ./figs/calibration_gui.png  used on input line 416.
 (pdftex.def)             Requested size: 170.71393pt x 231.68298pt.
  [6 <./figs/calibration_gui.png>]
-<./figs/Cam_pos_examples.pdf, id=411, 411.68683pt x 156.09958pt>
+<./figs/Cam_pos_examples.pdf, id=416, 411.68683pt x 156.09958pt>
 File: ./figs/Cam_pos_examples.pdf Graphic file (type pdf)
 <use ./figs/Cam_pos_examples.pdf>
 Package pdftex.def Info: ./figs/Cam_pos_examples.pdf  used on input line 477.
 (pdftex.def)             Requested size: 341.43437pt x 129.46971pt.
-<./figs/cal_point_file.pdf, id=412, 354.32378pt x 277.69666pt>
+<./figs/cal_point_file.pdf, id=417, 354.32378pt x 277.69666pt>
 File: ./figs/cal_point_file.pdf Graphic file (type pdf)
 <use ./figs/cal_point_file.pdf>
 Package pdftex.def Info: ./figs/cal_point_file.pdf  used on input line 541.
 (pdftex.def)             Requested size: 199.16928pt x 156.09804pt.
-<./figs/target_file.pdf, id=413, 404.7084pt x 179.83281pt>
+<./figs/target_file.pdf, id=418, 404.7084pt x 179.83281pt>
 File: ./figs/target_file.pdf Graphic file (type pdf)
 <use ./figs/target_file.pdf>
 Package pdftex.def Info: ./figs/target_file.pdf  used on input line 544.
 (pdftex.def)             Requested size: 256.0748pt x 113.79192pt.
-<./figs/match_target_file.jpeg, id=414, 534.0753pt x 469.0323pt>
+<./figs/match_target_file.jpeg, id=419, 534.0753pt x 469.0323pt>
 File: ./figs/match_target_file.jpeg Graphic file (type jpg)
 <use ./figs/match_target_file.jpeg>
 Package pdftex.def Info: ./figs/match_target_file.jpeg  used on input line 547.
@@ -639,12 +639,12 @@ on: multiple pdfs with page group included in a single page
 pdfTeX warning: /usr/bin/pdflatex (file ./figs/target_file.pdf): PDF inclusion:
  multiple pdfs with page group included in a single page
 > <./figs/match_target_file.jpeg>]
-<./figs/cal_image.jpg, id=454, 351.3125pt x 306.14375pt>
+<./figs/cal_image.jpg, id=459, 351.3125pt x 306.14375pt>
 File: ./figs/cal_image.jpg Graphic file (type jpg)
 <use ./figs/cal_image.jpg>
 Package pdftex.def Info: ./figs/cal_image.jpg  used on input line 670.
 (pdftex.def)             Requested size: 195.90276pt x 170.71652pt.
-<./figs/cal_error.pdf, id=455, 550.58505pt x 503.26839pt>
+<./figs/cal_error.pdf, id=460, 550.58505pt x 503.26839pt>
 File: ./figs/cal_error.pdf Graphic file (type pdf)
 <use ./figs/cal_error.pdf>
 Package pdftex.def Info: ./figs/cal_error.pdf  used on input line 674.
@@ -656,121 +656,135 @@ rom all the "XXXXX_i_cal_points"
  []
 
 
-Overfull \hbox (10.33026pt too wide) in paragraph at lines 733--734
+Overfull \hbox (10.33026pt too wide) in paragraph at lines 791--792
 \T1/cmtt/m/n/10 images_folder\T1/cmr/m/n/10 ), and save the re-sults in a text 
 file by set-ting \T1/cmtt/m/n/10 save_name: /file/name/to/use 
  []
 
-LaTeX Font Info:    Try loading font information for OMS+cmr on input line 743.
+LaTeX Font Info:    Try loading font information for OMS+cmr on input line 801.
 
 (/usr/share/texlive/texmf-dist/tex/latex/base/omscmr.fd
 File: omscmr.fd 2014/09/29 v2.5h Standard LaTeX font definitions
 )
 LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <10> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 743.
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 801.
  [10]
-<./figs/filters_effect.pdf, id=488, 1115.71849pt x 756.45815pt>
+<./figs/filters_effect.pdf, id=494, 1115.71849pt x 756.45815pt>
 File: ./figs/filters_effect.pdf Graphic file (type pdf)
 <use ./figs/filters_effect.pdf>
-Package pdftex.def Info: ./figs/filters_effect.pdf  used on input line 756.
+Package pdftex.def Info: ./figs/filters_effect.pdf  used on input line 814.
 (pdftex.def)             Requested size: 341.43306pt x 231.48698pt.
-<./figs/Labeling_vs_Dilation.pdf, id=489, 478.0878pt x 263.99626pt>
+<./figs/Labeling_vs_Dilation.pdf, id=495, 478.0878pt x 263.99626pt>
 File: ./figs/Labeling_vs_Dilation.pdf Graphic file (type pdf)
 <use ./figs/Labeling_vs_Dilation.pdf>
-Package pdftex.def Info: ./figs/Labeling_vs_Dilation.pdf  used on input line 76
-4.
+Package pdftex.def Info: ./figs/Labeling_vs_Dilation.pdf  used on input line 82
+2.
 (pdftex.def)             Requested size: 256.0748pt x 141.40779pt.
  [11 <./figs/filters_effect.pdf> <./figs/Labeling_vs_Dilation.pdf
 
 pdfTeX warning: /usr/bin/pdflatex (file ./figs/Labeling_vs_Dilation.pdf): PDF i
 nclusion: multiple pdfs with page group included in a single page
->] [12] [13] [14]
-<./figs/2D_tracking_setup.pdf, id=547, 359.69543pt x 273.00352pt>
+>]
+<./figs/2D_tracking_setup.pdf, id=535, 359.69543pt x 273.00352pt>
 File: ./figs/2D_tracking_setup.pdf Graphic file (type pdf)
 <use ./figs/2D_tracking_setup.pdf>
-Package pdftex.def Info: ./figs/2D_tracking_setup.pdf  used on input line 1082.
+Package pdftex.def Info: ./figs/2D_tracking_setup.pdf  used on input line 1083.
 
 (pdftex.def)             Requested size: 227.62204pt x 172.76378pt.
-<./figs/man_match.pdf, id=556, 597.50786pt x 845.04686pt>
+ [12]
+<./figs/man_match.pdf, id=557, 597.50786pt x 845.04686pt>
 File: ./figs/man_match.pdf Graphic file (type pdf)
 <use ./figs/man_match.pdf>
-Package pdftex.def Info: ./figs/man_match.pdf  used on input line 1162.
+Package pdftex.def Info: ./figs/man_match.pdf  used on input line 1163.
 (pdftex.def)             Requested size: 341.43306pt x 482.88089pt.
- [15] [16 <./figs/2D_tracking_setup.pdf>] [17 <./figs/man_match.pdf>]
+
+Overfull \hbox (19.66132pt too wide) in paragraph at lines 1186--1187
+[]\T1/cmr/m/n/10 To cal-cu-late the ori-en-ta-tions in 3D, use the work-flow sc
+ript with the ac-tion '\T1/cmtt/m/n/10 fiber_orientations\T1/cmr/m/n/10 '.
+ []
+
+
+Underfull \hbox (badness 1521) in paragraph at lines 1206--1206
+[]|\T1/cmr/m/n/10 The name of the files that hold the re-sults of the \T1/cmr/b
+x/n/10 blob
+ []
+
+[13 <./figs/2D_tracking_setup.pdf>] [14 <./figs/man_match.pdf>] [15] [16]
+[17] [18]
 LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <14.4> not available
-(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 1176.
+(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 1228.
 LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <12> not available
-(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 1183.
-<./figs/camera_files.pdf, id=602, 508.10204pt x 141.02348pt>
+(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 1235.
+<./figs/camera_files.pdf, id=617, 508.10204pt x 141.02348pt>
 File: ./figs/camera_files.pdf Graphic file (type pdf)
 <use ./figs/camera_files.pdf>
-Package pdftex.def Info: ./figs/camera_files.pdf  used on input line 1213.
+Package pdftex.def Info: ./figs/camera_files.pdf  used on input line 1265.
 (pdftex.def)             Requested size: 426.79135pt x 118.45676pt.
- [18
+ [19
 
  <./figs/camera_files.pdf>]
-Overfull \hbox (1.44354pt too wide) in paragraph at lines 1283--1284
+Overfull \hbox (1.44354pt too wide) in paragraph at lines 1335--1336
 []\T1/cmtt/m/n/10 fineCalibration(maxiter=500) \T1/cmr/m/n/10 - This func-tion 
 will solve for the co-ef-fi-cients of the quadratic
  []
 
-[19] [20]
-<./figs/blob_file.pdf, id=672, 223.10614pt x 155.32921pt>
+[20] [21]
+<./figs/blob_file.pdf, id=688, 223.10614pt x 155.32921pt>
 File: ./figs/blob_file.pdf Graphic file (type pdf)
 <use ./figs/blob_file.pdf>
-Package pdftex.def Info: ./figs/blob_file.pdf  used on input line 1412.
+Package pdftex.def Info: ./figs/blob_file.pdf  used on input line 1464.
 (pdftex.def)             Requested size: 284.52756pt x 198.10016pt.
- [21] [22 <./figs/blob_file.pdf>]
-<./figs/particle_file.pdf, id=723, 390.14703pt x 291.52518pt>
+ [22] [23 <./figs/blob_file.pdf>]
+<./figs/particle_file.pdf, id=738, 390.14703pt x 291.52518pt>
 File: ./figs/particle_file.pdf Graphic file (type pdf)
 <use ./figs/particle_file.pdf>
-Package pdftex.def Info: ./figs/particle_file.pdf  used on input line 1464.
+Package pdftex.def Info: ./figs/particle_file.pdf  used on input line 1516.
 (pdftex.def)             Requested size: 341.43306pt x 255.13727pt.
 
-Overfull \hbox (18.38263pt too wide) in paragraph at lines 1473--1474
+Overfull \hbox (18.38263pt too wide) in paragraph at lines 1525--1526
 \T1/cmr/m/n/10 we run the rel-e-vant func-tions: \T1/cmtt/m/n/10 get_voxel_dict
 ionary() $\OMS/cmsy/m/n/10 !$ \T1/cmtt/m/n/10 list_candidates() $\OMS/cmsy/m/n/
 10 !$ \T1/cmtt/m/n/10 get_particles()\T1/cmr/m/n/10 ,
  []
 
-[23 <./figs/particle_file.pdf>]
-<./figs/trajectory_files.pdf, id=743, 470.98941pt x 297.17282pt>
+[24 <./figs/particle_file.pdf>]
+<./figs/trajectory_files.pdf, id=758, 470.98941pt x 297.17282pt>
 File: ./figs/trajectory_files.pdf Graphic file (type pdf)
 <use ./figs/trajectory_files.pdf>
-Package pdftex.def Info: ./figs/trajectory_files.pdf  used on input line 1535.
+Package pdftex.def Info: ./figs/trajectory_files.pdf  used on input line 1587.
 (pdftex.def)             Requested size: 284.52756pt x 179.52937pt.
- [24]
-<./figs/smoothed_trajfile.pdf, id=764, 514.2885pt x 471.065pt>
+ [25]
+<./figs/smoothed_trajfile.pdf, id=779, 514.2885pt x 471.065pt>
 File: ./figs/smoothed_trajfile.pdf Graphic file (type pdf)
 <use ./figs/smoothed_trajfile.pdf>
-Package pdftex.def Info: ./figs/smoothed_trajfile.pdf  used on input line 1581.
+Package pdftex.def Info: ./figs/smoothed_trajfile.pdf  used on input line 1633.
 
 (pdftex.def)             Requested size: 341.43306pt x 312.73677pt.
- [25 <./figs/trajectory_files.pdf>]
-[26 <./figs/smoothed_trajfile.pdf>] (./user_manual.bbl)
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 1633.
- [27]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 1633.
+ [26 <./figs/trajectory_files.pdf>]
+[27 <./figs/smoothed_trajfile.pdf>] (./user_manual.bbl)
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 1685.
+ [28]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 1685.
  (./user_manual.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 1633.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 1633.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 1685.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 1685.
 
 Package rerunfilecheck Info: File `user_manual.out' has not changed.
-(rerunfilecheck)             Checksum: B375A2A59A5570D89B75F393865820D0;4010.
+(rerunfilecheck)             Checksum: DC0B03C093D5B41433D65BA9729A5831;4075.
 
 
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 1633.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 1685.
  ) 
 Here is how much of TeX's memory you used:
- 10171 strings out of 493756
- 148269 string characters out of 6152244
- 265173 words of memory out of 5000000
- 13285 multiletter control sequences out of 15000+600000
+ 10180 strings out of 493756
+ 148369 string characters out of 6152244
+ 280390 words of memory out of 5000000
+ 13288 multiletter control sequences out of 15000+600000
  24847 words of font info for 66 fonts, out of 8000000 for 9000
  645 hyphenation exceptions out of 8191
- 36i,13n,49p,1104b,458s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 36i,13n,49p,1104b,438s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/usr/share/texmf/fonts/enc/dvips/cm-super/cm-super-t1.enc}</usr/share/texliv
 e/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></usr/share/texlive/texm
 f-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/share/texlive/texmf-dist
@@ -789,10 +803,10 @@ fb></usr/share/texmf/fonts/type1/public/cm-super/sfsx2488.pfb></usr/share/texmf
 cm-super/sftt0900.pfb></usr/share/texmf/fonts/type1/public/cm-super/sftt1000.pf
 b></usr/share/texmf/fonts/type1/public/cm-super/sftt1200.pfb></usr/share/texmf/
 fonts/type1/public/cm-super/sftt1440.pfb>
-Output written on user_manual.pdf (30 pages, 4248383 bytes).
+Output written on user_manual.pdf (31 pages, 4250380 bytes).
 PDF statistics:
- 921 PDF objects out of 1000 (max. 8388607)
- 790 compressed objects within 8 object streams
- 210 named destinations out of 1000 (max. 500000)
- 519 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 939 PDF objects out of 1000 (max. 8388607)
+ 806 compressed objects within 9 object streams
+ 216 named destinations out of 1000 (max. 500000)
+ 527 words of extra memory for PDF output out of 10000 (max. 10000000)
 

@@ -66,7 +66,7 @@
 
 \begin{minipage}{14cm}
 	{\small \sffamily
-	Version: 0.6.5 \\
+	Version: 0.7.0 \\
 	Last updated: \today \\
 	Github repository: \url{https://github.com/ronshnapp/MyPTV} \\
 	Get help \& interact with our community: \url{https://github.com/ronshnapp/MyPTV/discussions}\\
@@ -713,6 +713,64 @@ However, in some PTV systems another solution is taken such that the calibration
 
 
 
+\begin{table}[!ht]
+	\centering
+	\caption{The \texttt{params\_file.yml} parameters for the \textbf{segmentation} step. All paths to files are relative to the \texttt{workflow.py} script. \label{tab:segment_params}}
+	\begin{tabular}{l m{10cm}}
+		\hline
+		Parameter & Description\\
+		\hline
+		
+		\texttt{image\char`_start} & The number of the image from which the loof begins. If this is \texttt{None} (default) the first image is set to 0.\\[.3em]
+		
+		\texttt{Number\char`_of\char`_images} & Number of images over which to do the segmentation. If it is 1, segmentation is done only on the image with the name given in \texttt{single\char`_image\char`_name}. If this is an integer, segmentation is performed on the first N images found in the directory \texttt{images\char`_folder}. If this is \texttt{None}, segmentation is performed over all the images in the directory \texttt{images\char`_folder} \\[.3em]
+		
+		\texttt{images\char`_folder} & path to the folder containing the images\\[.3em]
+		
+		\texttt{single\char`_image\char`_name} & If \texttt{Number\char`_of\char`_images} is 1, the segmentation will be done on the image whose name is given here. If \texttt{Number\char`_of\char`_images} is any other value, this parameter is not used. \\[.3em]
+		
+		\texttt{image\char`_extension} & extension of the images; for example, .tif\\[.3em]
+		
+		\texttt{shape} & Can be either 'particles' or 'fibers'. The 'particles' option is used for isotropic particles to follow traditional PTV, and the 'fibers' option is used for analyzing the orientations in 3D of anisotropic particles (elongated fibers or rods), see Sec.~\ref{sec:fibers}. \\[.3em]
+		
+		\texttt{plot\_result} & if \texttt{False} will not plot the results; if \texttt{True} the results will be plotted but only if number of images is 1 \\[.3em]
+		
+		\texttt{mask} & if this is 1.0, no mask is used; if this is set to a path to a file, the file will be used as a mask for the segmentation \\[.3em]
+		
+		
+		\texttt{ROI} & region of interest; specify by indicating the xmin, xmax, ymin, ymax coordinates \\[.3em]
+		
+		\texttt{threshold} & the brightness value for which a point is considered a particle after a local mean subtraction is performed \\[.3em]
+		
+		\texttt{median} & the intger window size of a median noise removal filter; set to \texttt{None} in order to not apply the filter \\[.3em]
+		
+		\texttt{blur\_sigma} & the float standard deviation of a Gaussian blur filter; set to \texttt{None} in order to not apply the filter \\[.3em]
+		
+		\texttt{local\_filter} & the integer widow size of a local mean subtraction filter; set to \texttt{None} in order to not apply the filter \\[.3em]
+		
+		\texttt{min\_xsize} & minimum particle size (pixels) in $x$ direction \\[.3em]
+		
+		\texttt{min\_ysize} & minimum particle size (pixels) in $y$ direction \\[.3em]
+		
+		\texttt{min\_mass} & minimum particle mass (mass is the sum of pixel grey values)\\[.3em]
+		
+		\texttt{max\_xsize} & maximum particle size (pixels) in $x$ direction \\[.3em]
+		
+		\texttt{max\_ysize} & maximum particle size (pixels) in $y$ direction \\[.3em]
+		
+		\texttt{max\_mass} & maximum particle area (mass is the sum of pixel grey values) \\[.3em]
+		
+		\texttt{plot\_result} & if \texttt{True} the segmented particles will be plotted over the processed image (after applying blur, local mean subtraction and masking); if \texttt{False} will not plot the results \\[.3em]
+		
+		\texttt{method} & ihe name of the method used for segmenting the blobs; can be either 'labeling' or 'dilation' \\
+		
+		\texttt{particle\_size} & in the 'dilation' method, this gives the diameter of blobs in the image (an integer number of pixels); this parameter is not used when method is set to 'labeling' \\
+		
+		\texttt{save\_name} & if \texttt{None} the results will not be saved in a file; if \texttt{path/to/file} will save the results in the given file name \\
+		
+		\hline
+	\end{tabular}
+\end{table}
 
 
 
@@ -774,63 +832,6 @@ To improve the results of segmenting over non-ideal images, MyPTV can be set to 
 
 
 
-\begin{table}[!ht]
-	\centering
-	\caption{The \texttt{params\_file.yml} parameters for the \textbf{segmentation} step. All paths to files are relative to the \texttt{workflow.py} script. \label{tab:segment_params}}
-	\begin{tabular}{l m{10cm}}
-		\hline
-		Parameter & Description\\
-		\hline
-		
-		\texttt{image\char`_start} & The number of the image from which the loof begins. If this is \texttt{None} (default) the first image is set to 0.\\[.3em]
-		
-		\texttt{Number\char`_of\char`_images} & Number of images over which to do the segmentation. If it is 1, segmentation is done only on the image with the name given in \texttt{single\char`_image\char`_name}. If this is an integer, segmentation is performed on the first N images found in the directory \texttt{images\char`_folder}. If this is \texttt{None}, segmentation is performed over all the images in the directory \texttt{images\char`_folder} \\[.3em]
-		
-		\texttt{images\char`_folder} & path to the folder containing the images\\[.3em]
-		
-		\texttt{single\char`_image\char`_name} & If \texttt{Number\char`_of\char`_images} is 1, the segmentation will be done on the image whose name is given here. If \texttt{Number\char`_of\char`_images} is any other value, this parameter is not used. \\[.3em]
-		
-		\texttt{image\char`_extension} & extension of the images; for example, .tif\\[.3em]
-		
-
-		\texttt{plot\_result} & if \texttt{False} will not plot the results; if \texttt{True} the results will be plotted but only if number of images is 1 \\[.3em]
-		
-		\texttt{mask} & if this is 1.0, no mask is used; if this is set to a path to a file, the file will be used as a mask for the segmentation \\[.3em]
-
-		
-		\texttt{ROI} & region of interest; specify by indicating the xmin, xmax, ymin, ymax coordinates \\[.3em]
-		
-		\texttt{threshold} & the brightness value for which a point is considered a particle after a local mean subtraction is performed \\[.3em]
-		
-		\texttt{median} & the intger window size of a median noise removal filter; set to \texttt{None} in order to not apply the filter \\[.3em]
-		
-		\texttt{blur\_sigma} & the float standard deviation of a Gaussian blur filter; set to \texttt{None} in order to not apply the filter \\[.3em]
-		 
-		\texttt{local\_filter} & the integer widow size of a local mean subtraction filter; set to \texttt{None} in order to not apply the filter \\[.3em]
-		
-		\texttt{min\_xsize} & minimum particle size (pixels) in $x$ direction \\[.3em]
-		
-		\texttt{min\_ysize} & minimum particle size (pixels) in $y$ direction \\[.3em]
-		
-		\texttt{min\_mass} & minimum particle mass (mass is the sum of pixel grey values)\\[.3em]
-		
-		\texttt{max\_xsize} & maximum particle size (pixels) in $x$ direction \\[.3em]
-		
-		\texttt{max\_ysize} & maximum particle size (pixels) in $y$ direction \\[.3em]
-		
-		\texttt{max\_mass} & maximum particle area (mass is the sum of pixel grey values) \\[.3em]
-
-		\texttt{plot\_result} & if \texttt{True} the segmented particles will be plotted over the processed image (after applying blur, local mean subtraction and masking); if \texttt{False} will not plot the results \\[.3em]
-		
-		\texttt{method} & ihe name of the method used for segmenting the blobs; can be either 'labeling' or 'dilation' \\
-		
-		\texttt{particle\_size} & in the 'dilation' method, this gives the diameter of blobs in the image (an integer number of pixels); this parameter is not used when method is set to 'labeling' \\
-		
-		\texttt{save\_name} & if \texttt{None} the results will not be saved in a file; if \texttt{path/to/file} will save the results in the given file name \\
-		
-		\hline
-	\end{tabular}
-\end{table}
 
 
 
@@ -1145,12 +1146,12 @@ To match a point we need to identify it from the different camera views. In the 
 	\caption{The \texttt{params\_file.yml} parameters for the manual matching operation. All paths to files are relative to the \texttt{workflow.py} script. \label{tab:man_match}}
 	\begin{tabular}{l m{10cm}}
 		\hline
-		Parameter & Description\\
+		Parameter & Description\\[.3em]
 		\hline
 		%
-		\texttt{cameras} & a list that holds the names of the cameras used; for example [cam1, cam2, cam3]. Note that the camera files need to be in the same folder where we are running the workflow script\\
+		\texttt{cameras} & a list that holds the names of the cameras used; for example [cam1, cam2, cam3]. Note that the camera files need to be in the same folder where we are running the workflow script\\[.3em]
 		%
-		\texttt{images} & the paths of the images from which matching should be performed. \\
+		\texttt{images} & the paths of the images from which matching should be performed. \\[.3em]
 		\hline
 	\end{tabular}
 \end{table}
@@ -1162,6 +1163,57 @@ To match a point we need to identify it from the different camera views. In the 
 	\includegraphics[width=12cm]{man_match.pdf}
 	\caption{Instructions of how to use the manual matching GUI \label{fig:man_match}}
 \end{figure}
+
+
+
+
+
+
+
+
+\subsection{Fiber tracking} \label{sec:fibers}
+
+MyPTV has also capabilities for 3D analysis of the motion of elongated particles, called 'fibers' or 'rods'. Here, both the positions of the particle's centers, and the orientation vector of the elongated particles are analyzed in 3D. 
+
+To measure fiber orientations, we use, again the workflow script. We do this via the following steps:
+
+\begin{enumerate}
+	\item In the segmentation step, make sure that the 
+	'shape' parameter is set to 'fibers'.
+	
+	\item Perform the segmentation, matching, tracking and smoothing, as normally done for isotropic particles. You will note that once the segmentation is done, two blob files will be saved for each image: a regular one for the blob positions, and another one for the blob shapes. 
+	
+	\item To calculate the orientations in 3D, use the workflow script with the action '\texttt{fiber\_orientations}'. Following this stage, a new results file will be saved with trajectories corresponding to the rotation angles of each particle. See Tab.~\ref{tab:fibers} for the documentation on the information needed. 
+\end{enumerate}  
+
+
+
+
+
+%
+\begin{table}[!ht]
+	\centering
+	\caption{The \texttt{params\_file.yml} parameters for the \texttt{fiber\_orientations} operation. All paths to files are relative to the \texttt{workflow.py} script. \label{tab:fibers}}
+	\begin{tabular}{l m{10cm}}
+		\hline
+		Parameter & Description\\
+		\hline
+		%
+		\texttt{camera\_names} & a list of the camera names, e.g. [cam1, cam2, cam3]. Note that the camera files need to be in the same folder where we are running the workflow script\\[.3em]
+		%
+		\texttt{cam\_resolution} & A tuple for the number of pixels in each axis. \\[.3em]
+		%
+		\texttt{blob\_files} & The name of the files that hold the results of the \textbf{blob orientations}. \\[.3em]
+		%
+		\texttt{fibers\_file} & The file name with the results of the matching stage. \\[.3em]
+		%
+		\texttt{trajectory\_file} & The file name with the results of the tracking stage. \\[.3em]
+		%
+		\texttt{save\_name} & The file name that should be used to save the results of the orientation measurements. \\[.3em]
+		\hline
+	\end{tabular}
+\end{table}
+
 
 
 

@@ -53,7 +53,7 @@ class workflow(object):
                                 'calibration', 'calibration_point_gui', 
                                 'match_target_file', '2D_tracking', 
                                 'manual_matching',
-                                ,'orientations',
+                                'fiber_orientations',
                                 'run_extention']
         
         
@@ -98,7 +98,7 @@ class workflow(object):
             elif action == 'manual_matching':
                 self.do_manual_matching()
                 
-            elif action == 'orientations':
+            elif action == 'fiber_orientations':
                 self.do_orientations()
             
             elif action == 'run_extention':
@@ -524,8 +524,7 @@ class workflow(object):
         Will perform segmentation on the images given in the parameters file
         and save the results on the given location.
         '''
-        from myptv.segmentation_mod import loop_segmentation
-        from myptv.segmentation_mod import particle_segmentation
+        
         from numpy import zeros
         from skimage.io import imread
         import os
@@ -552,6 +551,8 @@ class workflow(object):
         single_img_name = self.get_param('segmentation', 'single_image_name')
         method = self.get_param('segmentation', 'method')
         p_size = self.get_param('segmentation', 'particle_size')
+        shape = self.get_param('segmentation', 'shape')
+        
         
         # reading preprepared mask
         if type(mask)==str:
@@ -562,6 +563,9 @@ class workflow(object):
         
         if method=='dilation' and type(p_size) != int:
             raise ValueError('In dilation, particle_size can only be integer')
+        
+        if shape not in ['particles', 'fibers']:
+            raise ValueError('Shape can be only "particles" or "fibers"')
         
         # get the shape of the images
         allfiles = os.listdir(dirname)
@@ -578,102 +582,216 @@ class workflow(object):
             mask_ROI = zeros(image0.shape)
             mask_ROI[ROI[2]:ROI[3]+1, ROI[0]:ROI[1]+1] = 1
             mask = mask * mask_ROI
-
-        # segmenting the image if there are more than 1 frames
-        if N_img is None or N_img>1:
-            loopSegment = loop_segmentation(dirname, 
-                                            particle_size=p_size,
-                                            extension=ext,
-                                            image_start=image_start,
-                                            N_img=N_img, 
-                                            sigma=sigma, 
-                                            median=median,
-                                            threshold=threshold, 
-                                            local_filter=local_filter, 
-                                            max_xsize=max_xsize, 
-                                            max_ysize=max_ysize,
-                                            max_mass=max_mass,
-                                            min_xsize=min_xsize, 
-                                            min_ysize=min_ysize,
-                                            min_mass=min_mass,
-                                            mask=mask,
-                                            method=method)
         
-            loopSegment.segment_folder_images()
+        if shape=='particles':
             
-            print('\n','blobs found:', len(loopSegment.blobs))
+            from myptv.segmentation_mod import loop_segmentation
+            from myptv.segmentation_mod import particle_segmentation
+        
+            # segmenting the image if there are more than 1 frames
+            if N_img is None or N_img>1:
+                loopSegment = loop_segmentation(dirname, 
+                                                particle_size=p_size,
+                                                extension=ext,
+                                                image_start=image_start,
+                                                N_img=N_img, 
+                                                sigma=sigma, 
+                                                median=median,
+                                                threshold=threshold, 
+                                                local_filter=local_filter, 
+                                                max_xsize=max_xsize, 
+                                                max_ysize=max_ysize,
+                                                max_mass=max_mass,
+                                                min_xsize=min_xsize, 
+                                                min_ysize=min_ysize,
+                                                min_mass=min_mass,
+                                                mask=mask,
+                                                method=method)
             
-            # saving the semented blobs:
-            if save_name is not None and type(save_name)==str:
-                cwd_ls = os.listdir(os.getcwd())
-                if save_name in cwd_ls or os.path.exists(save_name):
-                    print('\n The file name "%s" already exists in'%save_name)
-                    print(' the working directory. Should I save anyways?')
-                    usr = input('(1=yes, else=no)')
-                    if usr == '1':
-                        loopSegment.save_results(save_name)
-                        print('\nfile saved.')
+                loopSegment.segment_folder_images()
+                
+                print('\n','blobs found:', len(loopSegment.blobs))
+                
+                # saving the semented blobs:
+                if save_name is not None and type(save_name)==str:
+                    cwd_ls = os.listdir(os.getcwd())
+                    if save_name in cwd_ls or os.path.exists(save_name):
+                        print('\n The file name "%s" already exists in'%save_name)
+                        print(' the working directory. Should I save anyways?')
+                        usr = input('(1=yes, else=no)')
+                        if usr == '1':
+                            loopSegment.save_results(save_name)
+                            print('\nfile saved.')
+                        else:
+                            print('\nskipped saving')
+                        
                     else:
-                        print('\nskipped saving')
+                        loopSegment.save_results(save_name)
+                        print('\nfile saved.')    
+                print('\nDone.\n')
+                
+            
+            
+            # segmenting the image if there is only 1 frames
+            if N_img == 1:
+                print('\n','starting segmentation on a single image.')
+                if single_img_name not in image_files:
+                    in_ = os.path.join(dirname,single_img_name)
+                    msg = 'Image %s not found in the directory.'%in_
+                    raise ValueError(msg)
+                
+                print('\n','segmenting image: %s'%single_img_name)
+                particleSegment = particle_segmentation(image0, 
+                                                        particle_size=p_size,
+                                                        sigma=sigma, 
+                                                        median=median,
+                                                        threshold=threshold, 
+                                                        local_filter=local_filter, 
+                                                        max_xsize=max_xsize, 
+                                                        max_ysize=max_ysize,
+                                                        max_mass=max_mass,
+                                                        min_xsize=min_xsize, 
+                                                        min_ysize=min_ysize,
+                                                        min_mass=min_mass,
+                                                        mask=mask,
+                                                        method=method)
+                particleSegment.get_blobs()
+                particleSegment.apply_blobs_size_filter()
+                
+                print('blobs found:', len(particleSegment.blobs))
+                
+                if plot_res:
+                    from matplotlib.pyplot import show
+                    particleSegment.plot_blobs()
+                    show()
                     
-                else:
-                    loopSegment.save_results(save_name)
-                    print('\nfile saved.')    
-            print('\nDone.\n')
-            
-        
-        
-        # segmenting the image if there is only 1 frames
-        if N_img == 1:
-            print('\n','starting segmentation on a single image.')
-            if single_img_name not in image_files:
-                in_ = os.path.join(dirname,single_img_name)
-                msg = 'Image %s not found in the directory.'%in_
-                raise ValueError(msg)
-            
-            print('\n','segmenting image: %s'%single_img_name)
-            particleSegment = particle_segmentation(image0, 
-                                                    particle_size=p_size,
-                                                    sigma=sigma, 
-                                                    median=median,
-                                                    threshold=threshold, 
-                                                    local_filter=local_filter, 
-                                                    max_xsize=max_xsize, 
-                                                    max_ysize=max_ysize,
-                                                    max_mass=max_mass,
-                                                    min_xsize=min_xsize, 
-                                                    min_ysize=min_ysize,
-                                                    min_mass=min_mass,
-                                                    mask=mask,
-                                                    method=method)
-            particleSegment.get_blobs()
-            particleSegment.apply_blobs_size_filter()
-            
-            print('blobs found:', len(particleSegment.blobs))
-            
-            if plot_res:
-                from matplotlib.pyplot import show
-                particleSegment.plot_blobs()
-                show()
-                
-                
-            # Saving the segmented blobs:
-            if save_name is not None and type(save_name)==str:
-                cwd_ls = os.listdir(os.getcwd())
-                if save_name in cwd_ls or os.path.exists(save_name):
-                    print('\n The file name "%s" already exists in'%save_name)
-                    print(' the working directory. Should I save anyways?')
-                    usr = input('(1=yes, else=no)')
-                    if usr == '1':
+                    
+                # Saving the segmented blobs:
+                if save_name is not None and type(save_name)==str:
+                    cwd_ls = os.listdir(os.getcwd())
+                    if save_name in cwd_ls or os.path.exists(save_name):
+                        print('\n The file name "%s" already exists in'%save_name)
+                        print(' the working directory. Should I save anyways?')
+                        usr = input('(1=yes, else=no)')
+                        if usr == '1':
+                            particleSegment.save_results(save_name)
+                            print('\nfile saved.')
+                        else:
+                            print('\nskipped saving')
+                    else:
                         particleSegment.save_results(save_name)
                         print('\nfile saved.')
-                    else:
-                        print('\nskipped saving')
-                else:
-                    particleSegment.save_results(save_name)
-                    print('\nfile saved.')
+                    
+                print('\nDone.\n')
                 
-            print('\nDone.\n')
+            
+        elif shape=='fibers':
+            
+            from myptv.fibers.fiber_segmentation_mod import fiber_segmentation
+            from myptv.fibers.fiber_segmentation_mod import loop_fiber_segmentation
+            
+            # segmenting the image if there are more than 1 frames
+            if N_img is None or N_img>1:
+                loopSegment = loop_fiber_segmentation(dirname, 
+                                                particle_size=p_size,
+                                                extension=ext,
+                                                image_start=image_start,
+                                                N_img=N_img, 
+                                                sigma=sigma, 
+                                                median=median,
+                                                threshold=threshold, 
+                                                local_filter=local_filter, 
+                                                max_xsize=max_xsize, 
+                                                max_ysize=max_ysize,
+                                                max_mass=max_mass,
+                                                min_xsize=min_xsize, 
+                                                min_ysize=min_ysize,
+                                                min_mass=min_mass,
+                                                mask=mask,
+                                                method=method,
+                                                pca_limit=1.0)
+                print('RON!')
+                loopSegment.segment_folder_images()
+                
+                print('\n','blobs found:', len(loopSegment.blobs))
+                
+                # saving the semented blobs:
+                if save_name is not None and type(save_name)==str:
+                    cwd_ls = os.listdir(os.getcwd())
+                    if save_name in cwd_ls or os.path.exists(save_name):
+                        print('\n The file name "%s" already exists in'%save_name)
+                        print(' the working directory. Should I save anyways?')
+                        usr = input('(1=yes, else=no)')
+                        if usr == '1':
+                            loopSegment.save_results(save_name)
+                            loopSegment.save_results_direction(save_name+'_directions')
+                            print('\nfile saved.')
+                        else:
+                            print('\nskipped saving')
+                        
+                    else:
+                        loopSegment.save_results(save_name)
+                        loopSegment.save_results_direction(save_name+'_directions')
+                        print('\nfile saved.')    
+                print('\nDone.\n')
+                
+            
+            
+            # segmenting the image if there is only 1 frames
+            if N_img == 1:
+                print('\n','starting segmentation on a single image.')
+                if single_img_name not in image_files:
+                    in_ = os.path.join(dirname,single_img_name)
+                    msg = 'Image %s not found in the directory.'%in_
+                    raise ValueError(msg)
+                
+                print('\n','segmenting image: %s'%single_img_name)
+                particleSegment = fiber_segmentation(image0, 
+                                                        particle_size=p_size,
+                                                        sigma=sigma, 
+                                                        median=median,
+                                                        threshold=threshold, 
+                                                        local_filter=local_filter, 
+                                                        max_xsize=max_xsize, 
+                                                        max_ysize=max_ysize,
+                                                        max_mass=max_mass,
+                                                        min_xsize=min_xsize, 
+                                                        min_ysize=min_ysize,
+                                                        min_mass=min_mass,
+                                                        mask=mask,
+                                                        method=method,
+                                                        pca_limit=1.0)
+                
+                particleSegment.get_blobs()
+                particleSegment.apply_blobs_size_filter()
+                
+                print('blobs found:', len(particleSegment.blobs))
+                
+                if plot_res:
+                    from matplotlib.pyplot import show
+                    particleSegment.plot_blobs()
+                    show()
+                    
+                    
+                # Saving the segmented blobs:
+                if save_name is not None and type(save_name)==str:
+                    cwd_ls = os.listdir(os.getcwd())
+                    if save_name in cwd_ls or os.path.exists(save_name):
+                        print('\n The file name "%s" already exists in'%save_name)
+                        print(' the working directory. Should I save anyways?')
+                        usr = input('(1=yes, else=no)')
+                        if usr == '1':
+                            particleSegment.save_results(save_name)
+                            particleSegment.save_results_direction(save_name+'_directions')
+                            print('\nfile saved.')
+                        else:
+                            print('\nskipped saving')
+                    else:
+                        particleSegment.save_results(save_name)
+                        particleSegment.save_results_direction(save_name+'_directions')
+                        print('\nfile saved.')
+                    
+                print('\nDone.\n')
             
             
             
@@ -1074,22 +1192,25 @@ class workflow(object):
             
         Will perform a fiber orientation analysis
         '''
-        from numpy import loadtxt
-        from myptv.fiber_orientation_mod import FiberOrientation
+        from numpy import loadtxt, empty, array, zeros, pi, sign, savetxt
+        from numpy import abs as absnp
+        from numpy.linalg import norm
+        from pandas import read_csv
+        from myptv.fibers.fiber_orientation_mod import FiberOrientation
         from myptv.imaging_mod import camera, img_system
         # from myptv.particle_matching_mod import match_blob_files
     
         
         # fetching the parameters
-        blob_fn = self.get_param('orientations', 'blob_files')
+        blob_fn = self.get_param('fiber_orientations', 'blob_files')
         blob_fn = [val.strip() for val in blob_fn.split(',')]
-        cam_names = self.get_param('orientations', 'camera_names')
+        cam_names = self.get_param('fiber_orientations', 'camera_names')
         cam_names = [val.strip() for val in cam_names.split(',')]
-        res = self.get_param('orientations', 'cam_resolution')
+        res = self.get_param('fiber_orientations', 'cam_resolution')
         res = tuple([float(val) for val in res.split(',')])
-        trajectory_file = self.get_param('orientations','trajectory_file')
+        trajectory_file = self.get_param('fiber_orientations','trajectory_file')
         
-        save_name = self.get_param('orientations', 'save_name')
+        save_name = self.get_param('fiber_orientations', 'save_name')
         print(save_name)
         # setting up the img_system 
         cams = [camera(cn, res) for cn in cam_names]
@@ -1102,11 +1223,11 @@ class workflow(object):
         # fibers = loadtxt(fibers_file)
         trajectories = loadtxt(trajectory_file)
         
-        oris = np.empty((len(trajectories[:,0]),8))
+        oris = empty((len(trajectories[:,0]),8))
         shape = (3,1)
         blobs = []
         for fn in blob_fn:
-            blobs.append(np.array(read_csv(fn, sep='\t', header=None)))
+            blobs.append(array(read_csv(fn, sep='\t', header=None)))
 
         count = 0
         for frame in range(int(trajectories[-1,-1])+1):
@@ -1114,8 +1235,8 @@ class workflow(object):
             frame_trajectories = [line for line in trajectories if line[7] == frame]
 
             for line in range(len(frame_trajectories)):    
-                X = np.array([np.zeros(shape),np.zeros(shape)])
-                B = np.array([np.zeros(shape),np.zeros(shape)])
+                X = array([zeros(shape),zeros(shape)])
+                B = array([zeros(shape),zeros(shape)])
                 
                 n_x_prev = 0
                 n_y_prev = 0
@@ -1146,8 +1267,8 @@ class workflow(object):
                 # get orientations
                 o = FiberOrientation(X, B)
                 c,u,ori = o.image2fiber(imsys.cameras)
-                ori = ori/np.pi*180
-                u /= np.linalg.norm(u)
+                ori = ori/pi*180
+                u /= norm(u)
                 
                 if line == 0:
                     n_x_prev = u[0]
@@ -1156,11 +1277,11 @@ class workflow(object):
                 
                 # correct sign
                 value = 0.2
-                if np.abs(np.abs(u[0]) - np.abs(n_x_prev)) < value and np.sign(u[0]) != np.sign(n_x_prev):
+                if absnp(absnp(u[0]) - absnp(n_x_prev)) < value and sign(u[0]) != sign(n_x_prev):
                     u[0] *= -1
-                if np.abs(np.abs(u[1]) - np.abs(n_y_prev)) < value and np.sign(u[1]) != np.sign(n_y_prev):
+                if absnp(absnp(u[1]) - absnp(n_y_prev)) < value and sign(u[1]) != sign(n_y_prev):
                     u[1] *= -1
-                if np.abs(np.abs(u[2]) - np.abs(n_z_prev)) < value and np.sign(u[2]) != np.sign(n_z_prev):
+                if absnp(absnp(u[2]) - absnp(n_z_prev)) < value and sign(u[2]) != sign(n_z_prev):
                     u[2] *= -1
                 
                 n_x_prev = u[0]
@@ -1182,7 +1303,7 @@ class workflow(object):
         if save_name is not None:
             print('\n', 'Saving the data.')    
             # o.save_results(save_name, oris)
-            np.savetxt(save_name, oris, fmt = 
+            savetxt(save_name, oris, fmt = 
                        ['%d', '%.3f', '%.3f', '%.3f', '%d', '%d', '%.2f', '%.2f'], delimiter='\t')
         print('\n', 'Done.')
     

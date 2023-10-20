@@ -43,7 +43,7 @@ of 27 coefficients.
 
 import os
 from math import sin, cos
-from numpy import zeros, array, dot
+from numpy import zeros, array, dot, transpose
 from numpy.linalg import inv
 from myptv.utils import line_dist, point_line_dist
 
@@ -227,6 +227,28 @@ class camera(object):
         r = dot(array([-eta_, -zeta_, -self.f]) - e, self.R)
         r = r / (r[0]**2 + r[1]**2 + r[2]**2)**0.5
         return r
+    
+    
+    def get_r_ori(self, u): # from Eric
+        '''
+        A function used for the orientation of fibers, written 
+        by Eric Aschari.
+        
+        input - pixel coordinates (eta, zeta) seen by the camera
+        output - direction vector in real space
+        '''
+         
+        eta = u[0,0]
+        zeta = u[1,0]
+         
+        Z3 = [eta, zeta, eta**2, zeta**2, eta * zeta]
+         
+        e = dot(self.E, Z3)
+        
+        r = dot(array([-eta, -zeta, -self.f]) - e, self.R) # previously with - before eta_ and zeta_
+        r = r / (r[0]**2 + r[1]**2 + r[2]**2)**0.5
+        
+        return transpose(array([self.O + r])) 
     
     
     def projection(self, x, correction=True):

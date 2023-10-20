@@ -1,5 +1,5 @@
 December 25, 2022
-Version: 0.6.5
+Version: 0.7.0
 
 <img src="./user_manual/figs/logo.png" style="zoom:20%;" />
 
@@ -29,6 +29,7 @@ MyPTV is designed to be used by scientists and engineers who need to track the t
 6) Tracking particles in 2D
 7) Smoothing particle trajectories while calculating their velocities and accelerations
 8) Re-connecting broken trajectories
+9) Measuring the orientations of anisotropic particles in 3D (new from version 7.0.0 and on)
 
 ## How to install?
 
