@@ -35,7 +35,8 @@ class cal_gui(object):
         # set the window
         self.root = Tk()
         self.root.geometry('390x500')
-        self.root.resizable(0,0)
+        #self.root.resizable(0,0)
+        self.root.resizable(height = None, width = None)
         self.root.title('MyPTV: calibration GUI')
 
 
