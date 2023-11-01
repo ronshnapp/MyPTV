@@ -227,7 +227,7 @@ class calibrate(object):
             return meanSquaredErr
         
         c = self.camera
-        X0 = c.E[:2,:]
+        X0 = c.E[:2,:].flatten()
         res = minimize(func, X0, method='nelder-mead', 
                        options={'maxiter': maxiter})
         
