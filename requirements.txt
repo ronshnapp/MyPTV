@@ -21,3 +21,4 @@ six
 tk
 tifffile
 pyyaml
+imagecodecs
