@@ -32,12 +32,15 @@
     blob_files: blobs_cam1, blobs_cam2, blobs_cam3
     frame_start: 0
     N_frames: None
+    march_forwards: True
+    march_backwards: True
     camera_names: cam1, cam2, cam3
     cam_resolution: 1280, 1024
     ROI: 0.0, 70.0, 0.0, 70.0, -25.0, 15.0
-    voxel_size: 10.0
-    max_blob_distance: 1.0
-    max_err: 0.25
+    voxel_size: 10
+    N0: 100
+    max_err: 0.15
+    min_cam_match: 3
     save_name: particles
 
 - tracking:

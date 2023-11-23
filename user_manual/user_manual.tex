@@ -66,7 +66,7 @@
 
 \begin{minipage}{14cm}
 	{\small \sffamily
-	Version: 0.7.0 \\
+	Version: 0.8.0 \\
 	Last updated: \today \\
 	Github repository: \url{https://github.com/ronshnapp/MyPTV} \\
 	Get help \& interact with our community: \url{https://github.com/ronshnapp/MyPTV/discussions}\\
@@ -842,9 +842,15 @@ To improve the results of segmenting over non-ideal images, MyPTV can be set to 
 
 \subsection{Matching}\label{sec:workflow_match}
 
-In the matching step, particles images in the various images are used to stereo-locate (triangulate) the 3D positions of particles in the lab-space coordinates. As before, run first only on several images to find optimal parameter values, and only then iterate over all frames by setting \texttt{N\_frames: None} and save the results. 
+In the matching step, particles images in the various images are used to stereo-locate (triangulate) the 3D positions of particles in the lab-space coordinates. 
 
-Note: to perform easy stereo matching of points in images, use the manual matching GUI. See Section~\ref{sec:man_match} and Fig.~\ref{fig:man_match}.
+One of the difficult challenges in the PTV method is to determine which particles in each image correspond to the same particles in other images, as the number of combinations can be very large for particle dense images. Here, we solve this issue using a new algorithm called "particle marching". In brief, we begin by having initial guesses for particle positions, and we check whether these initial guesses correspond to real particles with epipolar geometry. If they do, we store the found locations and if not, we throw them out. Then, in the next frame we use the particles found in the previous frame as initial new guesses. For the first round of initial guess, we use two methods: 1) a set of random points in space (the number of points is denoted N0 in MyPTV), 2) by dividing the measurement volume into smaller sub-volumes (called voxels, with a given size), and search for particles inside each voxel using the ray-traversal algorithm.
+     
+
+Getting the parameters N0 and the voxel size right will be able to generate good results. If they are given too large values this step could take up lon computational times. To optimize the values, run first only on several images to find optimal values, and only after that iterate over all frames by setting \texttt{N\_frames: None} and save the results. 
+
+
+Note: to easily perform manual stereo matching of several points in a given image, use the manual matching GUI. See Section~\ref{sec:man_match} and Fig.~\ref{fig:man_match}.
 
 
 \begin{table}[!ht]
@@ -861,17 +867,25 @@ Note: to perform easy stereo matching of points in images, use the manual matchi
 		
 		\texttt{N\_frames} & if \texttt{None} will match particles in all available frames; if an integer will match only particles in the first \texttt{N} frames. \\
 		
+		\texttt{march\_forwards} & if \texttt{True} then the particle marching sequence includes a pass forwards in time. \\
+		
+		\texttt{march\_backwards} & if \texttt{True} then the particle marching sequence includes a pass backwards in time. \\
+		
 		\texttt{camera\_names} & names of cameras used separated by commas; for example, \texttt{cam1, cam2, cam3} \\
 		
 		\texttt{cam\_resolution} & camera resolution; for example, \texttt{1280, 1024} \\
 		
 		\texttt{ROI} & region of interest for the matching in lab space coordinates, and according to the format of \texttt{xmin, xmax, ymin, ymax, zmin, zmax} \\
 		
-		\texttt{voxel\_size} & the side length of voxels used in the \textit{Ray Traversal} algorithm; note - too high values lead to long computation times and too low value result in matching errors and long computation times. \\
+		\texttt{voxel\_size} & Can be either a float or None. If it is a float, then this is the side length of voxels used in the \textit{Ray Traversal} algorithm; note - too high values lead to long computation times and too low value result in matching errors and long computation times. If this is None then Ray Traversal is not used to generate initial guesses. \\
 		
-		\texttt{max\_blob\_distance} &  the distance particle usually undergo during each frame in image space coordinates (pixels)\\
+		\texttt{N0} &  The number of random initial points to try as random initial guesses in each frame.\\
 		
-		\texttt{max\_err} & maximum value of the RMS triangulation error in lab space coordinates \\
+		\texttt{min\_cam\_match} & Only particle that are recognized by this many of more cameras are considered real particles. particles seen by fewer than this are thrown away. Needs to be 2 or higher. \\
+		
+		
+		
+		\texttt{max\_err} & Maximum value of the RMS triangulation error in lab space coordinates (e.g. millimeters). \\
 		
 		\texttt{save\_name} & path name used for saving the results; if \texttt{None} the results are not saved \\
 		
@@ -1474,12 +1488,37 @@ important functionalities are:
 
 \section{Particle matching - \texttt{particle\_matching\_mod.py}} \label{sec:matching}
 
-The module used to link particles in the different images through stereo matching and estimating their 3D positions. One of the main issue in this process is that stereo matching all possible candidates is an NP hard problem, so to track numerous particles in each frame we have to choose which particles are likely to produce a 3D particle coordinate. Thus, particle matching in MyPTV uses two algorithms in conjunction. First is a novel algorithm that uses 2D time tracking of blobs to deduce which candidates are more likely to produce traceable particles in 3D. Second is the Ray Traversal algorithm proposed in Ref~\cite{Bourgoin2020}, in which the lab space volume is divided to voxels and stereo matching is attempted for rays within each voxel. Using the two algorithms in conjunction was found to yield a 50\% reduction in computational time and more traceable trajectories (45\% more trajectories were found in a test). 
+The module used to link particles in the different images through stereo matching and estimating their 3D positions. 
+
+
+
+\subsection{The \texttt{matching\_with\_marching\_particles\_algorithm} object}
+
+
+One of the main issue in this process is that stereo matching all possible candidates is an NP hard problem, so to track numerous particles in each frame we have to choose which particles are likely to produce a 3D particle coordinate. To solve this we are using an algorithm called particle marching. The principles are as follows:
+
+1) Given an initial guess for a particle position in lab space coordinates, we can project it onto camera space coordinates of our camera system. The results of the projection can be denoted [(x1, y1), ..., (xn, yn)], where n is the number of cameras in our imaging system.
+
+2) The segmentation results from the experiment will be called blobs. For each point (xi, yi) from (1), we choose the blob that has the smallest distance to it. If the nearest neighbor blob in a certain camera was already used up previously, then we take the 2nd nearest blob (or the 3rd,...). We denote the nearest neighbor blobs we found as [(xNN1, yNN1), ..., (xNNn, yNNn)]. 
+
+3) Taking the NN blobs, we try to see if the epipolar lines associated with them cross each other. If more than a threshold number of lines cross, then the point at which they crossed is considered the position of a real particle. Otherwise, the initial guess is deemed bad and we dump it.
+
+The thing that is left it to have a method for choosing initial guesses for the lab space particles. We are using for that a combination of three methods - 
+
+1) If particles were found in the previous frame (say frame number i-1), then these positions are used as initial guesses for frame i. This allows to have continuous trajectories already from the matching process and really speeds up the process. It is also possible to do the same process going backwards, i.e. using particles from frame i+1 as the initial guesses. From this concept comes the name of this algorithm.
+
+2) Random guesses across the measurement volume. This is not so efficient but it does work and it allows starting up the marching process.
+
+3) Using the ray traversal algorithm over pairs of cameras to get initial guesses. This works quite good, however when there are many blobs in each frame it can take up a lot of time. This also allows starting up the marching process.
+
+
+
+%Thus, particle matching in MyPTV uses two algorithms in conjunction. First is a novel algorithm that uses 2D time tracking of blobs to deduce which candidates are more likely to produce traceable particles in 3D. Second is the Ray Traversal algorithm proposed in Ref~\cite{Bourgoin2020}, in which the lab space volume is divided to voxels and stereo matching is attempted for rays within each voxel. Using the two algorithms in conjunction was found to yield a 50\% reduction in computational time and more traceable trajectories (45\% more trajectories were found in a test). 
 
 
 
 
-\subsection{The \texttt{match\_blob\_files} object}
+\subsection{The \texttt{match\_blob\_files} object (Legacy)}
 
 
 This is the object that we use to get triangulated particles results from the segmented blob files (a file as the one in Fig.~\ref{fig:blobfile} for each camera). For each frame it first runs the first algorithm using time information, and only then uses the Ray traversal algorithm on the blobs that were not successfully connected. The inputs are:
@@ -1520,14 +1559,14 @@ The important functionalities are:
 
 
 
-\subsection{The \texttt{matching} object}
+\subsection{The \texttt{matching} object  (Legacy)}
 
 This object is the "engine" used to match particles using the Ray Traversal algorithm. In practice we run the relevant functions: \texttt{get\_voxel\_dictionary()} $\rightarrow$ \texttt{list\_candidates()} $\rightarrow$ \texttt{get\_particles()}, and after that the results are held in the attribute \texttt{matched\_particles}.
 
 
 
 
-\subsection{The \texttt{matching\_using\_time} object}
+\subsection{The \texttt{matching\_using\_time} object  (Legacy)}
 
 This object performs the matching of blobs using the 2D tracking heuristic. In principle, it is given a list of blobs that were successfully used to form 3D particles in the previous frame. Then, for each of the given blobs it searches for nearest neighbours in the current frame, and stereo-matches those blobs that were found (using the \texttt{.triangulate\_candidates()} method). 
 
@@ -1535,7 +1574,7 @@ This object performs the matching of blobs using the 2D tracking heuristic. In p
 
 
 
-\subsection{The \texttt{initiate\_time\_matching} object}
+\subsection{The \texttt{initiate\_time\_matching} object  (Legacy)}
 
 This object is used to initiate the time searching algorithm on the first frame. It goes over the blobs at the first frame and searches for blobs that have nearest neighbours at the second frame. Those that have neighbours are used in a first run of the Ray Traversal algorithm, thus they are given priority in the search.
 

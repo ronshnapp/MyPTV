@@ -38,15 +38,16 @@
 \BOOKMARK [2][-]{subsection.5.1}{The particle\137segmentation object}{section.5}% 38
 \BOOKMARK [2][-]{subsection.5.2}{The loop\137segmentation object}{section.5}% 39
 \BOOKMARK [1][-]{section.6}{Particle matching - particle\137matching\137mod.py}{}% 40
-\BOOKMARK [2][-]{subsection.6.1}{The match\137blob\137files object}{section.6}% 41
-\BOOKMARK [2][-]{subsection.6.2}{The matching object}{section.6}% 42
-\BOOKMARK [2][-]{subsection.6.3}{The matching\137using\137time object}{section.6}% 43
-\BOOKMARK [2][-]{subsection.6.4}{The initiate\137time\137matching object}{section.6}% 44
-\BOOKMARK [1][-]{section.7}{Tracking in 3D - tracking\137mod.py}{}% 45
-\BOOKMARK [2][-]{subsection.7.1}{The tracker\137four\137frames object}{section.7}% 46
-\BOOKMARK [2][-]{subsection.7.2}{The tracker\137two\137frames object}{section.7}% 47
-\BOOKMARK [2][-]{subsection.7.3}{The tracker\137nearest\137neighbour object}{section.7}% 48
-\BOOKMARK [1][-]{section.8}{Trajectory smoothing - traj\137smoothing\137mod.py}{}% 49
-\BOOKMARK [2][-]{subsection.8.1}{The smooth\137trajectories object}{section.8}% 50
-\BOOKMARK [1][-]{section.9}{Trajectory stitching - traj\137stitching\137mod.py}{}% 51
-\BOOKMARK [2][-]{subsection.9.1}{The traj\137stitching object}{section.9}% 52
+\BOOKMARK [2][-]{subsection.6.1}{The matching\137with\137marching\137particles\137algorithm object}{section.6}% 41
+\BOOKMARK [2][-]{subsection.6.2}{The match\137blob\137files object \(Legacy\)}{section.6}% 42
+\BOOKMARK [2][-]{subsection.6.3}{The matching object \(Legacy\)}{section.6}% 43
+\BOOKMARK [2][-]{subsection.6.4}{The matching\137using\137time object \(Legacy\)}{section.6}% 44
+\BOOKMARK [2][-]{subsection.6.5}{The initiate\137time\137matching object \(Legacy\)}{section.6}% 45
+\BOOKMARK [1][-]{section.7}{Tracking in 3D - tracking\137mod.py}{}% 46
+\BOOKMARK [2][-]{subsection.7.1}{The tracker\137four\137frames object}{section.7}% 47
+\BOOKMARK [2][-]{subsection.7.2}{The tracker\137two\137frames object}{section.7}% 48
+\BOOKMARK [2][-]{subsection.7.3}{The tracker\137nearest\137neighbour object}{section.7}% 49
+\BOOKMARK [1][-]{section.8}{Trajectory smoothing - traj\137smoothing\137mod.py}{}% 50
+\BOOKMARK [2][-]{subsection.8.1}{The smooth\137trajectories object}{section.8}% 51
+\BOOKMARK [1][-]{section.9}{Trajectory stitching - traj\137stitching\137mod.py}{}% 52
+\BOOKMARK [2][-]{subsection.9.1}{The traj\137stitching object}{section.9}% 53

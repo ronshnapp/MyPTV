@@ -286,7 +286,7 @@ class workflow(object):
     
     # ========================================================================
     # /\/\//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
-    #  Legacy functions that are no longer needed due to the cal_gui's
+    #  Legacy functions that are no longer needed due to the cal_gui
     # /\/\//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
     # ========================================================================
     
@@ -800,10 +800,11 @@ class workflow(object):
         '''
         Will perform the stereo matching with the file given parameters
         '''
-        from myptv.particle_matching_mod import match_blob_files
+        from myptv.particle_matching_mod import matching_with_marching_particles_algorithm
         from myptv.imaging_mod import camera, img_system
         from os import getcwd, listdir
         from os.path import exists as pathExists
+        from time import localtime, strftime
         
         
         # fetching the parameters
@@ -814,15 +815,23 @@ class workflow(object):
         res = self.get_param('matching', 'cam_resolution')
         res = tuple([float(val) for val in res.split(',')])
         ROI = self.get_param('matching', 'ROI').split(',')
-        ROI = [[float(ROI[2*i]), float(ROI[2*i+1])] for i in [0,1,2]]
+        ROI = [float(ROI[i]) for i in range(6)]
         voxel_size = self.get_param('matching', 'voxel_size')
-        max_blob_distance = self.get_param('matching', 'max_blob_distance')
+        N0 = self.get_param('matching', 'N0')
         max_err = self.get_param('matching', 'max_err')
+        min_cam_match = self.get_param('matching', 'min_cam_match')
         frame_start = self.get_param('matching', 'frame_start')
         N_frames = self.get_param('matching', 'N_frames')
+        march_forwards = self.get_param('matching', 'march_forwards')
+        march_backwards = self.get_param('matching', 'march_backwards')
         save_name = self.get_param('matching', 'save_name')
         
         
+        if N0==0 and voxel_size==None:
+            raise ValueError('No initial guess method given (N0=0, voxel_size=None)')
+        
+        if min_cam_match<2:
+            raise ValueError('min_cam_match needs to be at least 2.')
         
         # setting up the img_system 
         cams = [camera(cn, res) for cn in cam_names]
@@ -834,17 +843,20 @@ class workflow(object):
         imsys = img_system(cams)
         
         
-        mbf = match_blob_files(blob_fn, 
-                               imsys, 
-                               ROI, 
-                               voxel_size, 
-                               max_blob_distance,
-                               max_err=max_err, 
-                               reverse_eta_zeta=True)
+        mps = matching_with_marching_particles_algorithm(imsys, 
+                                               blob_fn, 
+                                               max_err, 
+                                               ROI,
+                                               N0,
+                                               voxel_size,
+                                               min_cam_match=min_cam_match,
+                                               reverse_eta_zeta=True)
+
+        
         
         # setting the frame range to match
-        ts = int(mbf.time_lst[0])
-        te = int(mbf.time_lst[-1])
+        ts = int(mps.frames[0])
+        te = int(mps.frames[-1])
         print('segmented particles time range: %d -> %d'%(ts,te),'\n')
         
         if frame_start is not None:
@@ -865,19 +877,31 @@ class workflow(object):
                 
                 
         # mathing
-        print('Starting stereo-matching.')
-        print('Matching in the frame range: %d -> %d'%(frames[0], frames[-1]))
-        mbf.get_particles(frames=frames)
+        print('Starting stereo-matching at: ', strftime("%H:%M:%S", localtime()))
+        
+        if march_forwards==True:
+            print('Matching forwards. Frames: %d -> %d'%(frames[0], frames[-1]))
+            for f in frames:
+                mps.match_frame(f)
+                
+        if march_backwards==True:
+            print('\n','Matching backwards. Frames: %d -> %d'%(frames[-1], frames[0]))
+            for f in frames[::-1]:
+                mps.match_frame(f)
+        
+        
         
         # print matching statistics
-        print('particles matched: %d \n'%(len(mbf.particles)))
+        print('')
+        print('Finished! \n')
+        print('particles matched: %d \n'%(len(mps.matches)))
         
         Nframes = len(frames)
-        c4 = sum([1 for p in mbf.particles if len(p[3])==4]) / Nframes
+        c4 = sum([1 for p in mps.matches if len(p[1])==4]) / Nframes
         print('quadruplets: %.1f per frame'%c4)
-        c3 = sum([1 for p in mbf.particles if len(p[3])==3]) / Nframes
+        c3 = sum([1 for p in mps.matches if len(p[1])==3]) / Nframes
         print('triplets: %.1f per frame'%c3)
-        c2 = sum([1 for p in mbf.particles if len(p[3])==2]) / Nframes
+        c2 = sum([1 for p in mps.matches if len(p[1])==2]) / Nframes
         print('pairs: %.1f per frame \n'%c2)
         
         
@@ -890,13 +914,13 @@ class workflow(object):
                 usr = input('(1=yes, else=no)')
                 if usr == '1':
                     print('\n','saving file.')
-                    mbf.save_results(save_name)
+                    mps.save_particles(save_name)
                 else:
                     print('\n','skiped saving.')
                 
             else:
                 print('\n','saving file.')
-                mbf.save_results(save_name)
+                mps.save_particles(save_name)
         
         print('\n', 'Finished Matching.\n')
             
