@@ -740,7 +740,9 @@ However, in some PTV systems another solution is taken such that the calibration
 		
 		\texttt{ROI} & region of interest; specify by indicating the xmin, xmax, ymin, ymax coordinates \\[.3em]
 		
-		\texttt{threshold} & the brightness value for which a point is considered a particle after a local mean subtraction is performed \\[.3em]
+		\texttt{threshold} & the brightness value for which a point is considered a particle after a local mean subtraction is performed \\[.5em]
+		
+		\texttt{remove\_background} & If this is True, then before segmentation a static background image is calculated (defined as the median of pixel values), and then the difference is taken between each image and the background; this is useful in images with inhomogeneous lighting conditions. \\[.5em]
 		
 		\texttt{median} & the intger window size of a median noise removal filter; set to \texttt{None} in order to not apply the filter \\[.3em]
 		

@@ -783,11 +783,17 @@ class workflow(object):
                     msg = 'Image %s not found in the directory.'%in_
                     raise ValueError(msg)
                 
+                if remove_BG==True:
+                    BG = calculate_BG_image(dirname, ext)
+                else:
+                    BG=None
+                
                 print('\n','segmenting image: %s'%single_img_name)
                 particleSegment = fiber_segmentation(image0, 
                                                         particle_size=p_size,
                                                         sigma=sigma, 
                                                         median=median,
+                                                        BG_image=BG,
                                                         threshold=threshold, 
                                                         local_filter=local_filter, 
                                                         max_xsize=max_xsize, 

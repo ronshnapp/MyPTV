@@ -12,6 +12,10 @@ from numpy import ones, savetxt, meshgrid,array,square,stack,sqrt,mean,append,tr
 from numpy import sum as npsum
 import numpy as np
 from skimage.io import imread
+from skimage import io
+
+from numpy import abs as npabs
+from numpy import median as npmedian
 
 from scipy.signal import convolve2d
 from scipy.ndimage import gaussian_filter, median_filter
@@ -26,6 +30,7 @@ class fiber_segmentation(object):
     
     def __init__(self, image, sigma=None, threshold=10, mask=1.0,
                  median = None, local_filter = None, particle_size=3,
+                 BG_image = None,
                  min_xsize=None, max_xsize=None,
                  min_ysize=None, max_ysize=None,
                  min_mass=None, max_mass=None,
@@ -80,6 +85,7 @@ class fiber_segmentation(object):
         self.mass_limits = (min_mass, max_mass)
         self.loc_filter = local_filter
         self.pca_limit = pca_limit
+        self.BG_image = BG_image
         
         if method not in ['dilation', 'labeling']:
             raise ValueError('method "%s" unknown.'%method)
@@ -109,11 +115,17 @@ class fiber_segmentation(object):
         Results are stored in the self.processed_im.
         '''
         
+        # subtract background:
+        if self.BG_image is not None:
+            imNoBG = npabs(self.im - self.BG_image).astype(self.im.dtype)
+        else:
+            imNoBG = self.im
+        
         # apply a Gussian blur
         if self.sigma is not None:
-            blured = gaussian_filter(self.im, self.sigma)
+            blured = gaussian_filter(imNoBG, self.sigma)
         else:
-            blured = self.im
+            blured = imNoBG
             
         # apply median filter
         if self.median is not None:
@@ -474,6 +486,7 @@ class loop_fiber_segmentation(object):
                  image_start = None,
                  N_img = None, sigma=1.0, threshold=10, mask=1.0,
                  local_filter = 15, median = None, particle_size=3,
+                 remove_ststic_BG = True,
                  min_xsize=None, max_xsize=None,
                  min_ysize=None, max_ysize=None,
                  min_mass=None, max_mass=None,
@@ -508,6 +521,7 @@ class loop_fiber_segmentation(object):
         self.loc_filter = local_filter
         self.method = method
         self.pca_limit = pca_limit
+        self.BG_remove = remove_ststic_BG
     
     
     def get_file_names(self):
@@ -526,6 +540,30 @@ class loop_fiber_segmentation(object):
         self.image_files = image_files
     
     
+    def calculate_BG(self):
+        '''
+        Calculates the background image, defined as the median of the given
+        images. If there are more than 200 images, then the background is done
+        using a subsample of 200 images, to keep the calculation from taking
+        too long.
+        '''
+        import os
+        
+        print('calculating background...\n')
+        # getting the subsample of images for BG calculation
+        if len(self.image_files)<=200:
+            BG_images = self.image_files
+            
+        else: 
+            BG_images=self.image_files[::int(len(self.image_files)/400+1)][:200]
+        
+        BG_images = [os.path.join(self.dir_name, im) for im in self.image_files]
+        # reading the images for BG subtraction
+        ic = io.ImageCollection(BG_images)
+        
+        self.BG = npmedian(ic, axis=0)
+    
+    
     def segment_folder_images(self):
         '''This loops over the image files in a folder'''
         import os
@@ -536,6 +574,11 @@ class loop_fiber_segmentation(object):
             N = len(self.image_files)
         else:
             N = self.N_img
+        
+        if self.BG_remove==True:
+            self.calculate_BG()
+        else:
+            self.BG = None
         
         i0 = (self.image_start is not None) * self.image_start
         
@@ -550,6 +593,7 @@ class loop_fiber_segmentation(object):
                                     threshold=self.th,
                                     median=self.median,
                                     local_filter=self.loc_filter,
+                                    BG_image=self.BG,
                                     mask=self.mask,
                                     max_xsize=self.bbox_limits[1],
                                     min_xsize=self.bbox_limits[0],
