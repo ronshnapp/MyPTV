@@ -8,10 +8,13 @@ Created on Fri Dec  7 18:02:07 2018
 contains a class for segmentation of circular particles
 """
 
-from numpy import zeros, ones, savetxt, meshgrid
+from numpy import ones, savetxt, meshgrid
 from numpy import sum as npsum
+from numpy import abs as npabs
+from numpy import median as npmedian
 
 from skimage.io import imread
+from skimage import io
 
 from scipy.signal import convolve2d
 from scipy.ndimage import gaussian_filter, median_filter
@@ -26,6 +29,7 @@ class particle_segmentation(object):
     
     def __init__(self, image, sigma=None, threshold=10, mask=1.0,
                  median = None, local_filter = None, particle_size=3,
+                 BG_image = None,
                  min_xsize=None, max_xsize=None,
                  min_ysize=None, max_ysize=None,
                  min_mass=None, max_mass=None,
@@ -52,6 +56,10 @@ class particle_segmentation(object):
         
         local_filter - int, the window size of the local mean subtraction 
                        filter. In this is None then the filter is not applied.
+        
+        BG_image - Either a given static image, in which case this image is
+                   subtracted from the given image by taking the difference,
+                   or this is None, in which case this operation is skipped.
                        
         min/max_( ) - size and area filters for the discovered blobs. If None
                       then filters are not applied.
@@ -76,6 +84,7 @@ class particle_segmentation(object):
         self.bbox_limits = (min_xsize, max_xsize, min_ysize, max_ysize)
         self.mass_limits = (min_mass, max_mass)
         self.loc_filter = local_filter
+        self.BG_image = BG_image
         
         if method not in ['dilation', 'labeling']:
             raise ValueError('method "%s" unknown.'%method)
@@ -105,11 +114,17 @@ class particle_segmentation(object):
         Results are stored in the self.processed_im.
         '''
         
+        # subtract background:
+        if self.BG_image is not None:
+            imNoBG = npabs(self.im - self.BG_image).astype(self.im.dtype)
+        else:
+            imNoBG = self.im
+        
         # apply a Gussian blur
         if self.sigma is not None:
-            blured = gaussian_filter(self.im, self.sigma)
+            blured = gaussian_filter(imNoBG, self.sigma)
         else:
-            blured = self.im
+            blured = imNoBG
             
         # apply median filter
         if self.median is not None:
@@ -390,13 +405,14 @@ class particle_segmentation(object):
         
 class loop_segmentation(object):
     
-    '''A class for looping over images in a library to segment particles
+    '''A class for looping over images in a directory to segment particles
     and save the results in a file.'''
     
     def __init__(self, dir_name, extension='.tif',
                  image_start = 0,
                  N_img = None, sigma=1.0, threshold=10, mask=1.0,
                  local_filter = 15, median = None, particle_size=3,
+                 remove_ststic_BG = True,
                  min_xsize=None, max_xsize=None,
                  min_ysize=None, max_ysize=None,
                  min_mass=None, max_mass=None,
@@ -414,6 +430,12 @@ class loop_segmentation(object):
                     folder. If it is an integer, will loop over the first
                     N images in the folder.
                     
+        remove_ststic_BG - If true, a "background image" is calculated for the
+                           images, defined as the median value of each pixel,
+                           and then background_subtraction is done by taking 
+                           the difference from the median. If this is False,
+                           then this operation is skipped.
+                    
         The rest are parameters for the segmentation class. 
         '''
         self.dir_name = dir_name
@@ -429,6 +451,7 @@ class loop_segmentation(object):
         self.mass_limits = (min_mass, max_mass)
         self.loc_filter = local_filter
         self.method = method
+        self.BG_remove = remove_ststic_BG
     
     
     def get_file_names(self):
@@ -447,6 +470,30 @@ class loop_segmentation(object):
         self.image_files = image_files
     
     
+    def calculate_BG(self):
+        '''
+        Calculates the background image, defined as the median of the given
+        images. If there are more than 200 images, then the background is done
+        using a subsample of 200 images, to keep the calculation from taking
+        too long.
+        '''
+        import os
+        
+        print('calculating background...\n')
+        # getting the subsample of images for BG calculation
+        if len(self.image_files)<=200:
+            BG_images = self.image_files
+            
+        else: 
+            BG_images=self.image_files[::int(len(self.image_files)/400+1)][:200]
+        
+        BG_images = [os.path.join(self.dir_name, im) for im in self.image_files]
+        # reading the images for BG subtraction
+        ic = io.ImageCollection(BG_images)
+        
+        self.BG = npmedian(ic, axis=0)
+        
+        
     def segment_folder_images(self):
         '''This loops over the image files in a folder'''
         import os
@@ -457,11 +504,16 @@ class loop_segmentation(object):
             N = len(self.image_files)
         else:
             N = self.N_img
+            
+        if self.BG_remove==True:
+            self.calculate_BG()
+        else:
+            self.BG = None
         
-        i0 = (self.image_start is not None) * self.image_start
+        i0 = (self.image_start is not None) * self.image_start        
         
         blob_list = []
-        print('Starting loop segmentation.')
+        print('Starting loop segmentation.\n')
         for i in range(N):
             print('', end='\r')
             print(' frame: %d'%(i+i0), end='\r')
@@ -471,6 +523,7 @@ class loop_segmentation(object):
                                        threshold=self.th,
                                        median=self.median,
                                        local_filter=self.loc_filter,
+                                       BG_image=self.BG,
                                        mask=self.mask,
                                        max_xsize=self.bbox_limits[1],
                                        min_xsize=self.bbox_limits[0],

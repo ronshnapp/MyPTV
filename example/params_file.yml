@@ -7,26 +7,27 @@
 - segmentation:
     Number_of_images: None
     image_start: 0
-    images_folder: Images_cam1
-    single_image_name: cal2.tif
+    images_folder: Images_cam3
+    single_image_name: 01.tif
     image_extension: '.tif'
     shape: particles
     mask: 1.0
     ROI: 227, 1050, 120, 920
     plot_result: True
-    threshold: 42
-    median: 5
-    blur_sigma: None
+    threshold: 8
+    remove_background: True
+    median: None
+    blur_sigma: 0.5
     local_filter: None
-    min_xsize: 1.0
-    min_ysize: 1.0
-    min_mass: 60.0
+    min_xsize: 0.0
+    min_ysize: 0.0
+    min_mass: 30.0
     max_xsize: 15.0
     max_ysize: 15.0
     max_mass: None
     method: labeling
     particle_size: 8  
-    save_name: test
+    save_name: blobs_cam3
 
 - matching:
     blob_files: blobs_cam1, blobs_cam2, blobs_cam3
@@ -39,7 +40,7 @@
     ROI: 0.0, 70.0, 0.0, 70.0, -25.0, 15.0
     voxel_size: 10
     N0: 100
-    max_err: 0.15
+    max_err: 0.25
     min_cam_match: 3
     save_name: particles
 
@@ -65,10 +66,10 @@
 
 - smoothing:
     trajectory_file: trajectories
-    window_size: 5
-    polynom_order: 3
+    window_size: 3
+    polynom_order: 2
     min_traj_length: 4
-    repetitions: 5
+    repetitions: 1
     save_name: smoothed_trajectories
 
 - stitching:

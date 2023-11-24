@@ -552,6 +552,7 @@ class workflow(object):
         method = self.get_param('segmentation', 'method')
         p_size = self.get_param('segmentation', 'particle_size')
         shape = self.get_param('segmentation', 'shape')
+        remove_BG = self.get_param('segmentation', 'remove_background')
         
         
         # reading preprepared mask
@@ -582,6 +583,36 @@ class workflow(object):
             mask_ROI = zeros(image0.shape)
             mask_ROI[ROI[2]:ROI[3]+1, ROI[0]:ROI[1]+1] = 1
             mask = mask * mask_ROI
+            
+            
+        def calculate_BG_image(dirname, extension):
+            '''
+            Calculates the background of images, defined as the median over a
+            subsample of 200 images from the image folder.
+            '''
+            import os
+            from skimage import io
+            from numpy import median
+            
+            print('\ncalculating background...')
+            
+            allfiles = os.listdir(dirname)
+            n_ext = len(extension)
+            fltr = lambda s: s[-n_ext:]==extension
+            image_files = sorted(list(filter(fltr, allfiles)))
+            image_files = [os.path.join(dirname, fn) for fn in image_files]
+            
+            if len(image_files)<=200:
+                ic = io.ImageCollection(image_files)
+                
+            else:
+                ic = io.ImageCollection(
+                            image_files[::int(len(image_files)/400+1)][:200])
+            
+            BG = median(ic, axis=0)
+            
+            return BG
+            
         
         if shape=='particles':
             
@@ -594,7 +625,8 @@ class workflow(object):
                                                 particle_size=p_size,
                                                 extension=ext,
                                                 image_start=image_start,
-                                                N_img=N_img, 
+                                                N_img=N_img,
+                                                remove_ststic_BG=remove_BG,
                                                 sigma=sigma, 
                                                 median=median,
                                                 threshold=threshold, 
@@ -640,11 +672,17 @@ class workflow(object):
                     msg = 'Image %s not found in the directory.'%in_
                     raise ValueError(msg)
                 
+                if remove_BG==True:
+                    BG = calculate_BG_image(dirname, ext)
+                else:
+                    BG=None
+                    
                 print('\n','segmenting image: %s'%single_img_name)
                 particleSegment = particle_segmentation(image0, 
                                                         particle_size=p_size,
                                                         sigma=sigma, 
                                                         median=median,
+                                                        BG_image=BG,
                                                         threshold=threshold, 
                                                         local_filter=local_filter, 
                                                         max_xsize=max_xsize, 
