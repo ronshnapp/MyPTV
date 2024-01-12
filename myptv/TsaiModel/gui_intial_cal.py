@@ -4,13 +4,14 @@ Created on April 23, 2022
 
 @author: Ron
 
-A gui for manually marking points on a calibration target. 
+A gui for the initial calibration of a Tsai-model camera. 
 """
 
-from myptv.imaging_mod import camera
+from myptv.TsaiModel.camera import camera_Tsai
+from myptv.TsaiModel.calibrate import calibrate_Tsai
 from myptv.segmentation_mod import particle_segmentation
-from myptv.calibrate_mod import calibrate
 from myptv.utils import match_calibration_blobs_and_points
+
 from PIL import Image, ImageTk
 from tkinter import Label, Canvas, LabelFrame, Entry, Tk, Scrollbar, Button
 from numpy import array
@@ -48,11 +49,11 @@ class initial_cal_gui(object):
         self.cam_name = cam_name
         self.cam_res = image_size
         try:
-            self.cam = camera(self.cam_name, self.cam_res, 
+            self.cam = camera_Tsai(self.cam_name, 
                           cal_points_fname = self.cam_name+'_manualPoints')
             self.cam.load('.')
         except:
-            self.cam = camera(self.cam_name, self.cam_res)
+            self.cam = camera_Tsai(self.cam_name)
 
         self.segmented = []
         
@@ -518,10 +519,10 @@ class initial_cal_gui(object):
         '''Calibrates the camera using marked points'''
         
         cpf = os.path.join(self.folder, self.cam_name+'_manualPoints')
-        self.cam = camera(self.cam_name, self.cam_res, cal_points_fname = cpf)
+        self.cam = camera_Tsai(self.cam_name, self.cam_res, cal_points_fname = cpf)
         self.cam.load('.')
         print('camera data loaded successfully.')
-        cal = calibrate(self.cam, self.cam.lab_points, self.cam.image_points)
+        cal = calibrate_Tsai(self.cam, self.cam.lab_points, self.cam.image_points)
         err = cal.mean_squared_err()
         print('initial error: %.3f pixels\n'%(err))
         
@@ -646,12 +647,14 @@ class initial_cal_gui(object):
         ty = float(self.yori_input.get()) 
         tz = float(self.zori_input.get()) 
         f = float(self.f_input.get()) 
+        
         #xh = float(self.xh_input.get()) 
         #yh = float(self.yh_input.get()) 
         
         self.cam.O = [ox,oy,oz]
         self.cam.theta = [tx,ty,tz]
         self.cam.f = f
+        self.cam.resolution = self.cam_res
         #self.cam.xh = xh
         #self.cam.yh = yh
         self.cam.calc_R()

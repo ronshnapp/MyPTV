@@ -4,7 +4,7 @@ Created on April 23, 2022
 
 @author: Ron
 
-A gui for manually marking points on a calibration target. 
+A gui for the final calibration of a Tsai model camera. 
 """
 
 

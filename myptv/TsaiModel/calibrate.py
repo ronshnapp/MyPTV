@@ -14,7 +14,7 @@ from pandas import read_csv
 
 
 
-class calibrate(object):
+class calibrate_Tsai(object):
     '''
     This object is used to calibrate cameras against a given list
     of lab and camera point coordinates. 
@@ -473,7 +473,7 @@ class calibrate(object):
 
 
 
-class calibrate_with_particles(object):
+class calibrate_with_particles_Tsai(object):
     '''
     A class used to refine the calibration using particles data. In short,
     after the primary clibration is done, matching and tracking can be used

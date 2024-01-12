@@ -207,22 +207,35 @@ class workflow(object):
         '''
         Starts the initial calibration GUI
         '''
-        from myptv.gui_intial_cal import initial_cal_gui
         from matplotlib.pyplot import imread
         
         # fetch parameters from the file
+        model_name = self.get_param('calibration', '3D_model')
         cam_name = self.get_param('calibration', 'camera_name')
         cal_image = self.get_param('calibration', 'calibration_image')
         target_file = self.get_param('calibration', 'target_file')
         res = self.get_param('calibration', 'resolution').split(',')
         res = (float(res[0]), float(res[1]))
         
-        image = imread(cal_image)
-        if image.shape[1] != res[0] or image.shape[0] != res[1]:
-            msg = 'The given resolution doesnt match the image size'
-            raise ValueError(msg)
         
-        gui = initial_cal_gui(cam_name, cal_image, target_file)
+        if model_name == 'Tsai':
+            from myptv.TsaiModel.gui_intial_cal import initial_cal_gui
+            image = imread(cal_image)
+            if image.shape[1] != res[0] or image.shape[0] != res[1]:
+                msg = 'The given resolution doesnt match the image size'
+                raise ValueError(msg)
+        
+            gui = initial_cal_gui(cam_name, cal_image, target_file)
+        
+        
+        elif model_name == 'extendedZolof':
+            ...
+            
+        
+        else:
+            models = str(['Tsai', 'extendedZolof'])[1:-1]
+            msg = 'Unknown 3D model; permisible model names are: '
+            raise ValueError(msg + models)
         
         
         
@@ -230,13 +243,10 @@ class workflow(object):
         '''
         Starts the initial calibration GUI
         '''
-        from myptv.gui_final_cal import cal_gui
-        from myptv.imaging_mod import camera
-        from myptv.calibrate_mod import calibrate
-        from matplotlib.pyplot import imread
         import os
         
         # fetch parameters from the file
+        model_name = self.get_param('calibration', '3D_model')
         cam_name = self.get_param('calibration', 'camera_name')
         cal_image = self.get_param('calibration', 'calibration_image')
         res = self.get_param('calibration', 'resolution').split(',')
@@ -262,23 +272,38 @@ class workflow(object):
         # get the blob file and setup the camera instance
         blob_file = os.path.join(cal_folder, cam_name+'_cal_points')
         
-        try:
-            cam = camera(cam_name, res, cal_points_fname = blob_file)
-        except:
-            msg = 'Calibration point file (%s) not found!'%blob_file
-            msg2 = 'Make sure the initial calibration was completed fully.'
-            raise ValueError(msg+msg2)
+        if model_name == 'Tsai':
+            from myptv.TsaiModel.gui_final_cal import cal_gui
+            from myptv.TsaiModel.camera import camera_Tsai
+            from myptv.TsaiModel.calibrate import calibrate_Tsai
+            
+            try:
+                cam = camera_Tsai(cam_name, cal_points_fname = blob_file)
+            except:
+                msg = 'Calibration point file (%s) not found!'%blob_file
+                msg2 = 'Make sure the initial calibration was completed fully.'
+                raise ValueError(msg+msg2)
+                
+            
+            # load the camera
+            cam.load('.')
+            print('camera data loaded successfully.')
+            cal = calibrate_Tsai(cam, cam.lab_points, cam.image_points)
+            print('initial error: %.3f pixels\n'%(cal.mean_squared_err()))
+            
+            # run the final calibration gui
+            print('starting calibration GIU\n')
+            gui = cal_gui(cal, cal_image)   
+
+        
+        elif model_name == 'extendedZolof':
+                    ...
             
         
-        # load the camera
-        cam.load('.')
-        print('camera data loaded successfully.')
-        cal = calibrate(cam, cam.lab_points, cam.image_points)
-        print('initial error: %.3f pixels\n'%(cal.mean_squared_err()))
-        
-        # run the final calibration gui
-        print('starting calibration GIU\n')
-        gui = cal_gui(cal, cal_image)                                   
+        else:
+            models = str(['Tsai', 'extendedZolof'])[1:-1]
+            msg = 'Unknown 3D model; permisible model names are: '
+            raise ValueError(msg + models)                                
             
         
     
@@ -846,7 +871,7 @@ class workflow(object):
         Will perform the stereo matching with the file given parameters
         '''
         from myptv.particle_matching_mod import matching_with_marching_particles_algorithm
-        from myptv.imaging_mod import camera, img_system
+        from myptv.imaging_mod import camera_wrapper, img_system
         from os import getcwd, listdir
         from os.path import exists as pathExists
         from time import localtime, strftime
@@ -857,8 +882,8 @@ class workflow(object):
         blob_fn = [val.strip() for val in blob_fn.split(',')]
         cam_names = self.get_param('matching', 'camera_names')
         cam_names = [val.strip() for val in cam_names.split(',')]
-        res = self.get_param('matching', 'cam_resolution')
-        res = tuple([float(val) for val in res.split(',')])
+        # res = self.get_param('matching', 'cam_resolution')
+        # res = tuple([float(val) for val in res.split(',')])
         ROI = self.get_param('matching', 'ROI').split(',')
         ROI = [float(ROI[i]) for i in range(6)]
         voxel_size = self.get_param('matching', 'voxel_size')
@@ -879,10 +904,10 @@ class workflow(object):
             raise ValueError('min_cam_match needs to be at least 2.')
         
         # setting up the img_system 
-        cams = [camera(cn, res) for cn in cam_names]
+        cams = [camera_wrapper(cn,'./') for cn in cam_names]
         for cam in cams:
             try:
-                cam.load('')
+                cam.load()
             except:
                 raise ValueError('camera file %s not found'%cam.name)
         imsys = img_system(cams)

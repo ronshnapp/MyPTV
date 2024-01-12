@@ -1,4 +1,5 @@
 - calibration:
+    3D_model: Tsai
     camera_name: cam3
     resolution: 1280, 1024
     calibration_image: ./Calibration/cal3.tif
@@ -36,7 +37,6 @@
     march_forwards: True
     march_backwards: True
     camera_names: cam1, cam2, cam3
-    cam_resolution: 1280, 1024
     ROI: 0.0, 70.0, 0.0, 70.0, -25.0, 15.0
     voxel_size: 10
     N0: 100
