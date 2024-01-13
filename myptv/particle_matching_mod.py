@@ -344,7 +344,7 @@ class matching_with_marching_particles_algorithm(object):
         
         # fetching the cameras and the blobs
         cam1 = self.imsys.cameras[camNum1] ; cam2 = self.imsys.cameras[camNum2]
-        O1 = cam1.O ; O2 = cam2.O
+        # O1 = cam1.O ; O2 = cam2.O
         blobs1 = self.blobs[camNum1][frame]
         blobs2 = self.blobs[camNum2][frame]
         
@@ -373,7 +373,8 @@ class matching_with_marching_particles_algorithm(object):
             if identifier in self.matchedBlobs[frame]: # this blob has been used
                 continue
             
-            r = cam2.get_r(b[0], b[1])
+            #r = cam2.get_r(b[0], b[1])
+            O2, r = cam2.get_epipolarline(b[0], b[1])
             a_center = sum([r[i]*(O_ROI[i]-O2[i]) for i in range(3)]) 
             a1, a2 = a_center - a_range/2 , a_center + a_range/2 
             
@@ -406,7 +407,8 @@ class matching_with_marching_particles_algorithm(object):
             if identifier in self.matchedBlobs[frame]: # this blob has been used
                 continue
             
-            r = cam1.get_r(b[0], b[1])
+            # r = cam1.get_r(b[0], b[1])
+            O1, r = cam1.get_epipolarline(b[0], b[1])
             a_center = sum([r[i]*(O_ROI[i]-O1[i]) for i in range(3)]) 
             a1, a2 = a_center - a_range/2 , a_center + a_range/2 
             
@@ -945,8 +947,9 @@ class matching_Ray_Traversal(object):
             return
         
         cam  = self.imsys.cameras[ray[2][0]]
-        O = cam.O
-        r = cam.get_r(ray[0], ray[1])
+        # O = cam.O
+        # r = cam.get_r(ray[0], ray[1])
+        O, r = cam.get_epipolarline(ray[0], ray[1])
         r_ = r / sum(r**2)**0.5
 
         a1, a2 = (self.RIO[2][0] - O[2])/r_[2], (self.RIO[2][1] - O[2])/r_[2]

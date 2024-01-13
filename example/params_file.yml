@@ -38,7 +38,7 @@
     march_backwards: True
     camera_names: cam1, cam2, cam3
     ROI: 0.0, 70.0, 0.0, 70.0, -25.0, 15.0
-    voxel_size: 10
+    voxel_size: 20
     N0: 100
     max_err: 0.25
     min_cam_match: 3
