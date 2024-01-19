@@ -80,6 +80,9 @@ class calibrate_Tsai(object):
         '''
         from scipy.optimize import minimize
         
+        
+        # 1) find center and rotation angles
+        
         def func(X):
             self.camera.O = X[:3]
             self.camera.theta = X[3:6]
@@ -102,9 +105,6 @@ class calibrate_Tsai(object):
         
         else:
             X0 = hstack([c.O, c.theta, c.xh, c.yh, c.f])
-            
-        # res = minimize(func, X0, method='nelder-mead',
-        #                options={'maxiter': maxiter})
             
         if (self.camera.E == 0).all():
             res = minimize(func, X0, method='BFGS',

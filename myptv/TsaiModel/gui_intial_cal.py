@@ -519,7 +519,7 @@ class initial_cal_gui(object):
         '''Calibrates the camera using marked points'''
         
         cpf = os.path.join(self.folder, self.cam_name+'_manualPoints')
-        self.cam = camera_Tsai(self.cam_name, self.cam_res, cal_points_fname = cpf)
+        self.cam = camera_Tsai(self.cam_name, cal_points_fname = cpf)
         self.cam.load('.')
         print('camera data loaded successfully.')
         cal = calibrate_Tsai(self.cam, self.cam.lab_points, self.cam.image_points)

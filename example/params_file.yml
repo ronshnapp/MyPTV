@@ -5,6 +5,10 @@
     calibration_image: ./Calibration/cal3.tif
     target_file: ./Calibration/target_file
 
+- analyze_calibration_error:
+    camera_names: cam1, cam2, cam3
+    plot_histogram: True
+
 - segmentation:
     Number_of_images: None
     image_start: 0

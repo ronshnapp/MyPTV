@@ -47,6 +47,7 @@ class workflow(object):
         
         self.allowed_actions = ['help', 'initial_calibration', 
                                 'final_calibration',
+                                'analyze_calibration_error',
                                 'calibration_with_particles', 'matching', 
                                 'segmentation',
                                 'smoothing', 'stitching', 'tracking', 
@@ -73,6 +74,9 @@ class workflow(object):
                 
             elif action == 'final_calibration':
                 self.final_calibration()
+                
+            elif action == 'analyze_calibration_error':
+                self.calibration_error_estimation()
                 
             elif action == 'calibration_with_particles':
                 self.calibration_with_particles()
@@ -280,8 +284,8 @@ class workflow(object):
             try:
                 cam = camera_Tsai(cam_name, cal_points_fname = blob_file)
             except:
-                msg = 'Calibration point file (%s) not found!'%blob_file
-                msg2 = 'Make sure the initial calibration was completed fully.'
+                msg = 'Calibration point file (%s) is not right!'%blob_file
+                msg2 = 'check that the file exists and that it has no errors.'
                 raise ValueError(msg+msg2)
                 
             
@@ -455,6 +459,78 @@ class workflow(object):
     # /\/\//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
     # ========================================================================
     
+    
+    
+    def calibration_error_estimation(self):
+        '''
+        Performs stereo matching of the calibration points and compares
+        then with the ground truth. 
+        '''
+        from numpy import loadtxt, array, mean, median
+        from myptv.imaging_mod import camera_wrapper, img_system
+        
+        cam_names = self.get_param('analyze_calibration_error', 'camera_names')
+        cam_names = [val.strip() for val in cam_names.split(',')]
+        plot = self.get_param('analyze_calibration_error', 'plot_histogram')
+        
+        
+        # setting up the img_system 
+        cams = [camera_wrapper(cn,'./') for cn in cam_names]
+        for cam in cams:
+            try:
+                cam.load()
+            except:
+                raise ValueError('camera file %s not found'%cam.name)
+        imsys = img_system(cams)
+        
+        
+        # read calibration point files and organize in a dictionary
+        point_dic = {}
+        for e, cn in enumerate(cam_names):
+            filename = './Calibration/%s_cal_points'%cn
+            data = loadtxt(filename)
+            for i in range(len(data)):
+                try:
+                    point_dic[tuple(data[i][2:])][e] = data[i][:2]
+                except:
+                    point_dic[tuple(data[i][2:])] = {e: data[i][:2]}
+        
+        
+        # for each point in the dictionary, get the calibration error
+        errors = []
+        errsX, errsY, errsZ = [], [] ,[]
+        for k in point_dic.keys():
+            if len(point_dic[k])!=len(cam_names): continue
+            ground_truth = array(k)
+            triangulation = imsys.stereo_match(point_dic[k], 1e20)[0]
+            diff = triangulation - ground_truth
+            err = sum((diff)**2)**0.5
+            
+            errors.append(err)
+            errsX.append(diff[0]) ; errsY.append(diff[1]) ; errsZ.append(diff[2])
+            
+        print('Calibration error in in lab-space units:')
+        print('RMS of full error: %.3e'%(mean(errors)))
+        print('median of full error: %.3e'%(median(errors)))
+        print('x error: %.3e'%(mean(abs(array(errsX)))))
+        print('y error: %.3e'%(mean(abs(array(errsY)))))
+        print('z error: %.3e'%(mean(abs(array(errsZ)))))
+        print('')
+        
+        if plot == True:
+            print(plot)
+            import matplotlib.pyplot as plt
+            fig, ax = plt.subplots(1,4)
+            
+            fig.suptitle('Errors in lab-space unites')
+            titles = ['total error', 'x error', 'y error', 'z error']
+            for e, lst in enumerate([errors, errsX, errsY, errsZ]):
+                h = ax[e].hist(lst, bins='auto')
+                ax[e].set_title(titles[e])
+            plt.show()
+            
+            
+        
     
     
     def calibration_with_particles(self):
