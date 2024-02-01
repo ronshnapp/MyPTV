@@ -47,11 +47,12 @@ class FiberOrientation(object):
                               cams[j].get_r_ori(cs[j]),
                               cams[j].get_r_ori(bs[j]))
                 ctemp,utemp = self.intersectPlanes(p1_n,p1_m,p2_n,p2_m)
-
-                if type(utemp[0]) != 'NaN' and type(utemp[1]) != 'NaN' and type(utemp[2]) != 'NaN':
-                    c[:,[r]] = ctemp
-                    u[:,[r]] = utemp
-                    r += 1
+                
+                if type(utemp) != str:
+                    if type(utemp[0]) != 'NaN' and type(utemp[1]) != 'NaN' and type(utemp[2]) != 'NaN':
+                        c[:,[r]] = ctemp
+                        u[:,[r]] = utemp
+                        r += 1
         
         cAvg,uAvg = self.averageLine(c,u)
         
@@ -113,9 +114,9 @@ class FiberOrientation(object):
             c,u: f(k) = c + k * u 
         '''
         n = np.concatenate([np.transpose(p1_n),np.transpose(p2_n)])
-        if np.dot(np.transpose(p1_n),p2_n) > 0.999:  # acos(0.999) = 2.5° between planes
-            c = float("nan")
-            u = float("nan")
+        if np.dot(np.transpose(p1_n),p2_n) > 0.9999:  #small angle between planes
+            c = 'NaN'
+            u = 'NaN'
             return c,u
 
         c = np.linalg.lstsq(n,np.array([[p1_m],[p2_m]]),rcond=-1)[0]
