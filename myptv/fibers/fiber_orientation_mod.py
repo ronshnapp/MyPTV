@@ -11,7 +11,8 @@ import math
 from scipy import linalg
 
 class FiberOrientation(object):
-    '''A class to obtain the 3D fiber orientation from two fiber points on every segmented image'''
+    '''A class to obtain the 3D fiber orientation from two fiber 
+    points on every segmented image'''
     
     def __init__(self, X: np.ndarray,
                  B: np.ndarray):

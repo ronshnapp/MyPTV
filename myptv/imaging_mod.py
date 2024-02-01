@@ -21,6 +21,9 @@ from myptv.utils import line_dist, point_line_dist
 from myptv.TsaiModel.calibrate import calibrate_Tsai
 from myptv.TsaiModel.camera import camera_Tsai
 
+from myptv.extendedZolof.camera import camera_extendedZolof
+from myptv.extendedZolof.calibrate import calibrate_extendedZolof
+
 
 
 
@@ -175,8 +178,8 @@ class camera_wrapper(object):
             self.camera.load(self.dir)
         
         if self.modelName =='extendedZolof':
-            ...
-            self.camera = ...
+            self.camera = camera_extendedZolof(self.fileName)
+            self.camera.load(self.dir)
             
     
     
@@ -219,7 +222,7 @@ class camera_wrapper(object):
             return self.camera.projection(x)
         
         elif self.modelName == 'extendedZolof':
-            ...
+            return self.camera.projection(x)
             
     
     
@@ -239,7 +242,7 @@ class camera_wrapper(object):
             return (self.camera.O, self.camera.get_r(eta, zeta))
         
         elif self.modelName == 'extendedZolof':
-            ...
+            return (self.camera.O, self.camera.get_r(eta, zeta))
     
     
     
@@ -253,7 +256,7 @@ class camera_wrapper(object):
             return self.camera.get_r(eta, zeta)
         
         elif self.modelName == 'extendedZolof':
-            ...
+            return self.camera.get_r(eta, zeta)
 
 
 
@@ -284,7 +287,7 @@ class camera_wrapper(object):
             return self.camera.O
         
         elif self.modelName == 'extendedZolof':
-            ...
+            return self.camera.O
         
 
 

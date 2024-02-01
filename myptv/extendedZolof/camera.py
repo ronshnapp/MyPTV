@@ -193,7 +193,7 @@ class camera_extendedZolof(object):
         x = [eta, zeta]
         xColumn = self.get_xCol(x)
         res = dot(xColumn, self.B)
-        return [res[0], res[1], res[2]]
+        return array([res[0], res[1], res[2]])
     
     
     

@@ -518,7 +518,6 @@ class workflow(object):
         print('')
         
         if plot == True:
-            print(plot)
             import matplotlib.pyplot as plt
             fig, ax = plt.subplots(1,4)
             
