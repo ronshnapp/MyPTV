@@ -10,7 +10,7 @@ obtain the [A], [B], and O Extended Zolof model parameters.
 
 """
 
-from numpy import array
+from numpy import array, dot
 from numpy import sum as npsum
 from numpy.linalg import lstsq, norm
 from scipy.optimize import minimize
@@ -28,7 +28,8 @@ class calibrate_extendedZolof(camera_extendedZolof):
     of lab and camera point coordinates. 
     '''
     
-    def __init__(self, camera, x_list, X_list):
+    
+    def __init__(self, camera, x_list, X_list, quadratic=False):
         '''
         Given a list of 2D points, x=(x,y), and a list of 3D point X=(X,Y,Z), 
         we assume that given a point X, we can compute x by a polynomial 
@@ -37,12 +38,16 @@ class calibrate_extendedZolof(camera_extendedZolof):
         x = A0 + A1*X + A2*Y + A3*Z +
             A4*X^2 + A5*Y^2 + A6*Z^2 + A7*XY + A8*YZ + A9*ZX + A108XYZ
             A11*XY^2 + A12*XZ^2 + A13*YX^2 + A14*YZ^2 + A15*ZX^2 + A16*ZY^2  
+            
+        if quadratic==True, then only the quadratic terms are used. This is 
+        used in the initial calibration.
         '''
         self.cam = camera
         self.A = [[0.0 for i in range(17)] for j in [0,1]]
         self.B = [[0.0 for i in range(10)] for j in [0, 1, 2]]
         self.x_list = x_list
         self.X_list = X_list
+        self.quadratic = quadratic
         
         
         
@@ -53,7 +58,16 @@ class calibrate_extendedZolof(camera_extendedZolof):
         the A coefficients. 
         '''
         # 1) finding the A coefficients - 
-        XColumns = [self.cam.get_XCol(Xi) for Xi in self.X_list]
+        if self.quadratic==False:
+            XColumns = [self.cam.get_XCol(Xi) for Xi in self.X_list]
+        
+        elif self.quadratic==True:
+            XColumns = []
+            for Xi in self.X_list:
+                Xcol_i = self.cam.get_XCol(Xi)
+                for i in range(-7,0): Xcol_i[i] = 0
+                XColumns.append(Xcol_i)
+        
         res = lstsq(XColumns, self.x_list, rcond=None)
         self.A = res[0]
         
@@ -100,4 +114,25 @@ class calibrate_extendedZolof(camera_extendedZolof):
         e = (O-dX)/sum((O-dX)**2)**0.5
         
         return O, e
+        
+    
+    
+    def mean_squared_err(self):
+        '''
+        Calculates and returns the mean square of the deviations in camera
+        space.
+        '''
+        errorsSquard = []
+        
+        for i in range(len(self.X_list)):
+            xProj = dot(self.get_XCol(self.X_list[i]), self.cam.A)
+            errorsSquard.append( norm(array(xProj)-array(self.x_list[i]))**2 )
+        
+        return (sum(errorsSquard)/len(errorsSquard))**0.5
+        
+        
+        
+        
+        
+        
         
