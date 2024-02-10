@@ -1,8 +1,8 @@
 - calibration:
     3D_model: Tsai
-    camera_name: cam3
+    camera_name: cam1
     resolution: 1280, 1024
-    calibration_image: ./Calibration/cal3.tif
+    calibration_image: ./Calibration/cal1.tif
     target_file: ./Calibration/target_file
 
 - analyze_calibration_error:

@@ -133,6 +133,42 @@ class calibrate_extendedZolof(camera_extendedZolof):
         
         
         
+    def plot_err_distribution(self, ax = None):
+        import matplotlib.pyplot as plt
+        from numpy import sum as npsum
+        
+        if ax == None:
+            fig, ax = plt.subplots()
+        
+        imc = array(self.x_list)
+        z_lst = array([self.cam.projection(x) for x in self.X_list])
+        err = npsum((imc-z_lst)**2, axis=1)**0.5
+        
+        h = ax.hist( err, bins='auto')
+        ax.set_xlabel('Camera projection err [px]')
+        ax.set_ylabel('Counts')
+        
+        
+        
+        
+    def plot_proj(self, ax = None):
+        import matplotlib.pyplot as plt
+        
+        if ax == None:
+            fig, ax = plt.subplots()
+        
+        imc = array(self.x_list)
+        ax.plot(imc[:,0], imc[:,1], 'ob')
+        for i in range(imc.shape[0]):
+            ax.text(imc[i,0], imc[i,1], '%d'%i, color = 'b')
+        
+        z_lst = array([self.cam.projection(x) for x in self.X_list])
+        ax.plot( z_lst[:,0], z_lst[:,1], 'xr' )
+        for i in range(z_lst.shape[0]):
+            ax.text(z_lst[i,0], z_lst[i,1], '%d'%i, color = 'r')
+            
+        ax.set_aspect('equal')
+        
         
         
         
