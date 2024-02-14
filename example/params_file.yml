@@ -60,13 +60,12 @@
 
 - calibration_with_particles:
     camera_name: cam1
-    resolution: 1280, 1024
     traj_filename: './trajectories'
     cam_number: 1 
     blobs_fname: 'blobs_cam1'
     min_traj_len: 4
     max_point_number: 1000
-    target_file: ./Calibration/target_file
+    calibration_image: ./Calibration/cal1.tif
 
 - smoothing:
     trajectory_file: trajectories

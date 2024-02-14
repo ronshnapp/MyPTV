@@ -141,7 +141,8 @@ class cal_gui(object):
         self.error_input = Label(err_dashboard, text='0.0', padx=2, pady=2,
                                  width=14, bg='white')
         self.error_input.grid(row=1, column=1, rowspan=1, sticky='nw', padx=2, pady=2)
-        
+        err = self.calibrate_obj.mean_squared_err()
+        self.error_input.config(text = '%.3e'%err)
 
         
         #if self.calibrate_obj is not None:

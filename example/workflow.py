@@ -332,155 +332,7 @@ class workflow(object):
             msg = 'Unknown 3D model; permisible model names are: '
             raise ValueError(msg + models)                                
             
-        
     
-    
-    
-    # ========================================================================
-    # /\/\//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
-    #  Legacy functions that are no longer needed due to the cal_gui
-    # /\/\//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
-    # ========================================================================
-    
-    def match_target_file(self):
-        '''
-        This function is used to match calibration points to a target file.
-        '''
-        from myptv.imaging_mod import camera
-        from myptv.utils import match_calibration_blobs_and_points
-        from matplotlib.pyplot import show
-        
-        # fetch parameters from the file
-        cam_name = self.get_param('calibration', 'camera_name')
-        points_file = self.get_param('calibration', 'calibration_points_file')
-        target_file = self.get_param('calibration', 'target_file')
-        segmented_file = self.get_param('calibration', 'segmented_points_file')
-        res = self.get_param('calibration', 'resolution').split(',')
-        res = (float(res[0]), float(res[1]))
-        
-        print('Matching target file and segmental calibration points')
-        print('for camera: %s'%cam_name)
-        # initiate the camera
-        cam = camera(cam_name, res)
-        cam.load('.')
-        
-        # match the points
-        mtf = match_calibration_blobs_and_points(cam,
-                                                 segmented_file,
-                                                 target_file)
-        mtf.pair_points()
-    
-        # plot the pairs
-        mtf.plot_projections()
-        show()
-        
-        print('Please confirm that the points were pairs correctly')
-        print("in the figure, by making sure that the blue points")
-        print("and the red x's are close to each other." ,'\n')
-        
-        print("To confirm and save the calibration point file, enter '1'")
-        print("If there are errors, enter '2' and improve the initial calibration.")
-        user = input()
-        
-        if user == '1':
-            mtf.save_results(points_file)
-            print('\n', 'file saved', '\n')
-        
-        elif user == '2':
-            print('\n', 'file not saved', '\n')
-        
-        else:
-            print('\n','unrecognized command. Leaving the workflow.', '\n')
-            
-        print('Done.')
-        
-        
-    
-    
-    
-    def calibration_sequence(self):
-        '''
-        Starts a sequence to guide users through the calibration process.
-        '''
-        from myptv.imaging_mod import camera
-        from myptv.calibrate_mod import calibrate
-        from os import listdir
-        from os.path import isfile
-        #from matplotlib.pyplot import subplots, show, imread
-        
-        # fetch parameters from the file
-        cam_name = self.get_param('calibration', 'camera_name')
-        blob_file = self.get_param('calibration', 'calibration_points_file')
-        cal_image = self.get_param('calibration', 'calibration_image')
-        res = self.get_param('calibration', 'resolution').split(',')
-        res = (float(res[0]), float(res[1]))
-        
-        
-        # checking that a camera file in the working directory
-        ls = listdir('.')                
-        
-        # if the file is found, start calibration sequence
-        if cam_name in ls:
-            print('Starting calibration sequence.')
-            
-            try:
-                cam = camera(cam_name, res, cal_points_fname = blob_file)
-            except:
-                print('\n','Calibration point file (%s) not found!'%blob_file)
-                print('\n','Would you like to start the calibration point gui?')
-                user = input('1=yes,  else=no : ')
-                if user == '1':
-                    self.calibration_point_gui()  
-                else:
-                    print('quitting...')
-                return 
-            
-            cam.load('.')
-            print('camera data loaded successfully.')
-            cal = calibrate(cam, cam.lab_points, cam.image_points)
-            print('initial error: %.3f pixels\n'%(cal.mean_squared_err()))
-            
-            
-            print('starting calibratino GIU\n')
-            from myptv.gui_final_cal import cal_gui
-            gui = cal_gui(cal, cal_image)
-                    
-            
-        # if not, generate an empty file camera file
-        else:
-            print('')
-            print('camera files not detected in the working directory.')
-            print('Generating a new empty file and leaving calib. sequence.')
-            print('To continue calibration, fill in an initial guess in the')
-            print('empty file, and then run again the calibration sequence.')
-            cam = camera(cam_name, res)
-            cam.save('.')
-            print('\n', 'Done.')
-    
-    
-    
-    
-    def calibration_point_gui(self):
-        '''
-        This will start the calibration segmentation point gui.
-        '''
-        from myptv.cal_point_gui import cal_point_gui
-        
-        # fetch parameters from the file
-        blob_file = self.get_param('calibration', 'calibration_points_file')
-        cal_image = self.get_param('calibration', 'calibration_image')
-        res = self.get_param('calibration', 'resolution').split(',')
-        res = (float(res[0]), float(res[1]))
-        
-        print('\n', 'Starting calibration point segmentation GUI', '\n')
-        gui = cal_point_gui(cal_image, blob_file)
-        
-        
-    # ========================================================================
-    # /\/\//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
-    #                         End of legacy functions
-    # /\/\//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
-    # ========================================================================
     
     
     
@@ -559,17 +411,14 @@ class workflow(object):
         '''
         This starts the calibrate with particles sequence
         '''
-        from myptv.gui_final_cal import cal_gui
-        from myptv.imaging_mod import camera
-        from myptv.calibrate_mod import calibrate_with_particles
         from  matplotlib.pyplot import subplots, show
         
         # fetch parameters from the file
         camera_name =  self.get_param('calibration_with_particles',
                                       'camera_name')
-        resolution = self.get_param('calibration_with_particles',
-                             'resolution').split(',')
-        resolution = (float(resolution[0]), float(resolution[1]))
+        #resolution = self.get_param('calibration_with_particles',
+        #                     'resolution').split(',')
+        #resolution = (float(resolution[0]), float(resolution[1]))
         traj_filename = self.get_param('calibration_with_particles',
                                       'traj_filename')
         cam_number = self.get_param('calibration_with_particles',
@@ -584,22 +433,60 @@ class workflow(object):
                                    'calibration_image')
         print('\n', 'starting calibration with particles')
         
-        # setting up a camera instance            
-        cam = camera(camera_name, resolution)
-        cam.load('./')
+        
+        cam_file = open('./'+camera_name, 'r')
+        model = cam_file.readline().split()[0]
+        
+        print('\n Camera model: %s'%model)
         
         
-        # set up the calibration object
-        cal_with_p = calibrate_with_particles(traj_filename, cam, cam_number, 
-                                      blobs_fname, min_traj_len=min_traj_len,
-                                      max_point_number=max_point_number)
+        if model == 'Tsai':
+            from myptv.TsaiModel.gui_final_cal import cal_gui
+            from myptv.TsaiModel.camera import camera_Tsai
+            from myptv.TsaiModel.calibrate import calibrate_with_particles_Tsai
+            
+            # setting up a camera instance            
+            cam = camera_Tsai(camera_name)
+            cam.load('./')
+            
+            
+            # set up the calibration object
+            cal_with_p = calibrate_with_particles_Tsai(traj_filename, cam, 
+                                                       cam_number, 
+                                                       blobs_fname, 
+                                                       min_traj_len=min_traj_len,
+                                                       max_point_number=max_point_number)
+            
+            cal = cal_with_p.get_calibrate_instance()
+            
+            # run the final calibration gui
+            print('starting calibration GIU using calibration with particles\n')
+            gui = cal_gui(cal, cal_image) 
+            
+            
         
-        
-        cal = cal_with_p.get_calibrate_instance()
-        
-        # run the final calibration gui
-        print('starting calibration GIU using calibration with particles\n')
-        gui = cal_gui(cal, cal_image) 
+        if model == 'extendedZolof':
+            from myptv.extendedZolof.gui_final_cal import cal_gui
+            from myptv.extendedZolof.camera import camera_extendedZolof
+            from myptv.extendedZolof.calibrate import calibrate_with_particles_EZ
+            
+            # setting up a camera instance            
+            cam = camera_extendedZolof(camera_name)
+            cam.load('./')
+            
+            
+            # set up the calibration object
+            cal_with_p = calibrate_with_particles_EZ(traj_filename, cam, 
+                                                       cam_number, 
+                                                       blobs_fname, 
+                                                       min_traj_len=min_traj_len,
+                                                       max_point_number=max_point_number)
+            
+            cal = cal_with_p.get_calibrate_instance()
+            
+            # run the final calibration gui
+            print('starting calibration GIU using calibration with particles\n')
+            gui = cal_gui(cal, cal_image) 
         
     
     
@@ -1483,9 +1370,158 @@ class workflow(object):
         # 3) run the class given as action_name, with the parameter given
         
         
-        
         return None
         
+    
+    
+    
+    # ========================================================================
+    # /\/\//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+    #  Legacy functions that are no longer needed due to the cal_gui
+    # /\/\//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+    # ========================================================================
+    
+    def match_target_file(self):
+        '''
+        This function is used to match calibration points to a target file.
+        '''
+        from myptv.imaging_mod import camera
+        from myptv.utils import match_calibration_blobs_and_points
+        from matplotlib.pyplot import show
+        
+        # fetch parameters from the file
+        cam_name = self.get_param('calibration', 'camera_name')
+        points_file = self.get_param('calibration', 'calibration_points_file')
+        target_file = self.get_param('calibration', 'target_file')
+        segmented_file = self.get_param('calibration', 'segmented_points_file')
+        res = self.get_param('calibration', 'resolution').split(',')
+        res = (float(res[0]), float(res[1]))
+        
+        print('Matching target file and segmental calibration points')
+        print('for camera: %s'%cam_name)
+        # initiate the camera
+        cam = camera(cam_name, res)
+        cam.load('.')
+        
+        # match the points
+        mtf = match_calibration_blobs_and_points(cam,
+                                                 segmented_file,
+                                                 target_file)
+        mtf.pair_points()
+    
+        # plot the pairs
+        mtf.plot_projections()
+        show()
+        
+        print('Please confirm that the points were pairs correctly')
+        print("in the figure, by making sure that the blue points")
+        print("and the red x's are close to each other." ,'\n')
+        
+        print("To confirm and save the calibration point file, enter '1'")
+        print("If there are errors, enter '2' and improve the initial calibration.")
+        user = input()
+        
+        if user == '1':
+            mtf.save_results(points_file)
+            print('\n', 'file saved', '\n')
+        
+        elif user == '2':
+            print('\n', 'file not saved', '\n')
+        
+        else:
+            print('\n','unrecognized command. Leaving the workflow.', '\n')
+            
+        print('Done.')
+        
+        
+    
+    
+    
+    def calibration_sequence(self):
+        '''
+        Starts a sequence to guide users through the calibration process.
+        '''
+        from myptv.imaging_mod import camera
+        from myptv.calibrate_mod import calibrate
+        from os import listdir
+        from os.path import isfile
+        #from matplotlib.pyplot import subplots, show, imread
+        
+        # fetch parameters from the file
+        cam_name = self.get_param('calibration', 'camera_name')
+        blob_file = self.get_param('calibration', 'calibration_points_file')
+        cal_image = self.get_param('calibration', 'calibration_image')
+        res = self.get_param('calibration', 'resolution').split(',')
+        res = (float(res[0]), float(res[1]))
+        
+        
+        # checking that a camera file in the working directory
+        ls = listdir('.')                
+        
+        # if the file is found, start calibration sequence
+        if cam_name in ls:
+            print('Starting calibration sequence.')
+            
+            try:
+                cam = camera(cam_name, res, cal_points_fname = blob_file)
+            except:
+                print('\n','Calibration point file (%s) not found!'%blob_file)
+                print('\n','Would you like to start the calibration point gui?')
+                user = input('1=yes,  else=no : ')
+                if user == '1':
+                    self.calibration_point_gui()  
+                else:
+                    print('quitting...')
+                return 
+            
+            cam.load('.')
+            print('camera data loaded successfully.')
+            cal = calibrate(cam, cam.lab_points, cam.image_points)
+            print('initial error: %.3f pixels\n'%(cal.mean_squared_err()))
+            
+            
+            print('starting calibratino GIU\n')
+            from myptv.gui_final_cal import cal_gui
+            gui = cal_gui(cal, cal_image)
+                    
+            
+        # if not, generate an empty file camera file
+        else:
+            print('')
+            print('camera files not detected in the working directory.')
+            print('Generating a new empty file and leaving calib. sequence.')
+            print('To continue calibration, fill in an initial guess in the')
+            print('empty file, and then run again the calibration sequence.')
+            cam = camera(cam_name, res)
+            cam.save('.')
+            print('\n', 'Done.')
+    
+    
+    
+    
+    def calibration_point_gui(self):
+        '''
+        This will start the calibration segmentation point gui.
+        '''
+        from myptv.cal_point_gui import cal_point_gui
+        
+        # fetch parameters from the file
+        blob_file = self.get_param('calibration', 'calibration_points_file')
+        cal_image = self.get_param('calibration', 'calibration_image')
+        res = self.get_param('calibration', 'resolution').split(',')
+        res = (float(res[0]), float(res[1]))
+        
+        print('\n', 'Starting calibration point segmentation GUI', '\n')
+        gui = cal_point_gui(cal_image, blob_file)
+        
+        
+    # ========================================================================
+    # /\/\//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+    #                         End of legacy functions
+    # /\/\//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+    # ========================================================================
+    
+    
 #%%
         
         

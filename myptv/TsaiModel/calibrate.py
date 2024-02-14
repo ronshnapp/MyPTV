@@ -575,9 +575,9 @@ class calibrate_with_particles_Tsai(object):
     def get_calibrate_instance(self):
         
         # initiating a calibrate object using this data
-        self.cal = calibrate(self.camera, 
-                             [p[0] for p in self.cal_points], 
-                             [p[1] for p in self.cal_points])
+        self.cal = calibrate_Tsai(self.camera, 
+                                  [p[0] for p in self.cal_points], 
+                                  [p[1] for p in self.cal_points])
         return self.cal
         
         
