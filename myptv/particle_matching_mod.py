@@ -223,7 +223,10 @@ class matching_with_marching_particles_algorithm(object):
             # whr = [i for i in range(self.blobs[camNum][frame].shape[0]) 
             #                              if i not in used_blob_indexes[camNum]]
             # self.B_ik_trees[camNum] = KDTree(self.blobs[camNum][frame][whr,:2])
-            self.B_ik_trees[camNum] = KDTree(self.blobs[camNum][frame][:,:2])
+            try:
+                self.B_ik_trees[camNum] = KDTree(self.blobs[camNum][frame][:,:2])
+            else:
+                self.B_ik_trees[camNum] = KDTree([[]])
             
         self.B_ik_trees['frame'] = frame
     
