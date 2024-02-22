@@ -735,7 +735,8 @@ class workflow(object):
                                                 extension=ext,
                                                 image_start=image_start,
                                                 N_img=N_img, 
-                                                sigma=sigma, 
+                                                sigma=sigma,
+                                                remove_ststic_BG=remove_BG,
                                                 median=median,
                                                 threshold=threshold, 
                                                 local_filter=local_filter, 
@@ -748,7 +749,7 @@ class workflow(object):
                                                 mask=mask,
                                                 method=method,
                                                 pca_limit=1.0)
-                print('RON!')
+                
                 loopSegment.segment_folder_images()
                 
                 print('\n','blobs found:', len(loopSegment.blobs))
