@@ -9,7 +9,7 @@ numpy
 opencv-python
 packaging
 pandas
-Pillow
+Pillow >=9.5.0
 pyparsing
 python-dateutil
 pytest

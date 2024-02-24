@@ -554,8 +554,11 @@ class initial_cal_gui(object):
         # refresh the image
         image = Image.open(self.image_name)
         s = image.size
+        #image = image.resize((int(s[0]*self.z),int(s[1]*self.z)),
+        #                     Image.ANTIALIAS)
         image = image.resize((int(s[0]*self.z),int(s[1]*self.z)),
-                             Image.ANTIALIAS)
+                             Image.LANCZOS)
+        
         new_bird = ImageTk.PhotoImage(image)
         self.board.configure(image = new_bird)
         self.board.image = new_bird
@@ -703,8 +706,11 @@ class initial_cal_gui(object):
         # plot the segmented particles over a refreshed image
         image = Image.open(self.image_name)
         s = image.size
+        #image = image.resize((int(s[0]*self.z),int(s[1]*self.z)),
+        #                     Image.ANTIALIAS)
         image = image.resize((int(s[0]*self.z),int(s[1]*self.z)),
-                             Image.ANTIALIAS)
+                             Image.LANCZOS)
+        
         new_bird = ImageTk.PhotoImage(image)
         self.board.configure(image = new_bird)
         self.board.image = new_bird
@@ -788,8 +794,12 @@ class initial_cal_gui(object):
         self.z = self.z*1.15
         image = Image.open(self.image_name)
         s = image.size
+        #image = image.resize((int(s[0]*self.z),int(s[1]*self.z)),
+        #                     Image.ANTIALIAS)
+        
         image = image.resize((int(s[0]*self.z),int(s[1]*self.z)),
-                             Image.ANTIALIAS)
+                             Image.LANCZOS)
+        
         new_bird = ImageTk.PhotoImage(image)
         self.board.configure(image = new_bird)
         self.board.image = new_bird
@@ -812,8 +822,10 @@ class initial_cal_gui(object):
         self.z = self.z*(1/1.15)
         image = Image.open(self.image_name)
         s = image.size
+        #image = image.resize((int(s[0]*self.z),int(s[1]*self.z)),
+        #                     Image.ANTIALIAS)
         image = image.resize((int(s[0]*self.z),int(s[1]*self.z)),
-                             Image.ANTIALIAS)
+                             Image.LANCZOS)
         new_bird = ImageTk.PhotoImage(image)
         self.board.configure(image = new_bird)
         self.board.image = new_bird

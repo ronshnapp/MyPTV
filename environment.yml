@@ -16,5 +16,5 @@ dependencies:
   - scikit-image
   - scipy
   - pyyaml
-  - pillow
+  - pillow >=9.5.0
   - tk

@@ -1,5 +1,5 @@
 November 23, 2023
-Version: 0.8.0
+Version: 0.8.2
 
 <img src="./user_manual/figs/logo.png" style="zoom:20%;" />
 
