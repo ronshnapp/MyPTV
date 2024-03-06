@@ -14,7 +14,7 @@ segmented particles' image coordinates.
 from myptv.utils import line_dist
 from math import ceil, floor
 from itertools import combinations, product
-from numpy import savetxt, array
+from numpy import savetxt, array, inf
 from numpy.random import uniform
 from scipy.spatial import KDTree
 
@@ -151,7 +151,7 @@ class matching_with_marching_particles_algorithm(object):
         finds in each camera the blobs nearest to this point's projection, 
         it stereo matches them, and returns the results. 
         
-        Results are returned only if the stereo match is consedered
+        Results are returned only if the stereo match is considered
         successfull, which means the max_d_err and min_cam_match tests 
         were successfull.
         '''
@@ -171,8 +171,12 @@ class matching_with_marching_particles_algorithm(object):
             projection = cam.projection(x)
             kNN = self.B_ik_trees[camNum].query([projection], k=self.max_k)  
             ind = kNN[1][0]
+            dist = kNN[0][0]
             for i in range(len(ind)):
                 
+                if dist[i]==inf:
+                    continue
+                                
                 identifier = (camNum, frame, ind[i])
                 if identifier in self.matchedBlobs[frame]: # this blob has been used
                     continue
