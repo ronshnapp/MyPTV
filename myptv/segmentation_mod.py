@@ -487,11 +487,18 @@ class loop_segmentation(object):
         else: 
             BG_images=self.image_files[::int(len(self.image_files)/400+1)][:200]
         
-        BG_images = [os.path.join(self.dir_name, im) for im in self.image_files]
+        BG_images = [os.path.join(self.dir_name, im) for im in BG_images]
         # reading the images for BG subtraction
-        ic = io.ImageCollection(BG_images)
         
-        self.BG = npmedian(ic, axis=0)
+        for i in range(len(BG_images)):
+            if i==0:
+                im0 = io.imread(BG_images[i])*1.0
+            else:
+                im0 += io.imread(BG_images[i])
+        
+        self.BG = im0 / len(BG_images)
+        #ic = io.ImageCollection(BG_images)
+        #self.BG = npmedian(ic, axis=0)
         
         
     def segment_folder_images(self):

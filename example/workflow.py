@@ -341,8 +341,9 @@ class workflow(object):
         Performs stereo matching of the calibration points and compares
         then with the ground truth. 
         '''
-        from numpy import loadtxt, array, mean, median
+        from numpy import loadtxt, array, mean, median, savez
         from myptv.imaging_mod import camera_wrapper, img_system
+        from pandas import DataFrame
         
         cam_names = self.get_param('analyze_calibration_error', 'camera_names')
         cam_names = [val.strip() for val in cam_names.split(',')]
@@ -374,6 +375,7 @@ class workflow(object):
         # for each point in the dictionary, get the calibration error
         errors = []
         errsX, errsY, errsZ = [], [] ,[]
+        x, y, z = [], [], []
         for k in point_dic.keys():
             if len(point_dic[k])!=len(cam_names): continue
             ground_truth = array(k)
@@ -382,8 +384,14 @@ class workflow(object):
             err = sum((diff)**2)**0.5
             
             errors.append(err)
-            errsX.append(diff[0]) ; errsY.append(diff[1]) ; errsZ.append(diff[2])
+            errsX.append(diff[0])
+            errsY.append(diff[1])
+            errsZ.append(diff[2])
+            x.append(ground_truth[0])
+            y.append(ground_truth[1])
+            z.append(ground_truth[2])
             
+        
         print('Calibration error in in lab-space units:')
         print('RMS of full error: %.3e'%(mean(errors)))
         print('median of full error: %.3e'%(median(errors)))
@@ -402,6 +410,17 @@ class workflow(object):
                 h = ax[e].hist(lst, bins='auto')
                 ax[e].set_title(titles[e])
             plt.show()
+        
+        
+        errs_df = DataFrame({'x':x, 'y':y, 'z':z,
+                             'x_err':errsX, 'y_err':errsY, 'z_err':errsZ})
+        
+        errs_df.to_csv('calibration_errors_data', 
+                       sep='\t', 
+                       index=False,
+                       float_format='%.4e')
+        
+        print('Calibration errors data saved as "calibration_errors_data" \n')
             
             
         
@@ -496,7 +515,7 @@ class workflow(object):
         and save the results on the given location.
         '''
         
-        from numpy import zeros
+        from numpy import zeros, amax
         from skimage.io import imread
         import os
         
@@ -554,6 +573,7 @@ class workflow(object):
             mask_ROI = zeros(image0.shape)
             mask_ROI[ROI[2]:ROI[3]+1, ROI[0]:ROI[1]+1] = 1
             mask = mask * mask_ROI
+            mask = (mask / amax(mask)).astype('uint')
             
             
         def calculate_BG_image(dirname, extension):
