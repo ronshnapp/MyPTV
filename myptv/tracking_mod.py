@@ -125,8 +125,11 @@ class tracker_four_frames(object):
         will use the 4 frame tracking. If a particle has no previous links, 
         it will attempt a nearest neighbour tracking.  
         '''
-        p1_lst = self.particles[frame_num]
-        p2_lst = self.particles[frame_num+1]
+        try:
+            p1_lst = self.particles[frame_num]
+            p2_lst = self.particles[frame_num+1]
+        except:
+            return None
         
         
         # try 4 frame tracking for particles that are connected at least once 
