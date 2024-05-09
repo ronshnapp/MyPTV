@@ -8,7 +8,7 @@ Created on Fri Dec  7 18:02:07 2018
 contains a class for segmentation of circular particles
 """
 
-from numpy import ones, savetxt, meshgrid
+from numpy import ones, savetxt, meshgrid, array, gradient
 from numpy import sum as npsum
 from numpy import abs as npabs
 from numpy import median as npmedian
@@ -23,7 +23,7 @@ from scipy.spatial import KDTree
 
 
 
-class particle_segmentation(object):
+class sheet_segmentation(object):
     '''a class for segmenting out particles (blobs) for a given image'''
     
     
@@ -180,7 +180,7 @@ class particle_segmentation(object):
         brightness above the threshold brightness value.
         
         input -
-        coord - an tuple or list of size 2 with the x,y coordinates
+        coord - a tuple or list of size 2 with the x,y coordinates
         size - if None, size is set to be self.particle_size; otherwise it 
                shoud be an integer.
         '''
@@ -252,7 +252,7 @@ class particle_segmentation(object):
     
     
     
-    def get_blobs(self):
+    def get_blobs_and_silhouettes(self):
         '''Returns a list of particle centers, their box size, and area
         
         The center is the weighted mean of the blob coordinates using
@@ -263,81 +263,41 @@ class particle_segmentation(object):
         
         returns - blobs: a nested list of [ [(center), (box size), area], ...]
         '''    
-
-        if self.method == 'dilation':
-                
-            # get a list of pixel coordinates that are bright local maxima
-            self.bin_im = self.get_binary_image() 
-            self.Y, self.X = meshgrid(range(self.im.shape[1]), 
-                                      range(self.im.shape[0]))
-            coords = list(zip(self.X[self.bin_im>0], self.Y[self.bin_im>0]))
-                
-            blobs = []
-            for coord in coords:
-                
-                # perform iterations (maximum of 3) to refine particles' position
-                for i in range(3) :
-                    C, bbox, mass = self.characterize_blob(coord)
-                    d = ((C[0]-coord[0])**2 + (C[1]-coord[1])**2)**0.5 
-                    coord = C
-                    
-                    if d < 1.0:
-                        break
-                
-                # round the center of mass
-                coord = [round(coord[0], ndigits=2), 
-                         round(coord[1], ndigits=2)]
-                
-                # add final blob to final list
-                blobs.append( [coord, bbox, mass] )
-                
+        # getting the binary image
+        self.bin_im = self.get_binary_image() 
+        
+        # labeling connected foreground pixels to form "blobs"
+        blob_pixels = self.blob_labeling(self.bin_im)
+        
+        # making an image with the edges of the blobs
+        grad = gradient(self.labeled)
+        self.silhouette_image = npsum(array(grad*(self.labeled>0))**2, axis=0)
+        
+        stamp_y, stamp_x = meshgrid(range(self.im.shape[1]), 
+                                    range(self.im.shape[0]))
+        
+        blobs = []
+        edge_pixels = []
+        
+        for e, loc in enumerate(blob_pixels):
+            # 1. extracting blob parameters
+            mask = 1.0*(self.labeled[loc]>0)*(self.labeled[loc]==e+1)
+            mass = npsum(self.processed_im[loc] * mask)
+            X = npsum(stamp_x[loc] * self.processed_im[loc] * mask) / mass
+            Y = npsum(stamp_y[loc] * self.processed_im[loc] * mask) / mass
+            center = [round(X, ndigits=2), round(Y, ndigits=2)]
+            box_size = list(mask.shape)
+            blobs.append( [center, box_size, mass])
             
-            # search and remove duplicates; duplicates are points that are 
-            # closer than self.particle_size/2 away. In this case, we keep the
-            # blob with lower mass, 
-            if len(blobs) > 0: 
-                tree = KDTree([b[0] for b in blobs])
-                duplicates = tree.query_pairs(self.p_size/2)
-                to_remove = []
-                for d in duplicates:
-                    if blobs[d[0]][-1] < blobs[d[1]][-1]:
-                        to_remove.append(d[1])
-                    else:
-                        to_remove.append(d[0])
-                        
-                to_remove = list(set(to_remove))
-                        
-                for i in sorted(to_remove, reverse=True): 
-                    del blobs[i] 
-                
-            self.blobs = blobs
+            # 2. extracting the pixels of the edges of each blob
+            mask = 1.0*(self.silhouette_image[loc]>0)*(self.labeled[loc]==e+1)
+            sill_x = (stamp_x[loc] * mask)[stamp_x[loc] * mask > 0]
+            sill_y = (stamp_y[loc] * mask)[stamp_x[loc] * mask > 0]
+            edge_pixels.append(list(zip(sill_x, sill_y)))
             
+        self.blobs = blobs
+        self.edge_pixels = edge_pixels
             
-            
-        elif self.method=='labeling':
-            
-            # getting the binary image
-            self.bin_im = self.get_binary_image() 
-            
-            # labeling connected foreground pixels to form "blobs"
-            blob_pixels = self.blob_labeling(self.bin_im)
-            
-            blobs = []
-            
-            stamp_y, stamp_x = meshgrid(range(self.im.shape[1]), 
-                                        range(self.im.shape[0]))
-            
-            for e, loc in enumerate(blob_pixels):
-                # extracting blob parameters
-                mask = 1.0*(self.labeled[loc]>0)*(self.labeled[loc]==e+1)
-                mass = npsum(self.processed_im[loc] * mask)
-                X = npsum(stamp_x[loc] * self.processed_im[loc] * mask) / mass
-                Y = npsum(stamp_y[loc] * self.processed_im[loc] * mask) / mass
-                center = [round(X, ndigits=2), round(Y, ndigits=2)]
-                box_size = list(mask.shape)
-                blobs.append( [center, box_size, mass])
-                
-            self.blobs = blobs
    
         
    
@@ -408,7 +368,7 @@ class particle_segmentation(object):
         
         
         
-class loop_segmentation(object):
+class loop_sheet_segmentation(object):
     
     '''A class for looping over images in a directory to segment particles
     and save the results in a file.'''
@@ -564,6 +524,28 @@ class loop_segmentation(object):
                 fmt=['%.02f','%.02f','%d','%d','%d','%d'], delimiter='\t')
         
         
+        
+        
+        
+        
+if __name__=='__main__':
+    
+    import matplotlib.pyplot as plt
+    
+    fn = '/home/ron/Desktop/Research/myptv_tests/sheet_segmentation/test_image.tif'
+    image = imread(fn, as_gray=True)
+    sg = sheet_segmentation(image, sigma=0.5, threshold=0.5)
+    
+    bin_im = sg.get_binary_image()
+    
+    sg.get_blobs_and_silhouettes()
+    
+    
+    plt.imshow(sg.labeled)
+    
+    for sill_pixels in sg.edge_pixels:
+        for px in sill_pixels:
+            plt.plot(px[1], px[0], 'bo', alpha=0.3)
         
     
     
