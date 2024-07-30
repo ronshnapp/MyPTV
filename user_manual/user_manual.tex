@@ -102,7 +102,8 @@
 \subsection{3D-PTV principles}
 
 
-The 3D-PTV method is used to measure the trajectories of particles in 3D space. It utilizes the principles of stereoscopic vision to reconstruct 3D positions of particles from images taken from several angles. A scheme of a typical 3D-PTV experiment using a four-camera system is shown in Fig.~\ref{fig:3dptv_exp}. The "workhorse" behind the 3D-PTV method is the co-linearity condition, the 3D model. In principle, if we know what the position is and what is the orientation of the camera in 3D space ($O'$ and $\theta$ in Fig.~\ref{fig:3dmodel}), we can use the pin-hole camera model to relate the image space coordinates of a particle ($\eta,\, \zeta$ in Fig.~\ref{fig:3dmodel}) to the ray of light connecting the imaging center and the particle. Then, if we have more than one camera, the particle will be located at the intersection of the two rays. Detailed information is given in \cite{Virant1997, Maas1993}.  
+The 3D-PTV method is used to measure the trajectories of particles in 3D space. It utilizes the principles of stereoscopic vision to reconstruct 3D positions of particles from images taken from several angles. A scheme of a typical 3D-PTV experiment using a four-camera system is shown in Fig.~\ref{fig:3dptv_exp}. The main components behind the 3D-PTV method are the co-linearity condition and the 3D model. The co-linearity condition means that the position of a point in 3D space can be identified from the crossing of two or more straight lines in 3D space. Therefore, if we have a system of cameras all see a common particle, then the particles' position is estimated by searching for the point in which rays of light connecting the particle with the different cameras cross each other. To perform this task we use a 3D model -- a mathematical representation of the way in which cameras "see" the world. Thus, the 3D model is a function that can convert 3D points into pixel coordinates ($\eta,\, \zeta$ in Fig.~\ref{fig:3dmodel}) and pixel coordinates back into rays of light~\cite{Virant1997, Maas1993}.
+For example, A commonly used 3D model is the pin-hole camera model, in which each camera is associated with a position and orientation in 3D space ($O'$ and $\theta$ in Fig.~\ref{fig:3dmodel}). MyPTV has two 3D models that the user can choose from and they are described below.
 
 
 \begin{figure}[!ht]
@@ -136,10 +137,55 @@ The sections that follow outline the code used to handle the 3D-PTV method in My
 
 
 
-\subsection{3D model}
 
 
-We use a pinhole camera model to transform the 2D particles seen in the camera images. In particular, the following expression relates the coordinates in the 2D image space coordinates and a direction vector pointing out from the camera imaging center:
+
+\subsection{MyPTV usage and structure}
+
+
+MyPTV is used to conduct the post-processing steps in which the experimental raw data (images) are transformed into particles' trajectories. The five steps include camera calibration, image segmentation, particle matching, particle tracking, and, data conditioning which is divided into smoothing and stitching of broken trajectories. This section outlines how these steps are to be followed and how MyPTV is structured to facilitate them. Section~\ref{sec:workflow} gives instructions on how to efficiently use MyPTV. 
+
+
+At the current stage, MyPTV does not include a graphical user interface. Instead, the package includes a script that can be used to efficiently and conveniently run the various post-processing steps. Knowledge of Python is not required to operate MyPTV.
+
+
+The internal structure of MyPTV is made of separate "modules", each of which deals with a particular step out of the list described above. Each module consists of a Python script file that includes one or several classes. Detailed information on each of these classes is given in Sections~\ref{sec:image_mod}--\ref{sec:stitching}, and the code itself includes documentation to a level appropriate for development. In addition to the source code, MyPTV includes a \textit{workflow} script that is used to operate the software in an organized fashion. Thus, MyPTV can be used either by using the workflow script or by directly evoking classes from the source code. 
+
+
+
+
+
+
+
+
+
+
+
+\clearpage
+
+
+
+
+
+
+\section{MyPTVs 3D models}
+
+
+The 3D model is a core element of the PTV method, as it allows to do the transformation between the coordinates of objects in the 3D world (so-called lab-space) and the 2D coordinates in the image space seen by the cameras (namely, pixel coordinates) and vise-versa. 
+In MyPTV there are two such models that have been implemented thus far, each having certain advantages and disadvantages with respect to the other. Other PTV programs can also use other 3D models. The models implemented are introduced below.
+
+
+
+
+\subsection{The Tsai model with non-linear polynomial correction}        
+
+
+The 3D model described here is based on the original model that was originally introduced in the seminal work of Maas, Gruen \& Papantoniou from ETH Z\"{u}rich~\cite{Maas1993}.
+The basic model uses the physical pin-hole camera model concepts to project 3D points onto an imaging plane; the basic model is invertible, meaning that points on the imaging plane can be transformed back to lines in the 3D world analytically. Notably, this model was the only one used in the first versions of MyPTV (all the 0.x.x versions).
+
+
+
+Each camera in this model is represented by its position ($\vec O$), orientation vector ($\vec \theta$), and the focal length, as described in Fig.~\ref{fig:3dmodel}. On top of that, to correct for non-linear image aberrations (such as lens imperfection, fisheye, etc), our version of the model uses a non-linear correction term. All in all, the model uses the following equation to transform between the coordinates in the 2D image space coordinates and a direction vector pointing out from the camera imaging center:
 %
 \begin{equation}
 \vec{r}-\vec{O} = \Big( \, 
@@ -152,7 +198,30 @@ f
 \label{eq:3dmodel}
 \end{equation}
 %
-where the description of the notations is given in Table~\ref{tab1:mathdesc}. The matrix $[R]= [R_1]\cdot [R_2] \cdot [R_3]$ is the rotation matrix calculated with the components of the orientation vector, $\vec{\theta} = [\theta 1,\, \theta 2,\, \theta 3]$. In addition, the correction term $\vec{e}$ is assumed to be a quadratic polynomial of the image space coordinates:
+Here, $\vec{r}$ and $\vec{O}$ are the position of a particle and the position of the cameras imaging center in 3D space; $(\eta, \zeta)$ are the particle coordinates as seen by the camera in 2D image space; $f$ is a scale factor, equal to the cameras' principal distance divided by the physical size of the camera pixels, $\vec e$ is the non-linear correction term, and $x_h,\, y_h$ are corrections to the cameras' imaging center. The matrix $[R]= [R_1]\cdot [R_2] \cdot [R_3]$ is the rotation matrix calculated with the components of the orientation vector, $\vec{\theta} = [\theta 1,\, \theta 2,\, \theta 3]$. 
+The notations are summarized in Table~\ref{tab1:mathdesc}. Each camera has its own distinct values of the parameters listed above. 
+
+
+
+\begin{table}[!hb]
+	\centering
+	\caption{Description of mathematical notation. used to describe the 3D model based on the Tsai model \label{tab1:mathdesc}}
+	\begin{tabular}{p{5em} p{30em}}
+		\hline
+		Symbol & Description \\ \hline
+		$\vec{r}$ & Particle position in the lab space coordinates\\
+		$\vec{O} $& Position of a camera's imaging center \\
+		$\eta, \, \zeta$ & image space coordinates (pixels) of a particle \\
+		$x_h , \, y_h$ & Correction to the camera's imaging center (in pixels)\\
+		$f$ & The camera's principle distance divided by the pixel size \\ 
+		$\vec{e}(\eta, \zeta)$ & A nonlinear correction term to compensate for image distortion and multimedia problems.\\
+		$[R]$ & The rotation matrix which corresponds to the camera orientation vector. \\  \hline
+	\end{tabular}
+\end{table}
+
+
+
+In addition, to the above, the correction term $\vec{e}$ is assumed to be a quadratic polynomial of the image space coordinates:
 %
 \begin{equation}
 \vec{e}(\eta,\,\zeta) = [E]\cdot P(\eta,\,\zeta) =
@@ -171,27 +240,7 @@ E_{21} & E_{22} & E_{23} & E_{24} & E_{25}\\
 \end{bmatrix}
 \end{equation}
 %
-where $[E]$ is a $3\times5$ matrix that holds the correction coefficients; the last row is filled with zeros because we do not attempt to correct $f$.
-
-
-
-
-
-\begin{table}[!ht]
-	\centering
-	\caption{Description of mathematical notation. \label{tab1:mathdesc}}
-	\begin{tabular}{p{5em} p{30em}}
-		\hline
-		Symbol & Description \\ \hline
-		$\vec{r}$ & Particle position in the lab space coordinates\\
-		$\vec{O} $& Position of a camera's imaging center \\
-		$\eta, \, \zeta$ & image space coordinates (pixels) of a particle \\
-		$x_h , \, y_h$ & Correction to the camera's imaging center (in pixels)\\
-		$f$ & The camera's principle distance divided by the pixel size \\ 
-		$\vec{e}(\eta, \zeta)$ & A nonlinear correction term to compensate for image distortion and multimedia problems.\\
-		$[R]$ & The rotation matrix which corresponds to the camera orientation vector. \\  \hline
-	\end{tabular}
-\end{table}
+Here, $[E]$ is a $3\times5$ matrix that holds the coefficients of the correction term (the last row is filled with zeros because we do not attempt to correct for $f$).
 
 
 
@@ -203,20 +252,47 @@ where $[E]$ is a $3\times5$ matrix that holds the correction coefficients; the l
 
 
 
+\subsection{The extended Zolof model} 
+
+
+
+The extended Zolof model is a nother approach to obtaining the transformation between 3D lab-space and 2D image space. 
+Here, the transformation is inherently mathematical, namely, in its basic version it does not involve any physical assumption about how cameras perceive the world. Thus the projection of 3D coordinates into the 2D lab coordinates is simply achieved using interpolating functions
+%
+\begin{equation}
+\left[ 
+\begin{matrix}
+\eta \\
+\zeta
+\end{matrix}
+\right]
+=
+\left[ 
+\begin{matrix}
+P_\eta(\vec{r}) \\
+P_\zeta(\vec{r})
+
+\end{matrix}
+\right]
+\end{equation}
+%
+In MyPTV, $P_\eta$ and $P_\zeta$ are simply polynomial functions of the $\vec{r}=(x,y,z)$ coordinates: ....
+
+
+
+The extended Zolof model is a later addition to MyPTV, and its allows the software users to 
 
 
 
 
-\subsection{MyPTV usage and structure}
 
 
-MyPTV is used to conduct the post-processing steps in which the experimental raw data (images) are transformed into particles' trajectories. The five steps include camera calibration, image segmentation, particle matching, particle tracking, and, data conditioning which is divided into smoothing and stitching of broken trajectories. This section outlines how these steps are to be followed and how MyPTV is structured to facilitate them. Section~\ref{sec:workflow} gives instructions on how to efficiently use MyPTV. 
 
 
-At the current stage, MyPTV does not include a graphical user interface. Instead, the package includes a script that can be used to efficiently and conveniently run the various post-processing steps. Knowledge of Python is not required to operate MyPTV.
 
 
-The internal structure of MyPTV is made of separate "modules", each of which deals with a particular step out of the list described above. Each module consists of a Python script file that includes one or several classes. Detailed information on each of these classes is given in Sections~\ref{sec:image_mod}--\ref{sec:stitching}, and the code itself includes documentation to a level appropriate for development. In addition to the source code, MyPTV includes a \textit{workflow} script that is used to operate the software in an organized fashion. Thus, MyPTV can be used either by using the workflow script or by directly evoking classes from the source code. 
+
+
 
 
 

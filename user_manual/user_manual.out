@@ -1,53 +1,55 @@
 \BOOKMARK [1][-]{section.1}{Introduction}{}% 1
 \BOOKMARK [2][-]{subsection.1.1}{3D-PTV principles}{section.1}% 2
-\BOOKMARK [2][-]{subsection.1.2}{3D model}{section.1}% 3
-\BOOKMARK [2][-]{subsection.1.3}{MyPTV usage and structure}{section.1}% 4
-\BOOKMARK [1][-]{section.2}{The Workflow: guidelines for a 3D-PTV experiment}{}% 5
-\BOOKMARK [2][-]{subsection.2.1}{Preparation of an experiment folder}{section.2}% 6
-\BOOKMARK [3][-]{subsubsection.2.1.1}{The workflow.py script}{subsection.2.1}% 7
-\BOOKMARK [3][-]{subsubsection.2.1.2}{The params\137file.yml file}{subsection.2.1}% 8
-\BOOKMARK [2][-]{subsection.2.2}{Calibration guide}{section.2}% 9
-\BOOKMARK [3][-]{subsubsection.2.2.1}{Preparing a target\137file}{subsection.2.2}% 10
-\BOOKMARK [3][-]{subsubsection.2.2.2}{Preparing the parameters in the params\137file}{subsection.2.2}% 11
-\BOOKMARK [3][-]{subsubsection.2.2.3}{Initial calibration}{subsection.2.2}% 12
-\BOOKMARK [3][-]{subsubsection.2.2.4}{Understanding camera external parameters}{subsection.2.2}% 13
-\BOOKMARK [3][-]{subsubsection.2.2.5}{Final calibration}{subsection.2.2}% 14
-\BOOKMARK [3][-]{subsubsection.2.2.6}{Important notes}{subsection.2.2}% 15
-\BOOKMARK [3][-]{subsubsection.2.2.7}{How to perform calibration with several images \(sometimes called multiplane calibration\)}{subsection.2.2}% 16
-\BOOKMARK [2][-]{subsection.2.3}{Segmentation}{section.2}% 17
-\BOOKMARK [3][-]{subsubsection.2.3.1}{How to segment in MyPTV}{subsection.2.3}% 18
-\BOOKMARK [3][-]{subsubsection.2.3.2}{Two methods of segmentation}{subsection.2.3}% 19
-\BOOKMARK [2][-]{subsection.2.4}{Matching}{section.2}% 20
-\BOOKMARK [2][-]{subsection.2.5}{Tracking}{section.2}% 21
-\BOOKMARK [2][-]{subsection.2.6}{Calibration with particles}{section.2}% 22
-\BOOKMARK [2][-]{subsection.2.7}{Smoothing}{section.2}% 23
-\BOOKMARK [2][-]{subsection.2.8}{Stitching}{section.2}% 24
-\BOOKMARK [2][-]{subsection.2.9}{2D tracking guide}{section.2}% 25
-\BOOKMARK [2][-]{subsection.2.10}{Manual Matching GUI}{section.2}% 26
-\BOOKMARK [2][-]{subsection.2.11}{Fiber tracking}{section.2}% 27
-\BOOKMARK [1][-]{section.3}{Imaging module - imaging\137mod.py}{}% 28
-\BOOKMARK [2][-]{subsection.3.1}{The camera object}{section.3}% 29
-\BOOKMARK [2][-]{subsection.3.2}{The imsys object}{section.3}% 30
-\BOOKMARK [2][-]{subsection.3.3}{The Cal\137image\137coord object}{section.3}% 31
-\BOOKMARK [1][-]{section.4}{Camera calibration - calibrate\137mod.py}{}% 32
-\BOOKMARK [2][-]{subsection.4.1}{The calibrate object}{section.4}% 33
-\BOOKMARK [2][-]{subsection.4.2}{The calibrate\137with\137particles object}{section.4}% 34
-\BOOKMARK [2][-]{subsection.4.3}{The gui\137final\137cal.py file}{section.4}% 35
-\BOOKMARK [2][-]{subsection.4.4}{The gui\137initial\137cal.py file}{section.4}% 36
-\BOOKMARK [1][-]{section.5}{Particle segmentation - segmentation\137mod.py}{}% 37
-\BOOKMARK [2][-]{subsection.5.1}{The particle\137segmentation object}{section.5}% 38
-\BOOKMARK [2][-]{subsection.5.2}{The loop\137segmentation object}{section.5}% 39
-\BOOKMARK [1][-]{section.6}{Particle matching - particle\137matching\137mod.py}{}% 40
-\BOOKMARK [2][-]{subsection.6.1}{The matching\137with\137marching\137particles\137algorithm object}{section.6}% 41
-\BOOKMARK [2][-]{subsection.6.2}{The match\137blob\137files object \(Legacy\)}{section.6}% 42
-\BOOKMARK [2][-]{subsection.6.3}{The matching object \(Legacy\)}{section.6}% 43
-\BOOKMARK [2][-]{subsection.6.4}{The matching\137using\137time object \(Legacy\)}{section.6}% 44
-\BOOKMARK [2][-]{subsection.6.5}{The initiate\137time\137matching object \(Legacy\)}{section.6}% 45
-\BOOKMARK [1][-]{section.7}{Tracking in 3D - tracking\137mod.py}{}% 46
-\BOOKMARK [2][-]{subsection.7.1}{The tracker\137four\137frames object}{section.7}% 47
-\BOOKMARK [2][-]{subsection.7.2}{The tracker\137two\137frames object}{section.7}% 48
-\BOOKMARK [2][-]{subsection.7.3}{The tracker\137nearest\137neighbour object}{section.7}% 49
-\BOOKMARK [1][-]{section.8}{Trajectory smoothing - traj\137smoothing\137mod.py}{}% 50
-\BOOKMARK [2][-]{subsection.8.1}{The smooth\137trajectories object}{section.8}% 51
-\BOOKMARK [1][-]{section.9}{Trajectory stitching - traj\137stitching\137mod.py}{}% 52
-\BOOKMARK [2][-]{subsection.9.1}{The traj\137stitching object}{section.9}% 53
+\BOOKMARK [2][-]{subsection.1.2}{MyPTV usage and structure}{section.1}% 3
+\BOOKMARK [1][-]{section.2}{MyPTVs 3D models}{}% 4
+\BOOKMARK [2][-]{subsection.2.1}{The Tsai model with non-linear polynomial correction}{section.2}% 5
+\BOOKMARK [2][-]{subsection.2.2}{The extended Zolof model}{section.2}% 6
+\BOOKMARK [1][-]{section.3}{The Workflow: guidelines for a 3D-PTV experiment}{}% 7
+\BOOKMARK [2][-]{subsection.3.1}{Preparation of an experiment folder}{section.3}% 8
+\BOOKMARK [3][-]{subsubsection.3.1.1}{The workflow.py script}{subsection.3.1}% 9
+\BOOKMARK [3][-]{subsubsection.3.1.2}{The params\137file.yml file}{subsection.3.1}% 10
+\BOOKMARK [2][-]{subsection.3.2}{Calibration guide}{section.3}% 11
+\BOOKMARK [3][-]{subsubsection.3.2.1}{Preparing a target\137file}{subsection.3.2}% 12
+\BOOKMARK [3][-]{subsubsection.3.2.2}{Preparing the parameters in the params\137file}{subsection.3.2}% 13
+\BOOKMARK [3][-]{subsubsection.3.2.3}{Initial calibration}{subsection.3.2}% 14
+\BOOKMARK [3][-]{subsubsection.3.2.4}{Understanding camera external parameters}{subsection.3.2}% 15
+\BOOKMARK [3][-]{subsubsection.3.2.5}{Final calibration}{subsection.3.2}% 16
+\BOOKMARK [3][-]{subsubsection.3.2.6}{Important notes}{subsection.3.2}% 17
+\BOOKMARK [3][-]{subsubsection.3.2.7}{How to perform calibration with several images \(sometimes called multiplane calibration\)}{subsection.3.2}% 18
+\BOOKMARK [2][-]{subsection.3.3}{Segmentation}{section.3}% 19
+\BOOKMARK [3][-]{subsubsection.3.3.1}{How to segment in MyPTV}{subsection.3.3}% 20
+\BOOKMARK [3][-]{subsubsection.3.3.2}{Two methods of segmentation}{subsection.3.3}% 21
+\BOOKMARK [2][-]{subsection.3.4}{Matching}{section.3}% 22
+\BOOKMARK [2][-]{subsection.3.5}{Tracking}{section.3}% 23
+\BOOKMARK [2][-]{subsection.3.6}{Calibration with particles}{section.3}% 24
+\BOOKMARK [2][-]{subsection.3.7}{Smoothing}{section.3}% 25
+\BOOKMARK [2][-]{subsection.3.8}{Stitching}{section.3}% 26
+\BOOKMARK [2][-]{subsection.3.9}{2D tracking guide}{section.3}% 27
+\BOOKMARK [2][-]{subsection.3.10}{Manual Matching GUI}{section.3}% 28
+\BOOKMARK [2][-]{subsection.3.11}{Fiber tracking}{section.3}% 29
+\BOOKMARK [1][-]{section.4}{Imaging module - imaging\137mod.py}{}% 30
+\BOOKMARK [2][-]{subsection.4.1}{The camera object}{section.4}% 31
+\BOOKMARK [2][-]{subsection.4.2}{The imsys object}{section.4}% 32
+\BOOKMARK [2][-]{subsection.4.3}{The Cal\137image\137coord object}{section.4}% 33
+\BOOKMARK [1][-]{section.5}{Camera calibration - calibrate\137mod.py}{}% 34
+\BOOKMARK [2][-]{subsection.5.1}{The calibrate object}{section.5}% 35
+\BOOKMARK [2][-]{subsection.5.2}{The calibrate\137with\137particles object}{section.5}% 36
+\BOOKMARK [2][-]{subsection.5.3}{The gui\137final\137cal.py file}{section.5}% 37
+\BOOKMARK [2][-]{subsection.5.4}{The gui\137initial\137cal.py file}{section.5}% 38
+\BOOKMARK [1][-]{section.6}{Particle segmentation - segmentation\137mod.py}{}% 39
+\BOOKMARK [2][-]{subsection.6.1}{The particle\137segmentation object}{section.6}% 40
+\BOOKMARK [2][-]{subsection.6.2}{The loop\137segmentation object}{section.6}% 41
+\BOOKMARK [1][-]{section.7}{Particle matching - particle\137matching\137mod.py}{}% 42
+\BOOKMARK [2][-]{subsection.7.1}{The matching\137with\137marching\137particles\137algorithm object}{section.7}% 43
+\BOOKMARK [2][-]{subsection.7.2}{The match\137blob\137files object \(Legacy\)}{section.7}% 44
+\BOOKMARK [2][-]{subsection.7.3}{The matching object \(Legacy\)}{section.7}% 45
+\BOOKMARK [2][-]{subsection.7.4}{The matching\137using\137time object \(Legacy\)}{section.7}% 46
+\BOOKMARK [2][-]{subsection.7.5}{The initiate\137time\137matching object \(Legacy\)}{section.7}% 47
+\BOOKMARK [1][-]{section.8}{Tracking in 3D - tracking\137mod.py}{}% 48
+\BOOKMARK [2][-]{subsection.8.1}{The tracker\137four\137frames object}{section.8}% 49
+\BOOKMARK [2][-]{subsection.8.2}{The tracker\137two\137frames object}{section.8}% 50
+\BOOKMARK [2][-]{subsection.8.3}{The tracker\137nearest\137neighbour object}{section.8}% 51
+\BOOKMARK [1][-]{section.9}{Trajectory smoothing - traj\137smoothing\137mod.py}{}% 52
+\BOOKMARK [2][-]{subsection.9.1}{The smooth\137trajectories object}{section.9}% 53
+\BOOKMARK [1][-]{section.10}{Trajectory stitching - traj\137stitching\137mod.py}{}% 54
+\BOOKMARK [2][-]{subsection.10.1}{The traj\137stitching object}{section.10}% 55

@@ -17,6 +17,7 @@ from itertools import combinations, product
 from numpy import savetxt, array, inf
 from numpy.random import uniform
 from scipy.spatial import KDTree
+from math import isinf
 
 from pandas import read_csv
 
@@ -174,9 +175,10 @@ class matching_with_marching_particles_algorithm(object):
             dist = kNN[0][0]
             for i in range(len(ind)):
                 
+
                 if dist[i]==inf:
                     continue
-                                
+
                 identifier = (camNum, frame, ind[i])
                 if identifier in self.matchedBlobs[frame]: # this blob has been used
                     continue

@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
 """
-Created on Fri Dec  7 18:02:07 2018
+Created on May 2024
 
 @author: ron
 
+Contains code for segmenting particles (aka blobs) 
+and their silhouettes (aka edges) 
 
-contains a class for segmentation of circular particles
 """
 
 from numpy import ones, savetxt, meshgrid, array, gradient
 from numpy import sum as npsum
 from numpy import abs as npabs
-from numpy import median as npmedian
 
 from skimage.io import imread
 from skimage import io
@@ -19,7 +19,6 @@ from skimage import io
 from scipy.signal import convolve2d
 from scipy.ndimage import gaussian_filter, median_filter
 from scipy.ndimage.measurements import label, find_objects
-from scipy.spatial import KDTree
 
 
 
@@ -277,7 +276,6 @@ class sheet_segmentation(object):
                                     range(self.im.shape[0]))
         
         blobs = []
-        edge_pixels = []
         
         for e, loc in enumerate(blob_pixels):
             # 1. extracting blob parameters
@@ -293,10 +291,9 @@ class sheet_segmentation(object):
             mask = 1.0*(self.silhouette_image[loc]>0)*(self.labeled[loc]==e+1)
             sill_x = (stamp_x[loc] * mask)[stamp_x[loc] * mask > 0]
             sill_y = (stamp_y[loc] * mask)[stamp_x[loc] * mask > 0]
-            edge_pixels.append(list(zip(sill_x, sill_y)))
+            blobs[-1].append(list(zip(sill_x, sill_y)))
             
         self.blobs = blobs
-        self.edge_pixels = edge_pixels
             
    
         
@@ -354,12 +351,21 @@ class sheet_segmentation(object):
         the given name fname.
         '''
         blob_list = []
-        for blb in self.blobs:
+        edges_list = []
+        
+        for e,blb in enumerate(self.blobs):
             blob_list.append([blb[0][0], blb[0][1], blb[1][0], blb[1][1],
                               blb[2], 0])
             
+            for px, py in blb[3]:
+                edges_list.append([e, px, py, 0])
+            
+            
         savetxt(fname, blob_list, 
                 fmt=['%.02f','%.02f','%d','%d','%d','%d'], delimiter='\t')
+        
+        savetxt(fname+'_edges', edges_list, 
+                fmt=['%d','%d','%d','%d'], delimiter='\t')
         
         
         
@@ -476,41 +482,53 @@ class loop_sheet_segmentation(object):
             N = len(self.image_files)
         else:
             N = self.N_img
+        
+        print('found %d files\n'%N)
             
         if self.BG_remove==True:
             self.calculate_BG()
+        elif hasattr(self.BG_remove,'shape'):
+            self.BG = self.BG_remove
         else:
             self.BG = None
         
         i0 = (self.image_start is not None) * self.image_start        
         
         blob_list = []
+        edges_list = []
+        
         print('Starting loop segmentation.\n')
         for i in range(N):
             print('', end='\r')
             print(' frame: %d'%(i+i0), end='\r')
             im = imread(os.path.join(self.dir_name, self.image_files[i]))
-            ps = particle_segmentation(im,
-                                       sigma=self.sigma, 
-                                       threshold=self.th,
-                                       median=self.median,
-                                       local_filter=self.loc_filter,
-                                       BG_image=self.BG,
-                                       mask=self.mask,
-                                       max_xsize=self.bbox_limits[1],
-                                       min_xsize=self.bbox_limits[0],
-                                       max_ysize=self.bbox_limits[3],
-                                       min_ysize=self.bbox_limits[2],
-                                       min_mass=self.mass_limits[0],
-                                       max_mass=self.mass_limits[1],
-                                       method = self.method,
-                                       particle_size=self.p_size)
-            ps.get_blobs()
-            ps.apply_blobs_size_filter()
-            for blb in ps.blobs:
+            sg = sheet_segmentation(im,
+                                    sigma=self.sigma, 
+                                    threshold=self.th,
+                                    median=self.median,
+                                    local_filter=self.loc_filter,
+                                    BG_image=self.BG,
+                                    mask=self.mask,
+                                    max_xsize=self.bbox_limits[1],
+                                    min_xsize=self.bbox_limits[0],
+                                    max_ysize=self.bbox_limits[3],
+                                    min_ysize=self.bbox_limits[2],
+                                    min_mass=self.mass_limits[0],
+                                    max_mass=self.mass_limits[1],
+                                    method = self.method,
+                                    particle_size=self.p_size)
+            sg.get_blobs_and_silhouettes()
+            sg.apply_blobs_size_filter()
+            
+            for e,blb in enumerate(sg.blobs):
                 blob_list.append([blb[0][0], blb[0][1], blb[1][0], blb[1][1],
                                   blb[2], i+i0])
+                for px, py in blb[3]:
+                    edges_list.append([e, px, py, i+i0])
+                    
         self.blobs = blob_list
+        self.edges = edges_list
+        
         
                                        
     def save_results(self, fname):
@@ -523,6 +541,9 @@ class loop_sheet_segmentation(object):
         savetxt(fname, self.blobs, 
                 fmt=['%.02f','%.02f','%d','%d','%d','%d'], delimiter='\t')
         
+        savetxt(fname+'_edges', self.edges, 
+                fmt=['%d','%d','%d','%d'], delimiter='\t')
+        
         
         
         
@@ -532,20 +553,32 @@ if __name__=='__main__':
     
     import matplotlib.pyplot as plt
     
-    fn = '/home/ron/Desktop/Research/myptv_tests/sheet_segmentation/test_image.tif'
-    image = imread(fn, as_gray=True)
-    sg = sheet_segmentation(image, sigma=0.5, threshold=0.5)
+    # dirname = '/home/ron/Desktop/Research/myptv_tests/sheet_segmentation'
+    # lss = loop_sheet_segmentation(dirname, image_start=0,
+    #                               threshold=0.5, sigma=0.5,
+    #                               remove_ststic_BG=False)
+    # lss.segment_folder_images()
+    # lss.save_results('blobs_cam1')
     
-    bin_im = sg.get_binary_image()
     
-    sg.get_blobs_and_silhouettes()
+    # =====================================
+    # Segment a particle in a single image:
     
+    # fn = '/home/ron/Desktop/Research/myptv_tests/sheet_segmentation/im_cam4.tif'
+    # image = imread(fn, as_gray=True)
+    # sg = sheet_segmentation(image, sigma=None, threshold=20)
     
-    plt.imshow(sg.labeled)
+    # bin_im = sg.get_binary_image()
     
-    for sill_pixels in sg.edge_pixels:
-        for px in sill_pixels:
-            plt.plot(px[1], px[0], 'bo', alpha=0.3)
+    # sg.get_blobs_and_silhouettes()
+    #=======================================
+    
+    # plt.imshow(sg.labeled)
+    
+    # for blb in sg.blobs:
+    #     sill_pixels = blb[3]
+    #     for px in sill_pixels:
+    #         plt.plot(px[1], px[0], 'bo', alpha=0.3)
         
     
     
