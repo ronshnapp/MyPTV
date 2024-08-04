@@ -220,11 +220,6 @@ class matching_with_marching_particles_algorithm(object):
         number. Blobs that have been used up already do not appear in the 
         trees' dataset.
         '''
-        
-        # used_blob_indexes = dict([(cn, []) for cn in range(self.Ncams)])
-        # for b in self.matchedBlobs[frame]:
-        #    if b[1]==frame:
-        #         used_blob_indexes[b[0]].append(b[2])
             
         for camNum in range(self.Ncams):
             # whr = [i for i in range(self.blobs[camNum][frame].shape[0]) 
@@ -336,6 +331,7 @@ class matching_with_marching_particles_algorithm(object):
         blob pairs in two given cameras. The points that are found are then
         returned.
         '''
+<<<<<<< HEAD
         
         # if there are no blobs in this frame, return empty list
         if frame not in self.blobs[camNum1].keys():
@@ -343,6 +339,11 @@ class matching_with_marching_particles_algorithm(object):
         
         if frame not in self.blobs[camNum2].keys():
             return []
+=======
+        # ensure the cameras have blobs in this frame
+        if frame not in list(self.blobs[camNum1].keys()): return []
+        if frame not in list(self.blobs[camNum2].keys()): return []
+>>>>>>> bug fix regarding frames with no blobs in  matching
         
         # fetching the cameras and the blobs
         cam1 = self.imsys.cameras[camNum1] ; cam2 = self.imsys.cameras[camNum2]

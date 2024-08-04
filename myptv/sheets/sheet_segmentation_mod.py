@@ -485,10 +485,12 @@ class loop_sheet_segmentation(object):
         
         print('found %d files\n'%N)
             
-        if self.BG_remove==True:
+        if self.BG_remove is True:
             self.calculate_BG()
+            
         elif hasattr(self.BG_remove,'shape'):
             self.BG = self.BG_remove
+            
         else:
             self.BG = None
         
