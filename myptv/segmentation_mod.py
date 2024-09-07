@@ -21,6 +21,8 @@ from scipy.ndimage import gaussian_filter, median_filter
 from scipy.ndimage.measurements import label, find_objects
 from scipy.spatial import KDTree
 
+import tqdm
+
 
 
 class particle_segmentation(object):
@@ -439,7 +441,8 @@ class loop_segmentation(object):
                            images, defined as the median value of each pixel,
                            and then background_subtraction is done by taking 
                            the difference from the median. If this is False,
-                           then this operation is skipped.
+                           then this operation is skipped. If this is a numpy
+                           array, than it is used as the BG image.
                     
         The rest are parameters for the segmentation class. 
         '''
@@ -456,7 +459,21 @@ class loop_segmentation(object):
         self.mass_limits = (min_mass, max_mass)
         self.loc_filter = local_filter
         self.method = method
-        self.BG_remove = remove_ststic_BG
+        
+        # optionally using pre-calculated BG image:
+        if type(remove_ststic_BG) == bool:
+            self.BG_remove = remove_ststic_BG
+            
+        else:
+            from numpy import ndarray
+            if type(remove_ststic_BG) == ndarray:
+                self.BG = remove_ststic_BG
+                self.BG_remove = False
+        
+        
+        
+        
+                
     
     
     def get_file_names(self):
@@ -517,18 +534,19 @@ class loop_segmentation(object):
         else:
             N = self.N_img
             
-        if self.BG_remove==True:
-            self.calculate_BG()
-        else:
-            self.BG = None
+        if type(self.BG_remove)==bool:
+            if self.BG_remove==True:
+                self.calculate_BG()
+            else:
+                self.BG = None
         
         i0 = (self.image_start is not None) * self.image_start        
         
         blob_list = []
         print('Starting loop segmentation.\n')
-        for i in range(N):
-            print('', end='\r')
-            print(' frame: %d'%(i+i0), end='\r')
+        for i in tqdm.tqdm(range(N)):
+            #print('', end='\r')
+            #print(' frame: %d'%(i+i0), end='\r')
             im = imread(os.path.join(self.dir_name, self.image_files[i]))
             ps = particle_segmentation(im,
                                        sigma=self.sigma, 

@@ -663,7 +663,11 @@ class workflow(object):
                     msg = 'Image %s not found in the directory.'%in_
                     raise ValueError(msg)
                 
-                if remove_BG==True:
+                if type(remove_BG)==str:
+                    print('\n','using given background image')
+                    BG = imread(remove_BG)*1.0
+                elif remove_BG==True:
+                    print('\n','calculating background image')
                     BG = calculate_BG_image(dirname, ext)
                 else:
                     BG=None
@@ -775,7 +779,11 @@ class workflow(object):
                     msg = 'Image %s not found in the directory.'%in_
                     raise ValueError(msg)
                 
-                if remove_BG==True:
+                if type(remove_BG)==str:
+                    print('\n','using given background image')
+                    BG = imread(remove_BG)*1.0
+                elif remove_BG==True:
+                    print('\n','calculating background image')
                     BG = calculate_BG_image(dirname, ext)
                 else:
                     BG=None

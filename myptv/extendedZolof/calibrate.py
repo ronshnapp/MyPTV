@@ -65,7 +65,8 @@ class calibrate_extendedZolof(camera_extendedZolof):
             XColumns = []
             for Xi in self.X_list:
                 Xcol_i = self.cam.get_XCol(Xi)
-                for i in range(-7,0): Xcol_i[i] = 0
+                # (Here, -7 is for quadratic, and -13 is linear)
+                for i in range(-7,0): Xcol_i[i] = 0  
                 XColumns.append(Xcol_i)
         
         res = lstsq(XColumns, self.x_list, rcond=None)
