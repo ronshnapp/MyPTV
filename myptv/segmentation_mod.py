@@ -468,7 +468,7 @@ class loop_segmentation(object):
             from numpy import ndarray
             if type(remove_ststic_BG) == ndarray:
                 self.BG = remove_ststic_BG
-                self.BG_remove = False
+            self.BG_remove=None
         
         
         
