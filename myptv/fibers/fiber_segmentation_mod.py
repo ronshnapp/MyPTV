@@ -491,7 +491,8 @@ class loop_fiber_segmentation(object):
                  min_ysize=None, max_ysize=None,
                  min_mass=None, max_mass=None,
                  pca_limit=1.0,
-                 method='labeling'):
+                 method='labeling',
+                 raw_format=raw_format):
         '''
         dir_name - string with the name of the directory that holds the 
                    images. Images should have a sequential numbers in their
@@ -522,6 +523,14 @@ class loop_fiber_segmentation(object):
         self.method = method
         self.pca_limit = pca_limit
         self.BG_remove = remove_ststic_BG
+        self.raw_format=raw_format
+        
+        if self.raw_format == False:
+            self.imread_func = lambda x: io.imread(x)
+        
+        else:
+            import rawpy
+            self.imread_func = lambda x: rawpy.imread(x).raw_image
     
     
     def get_file_names(self):
@@ -587,7 +596,7 @@ class loop_fiber_segmentation(object):
         for i in range(N):
             print('', end='\r')
             print(' frame: %d'%(i+i0), end='\r')
-            im = imread(os.path.join(self.dir_name, self.image_files[i]))
+            im = self.imread_func(os.path.join(self.dir_name, self.image_files[i]))
             ps = fiber_segmentation(im,
                                     sigma=self.sigma, 
                                     threshold=self.th,

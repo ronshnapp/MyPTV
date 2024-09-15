@@ -543,6 +543,7 @@ class workflow(object):
         p_size = self.get_param('segmentation', 'particle_size')
         shape = self.get_param('segmentation', 'shape')
         remove_BG = self.get_param('segmentation', 'remove_background')
+        raw_format = self.get_param('segmentation', 'raw_format')
         
         
         # reading preprepared mask
@@ -558,14 +559,21 @@ class workflow(object):
         if shape not in ['particles', 'fibers']:
             raise ValueError('Shape can be only "particles" or "fibers"')
         
+        if raw_format==False:
+            imread_func = lambda x: imread(x)
+        else:
+            import rawpy
+            imread_func = lambda x: rawpy.imread(x).raw_image
+        
+        
         # get the shape of the images
         allfiles = os.listdir(dirname)
         n_ext = len(ext)
         image_files = sorted(list(filter(lambda s: s[-n_ext:]==ext, allfiles)))
         if single_img_name in image_files:
-            image0 = imread(os.path.join(dirname,single_img_name))
+            image0 = imread_func(os.path.join(dirname,single_img_name))
         else:
-            image0 = imread(os.path.join(dirname,image_files[0]))
+            image0 = imread_func(os.path.join(dirname,image_files[0]))
         
         # preparing a mask using the given ROI
         if ROI is not None:
@@ -629,7 +637,8 @@ class workflow(object):
                                                 min_ysize=min_ysize,
                                                 min_mass=min_mass,
                                                 mask=mask,
-                                                method=method)
+                                                method=method,
+                                                raw_format=raw_format)
             
                 loopSegment.segment_folder_images()
                 
@@ -743,6 +752,7 @@ class workflow(object):
                                                 min_mass=min_mass,
                                                 mask=mask,
                                                 method=method,
+                                                raw_format=raw_format,
                                                 pca_limit=1.0)
                 
                 loopSegment.segment_folder_images()

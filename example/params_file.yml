@@ -15,6 +15,7 @@
     images_folder: Images_cam3
     single_image_name: 01.tif
     image_extension: '.tif'
+    raw_format: False
     shape: particles
     mask: 1.0
     ROI: 227, 1050, 120, 920
