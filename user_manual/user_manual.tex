@@ -66,7 +66,7 @@
 
 \begin{minipage}{14cm}
 	{\small \sffamily
-	Version: 0.8.3 \\
+	Version: 1.0.2 \\
 	Last updated: \today \\
 	Github repository: \url{https://github.com/ronshnapp/MyPTV} \\
 	Get help \& interact with our community: \url{https://github.com/ronshnapp/MyPTV/discussions}\\
@@ -342,17 +342,20 @@ python workflow.py params_file.yml "command"
 where \texttt{"command"} should be replaced with one of the following options, depending on the particular step of the post processing:
 %
 \begin{verbatim}
-	help
-	initial_calibration
-	final_calibration
-	calibration_with_particles
-	segmentation
-	matching
-	tracking	
-	smoothing
-	stitching
-	2D_tracking
-	manual_matching
+	"help"
+	"initial_calibration"
+	"final_calibration"
+	"analyze_calibration_error"
+	"calibration_with_particles"
+	"matching"
+	"segmentation"
+	"smoothing"
+	"stitching"
+	"tracking"
+	"2D_tracking"
+	"manual_matching"
+	"fiber_orientations"
+	"run_extention"
 \end{verbatim}
 %
 Each of these commands initiates one of MyPTVs functionalities, and a detailed explanation on them is found in Sections \ref{sec:cal_guide}--\ref{sec:workflow_stitch}. Use \texttt{help} to print the available list of commands.
@@ -731,9 +734,9 @@ which should start the interface shown in Fig.~\ref{fig:calibration_gui}. The de
 \subsubsection{Important notes}
 
 \begin{enumerate}
-	\item A "good" calibration will have a low error value - less than 0.5 pixels.  
+	\item A "good" calibration will have a low error value - how much exactly is hard to say and depends on the imaging setup used. Typically you would want to get down to 1 pixel or lower.  
 	
-	\item Optional validation - After all the cameras have been calibrated, it is also good practice to verify the calibration solution by stereo matching the calibration points. To do this, we use the \texttt{match\_blob\_files} (Section~\ref{sec:matching}) to stereo match the files of the segmented calibration target points. We can then calculate the so-called \textit{static calibration error} by computing the RMS of the distance between the triangulated calibration points and the real data from the target file. See Fig.~\ref{fig:cal_err} for an example. This validation step is not yet implemented in the workflow script. 
+	\item Validation - After all the cameras have been calibrated, it is good practice to verify the calibration quality by stereo matching the calibration points. We do this through the workflow command "\verb!analyze\_calibration\_error!", which prints statistics of the calibration error and plots the histogram of the error for individual calibration points.
 \end{enumerate}
 
 
@@ -792,7 +795,7 @@ However, in some PTV systems another solution is taken such that the calibration
 \begin{table}[!ht]
 	\centering
 	\caption{The \texttt{params\_file.yml} parameters for the \textbf{segmentation} step. All paths to files are relative to the \texttt{workflow.py} script. \label{tab:segment_params}}
-	\begin{tabular}{l m{10cm}}
+	\begin{tabular}{l m{13cm}}
 		\hline
 		Parameter & Description\\
 		\hline
@@ -807,6 +810,8 @@ However, in some PTV systems another solution is taken such that the calibration
 		
 		\texttt{image\char`_extension} & extension of the images; for example, .tif\\[.3em]
 		
+		\texttt{raw\char`_format} & Set this to True if your images are in RAW format (e.g. .dng), and False otherwise (usually this should be set to False)\\[.3em]
+		
 		\texttt{shape} & Can be either 'particles' or 'fibers'. The 'particles' option is used for isotropic particles to follow traditional PTV, and the 'fibers' option is used for analyzing the orientations in 3D of anisotropic particles (elongated fibers or rods), see Sec.~\ref{sec:fibers}. \\[.3em]
 		
 		\texttt{plot\_result} & if \texttt{False} will not plot the results; if \texttt{True} the results will be plotted but only if number of images is 1 \\[.3em]
@@ -818,7 +823,7 @@ However, in some PTV systems another solution is taken such that the calibration
 		
 		\texttt{threshold} & the brightness value for which a point is considered a particle after a local mean subtraction is performed \\[.5em]
 		
-		\texttt{remove\_background} & If this is True, then before segmentation a static background image is calculated (defined as the median of pixel values), and then the difference is taken between each image and the background; this is useful in images with inhomogeneous lighting conditions. \\[.5em]
+		\texttt{remove\_background} & If True, then before segmentation a static background image is calculated (defined as the median of pixel values), and then the difference is taken between each image and the background; if string, then it is the path to a pre-calculated background image; this is useful in images with inhomogeneous lighting conditions. \\[.5em]
 		
 		\texttt{median} & the intger window size of a median noise removal filter; set to \texttt{None} in order to not apply the filter \\[.3em]
 		
@@ -934,7 +939,7 @@ Note: to easily perform manual stereo matching of several points in a given imag
 \begin{table}[!ht]
 	\centering
 	\caption{The \texttt{params\_file.yml} parameters for the \textbf{matching} step. All paths to files are relative to the \texttt{workflow.py} script.}
-	\begin{tabular}{l m{10cm}}
+	\begin{tabular}{l m{13cm}}
 		\hline
 		Parameter & Description\\
 		\hline
@@ -1021,7 +1026,7 @@ The tracking step is used to link particle in the lab space coordinates in time,
 \begin{table}[!ht]
 	\centering
 	\caption{The \texttt{params\_file.yml} parameters for the \textbf{tracking} step. All paths to files are relative to the \texttt{workflow.py} script.}
-	\begin{tabular}{l m{10cm}}
+	\begin{tabular}{l m{12cm}}
 		\hline
 		Parameter & Description\\
 		\hline
@@ -1061,7 +1066,7 @@ After some trajectories have been obtained, we can refine the calibration of cam
 \begin{table}[!ht]
 	\centering
 	\caption{The \texttt{params\_file.yml} parameters for the calibration with particles step.}
-	\begin{tabular}{l m{10cm}}
+	\begin{tabular}{l m{13cm}}
 		\hline
 		Parameter & Description\\
 		\hline
@@ -1102,7 +1107,7 @@ The smoothing step is used to smooth trajectories in time and to calculate the v
 \begin{table}[!ht]
 	\centering
 	\caption{The \texttt{params\_file.yml} parameters for the smoothing step. All paths to files are relative to the \texttt{workflow.py} script.}
-	\begin{tabular}{l m{10cm}}
+	\begin{tabular}{l m{13cm}}
 		\hline
 		Parameter & Description\\
 		\hline
@@ -1135,7 +1140,7 @@ This step is used to re-track trajectories once velocities are known and to "sti
 \begin{table}[!ht]
 	\centering
 	\caption{The \texttt{params\_file.yml} parameters for the smoothing step. All paths to files are relative to the \texttt{workflow.py} script.}
-	\begin{tabular}{l m{10cm}}
+	\begin{tabular}{l m{12cm}}
 		\hline
 		Parameter & Description\\
 		\hline
@@ -1196,7 +1201,7 @@ The 2D particle tracking procedure requires following these steps:
 \begin{table}[!ht]
 	\centering
 	\caption{The \texttt{params\_file.yml} parameters for the 2D tracking step. All paths to files are relative to the \texttt{workflow.py} script. \label{tab:2d_tracking}}
-	\begin{tabular}{l m{10cm}}
+	\begin{tabular}{l m{12cm}}
 		\hline
 		Parameter & Description\\
 		\hline
@@ -1236,7 +1241,7 @@ To match a point we need to identify it from the different camera views. In the 
 \begin{table}[!ht]
 	\centering
 	\caption{The \texttt{params\_file.yml} parameters for the manual matching operation. All paths to files are relative to the \texttt{workflow.py} script. \label{tab:man_match}}
-	\begin{tabular}{l m{10cm}}
+	\begin{tabular}{l m{12cm}}
 		\hline
 		Parameter & Description\\[.3em]
 		\hline
@@ -1286,7 +1291,7 @@ To measure fiber orientations, we use, again the workflow script. We do this via
 \begin{table}[!ht]
 	\centering
 	\caption{The \texttt{params\_file.yml} parameters for the \texttt{fiber\_orientations} operation. All paths to files are relative to the \texttt{workflow.py} script. \label{tab:fibers}}
-	\begin{tabular}{l m{10cm}}
+	\begin{tabular}{l m{12cm}}
 		\hline
 		Parameter & Description\\
 		\hline

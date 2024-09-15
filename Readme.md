@@ -1,6 +1,10 @@
 November 23, 2023
+<<<<<<< HEAD
 
 Version: 1.0.0
+=======
+Version: 1.0.2
+>>>>>>> added stuff to user manual and upgraded to 1.0.2
 
 <img src="./user_manual/figs/logo.png" style="zoom:20%;" />
 
