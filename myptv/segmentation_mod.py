@@ -423,7 +423,8 @@ class loop_segmentation(object):
                  min_xsize=None, max_xsize=None,
                  min_ysize=None, max_ysize=None,
                  min_mass=None, max_mass=None,
-                 method='labeling'):
+                 method='labeling',
+                 raw_format=False):
         '''
         dir_name - string with the name of the directory that holds the 
                    images. Images should have a sequential numbers in their
@@ -443,6 +444,11 @@ class loop_segmentation(object):
                            the difference from the median. If this is False,
                            then this operation is skipped. If this is a numpy
                            array, than it is used as the BG image.
+                           
+        raw_format (default=Flase) - Set to true if the images are in raw 
+                                     format (e.g. .dng). Then, we use the
+                                     package rawpy to load the images.
+        
                     
         The rest are parameters for the segmentation class. 
         '''
@@ -459,6 +465,14 @@ class loop_segmentation(object):
         self.mass_limits = (min_mass, max_mass)
         self.loc_filter = local_filter
         self.method = method
+        self.raw_format = raw_format
+        
+        if self.raw_format == False:
+            self.imread_func = lambda x: io.imread(x)
+        
+        else:
+            import rawpy
+            self.imread_func = lambda x: rawpy.imread(x).raw_image
         
         # optionally using pre-calculated BG image:
         if type(remove_ststic_BG) == bool:
@@ -514,9 +528,11 @@ class loop_segmentation(object):
         
         for i in range(len(BG_images)):
             if i==0:
-                im0 = io.imread(BG_images[i])*1.0
+                #im0 = io.imread(BG_images[i])*1.0
+                im0 = self.imread_func(BG_images[i])*1.0
             else:
-                im0 += io.imread(BG_images[i])
+                #im0 += io.imread(BG_images[i])
+                im0 += self.imread_func(BG_images[i])
         
         self.BG = im0 / len(BG_images)
         #ic = io.ImageCollection(BG_images)
@@ -547,7 +563,8 @@ class loop_segmentation(object):
         for i in tqdm.tqdm(range(N)):
             #print('', end='\r')
             #print(' frame: %d'%(i+i0), end='\r')
-            im = imread(os.path.join(self.dir_name, self.image_files[i]))
+            #im = imread(os.path.join(self.dir_name, self.image_files[i]))
+            im = self.imread_func(os.path.join(self.dir_name, self.image_files[i]))
             ps = particle_segmentation(im,
                                        sigma=self.sigma, 
                                        threshold=self.th,
