@@ -102,7 +102,7 @@
 \subsection{3D-PTV principles}
 
 
-The 3D-PTV method is used to measure the trajectories of particles in 3D space. It utilizes the principles of stereoscopic vision to reconstruct 3D positions of particles from images taken from several angles. A scheme of a typical 3D-PTV experiment using a four-camera system is shown in Fig.~\ref{fig:3dptv_exp}. The main components behind the 3D-PTV method are the co-linearity condition and the 3D model. The co-linearity condition means that the position of a point in 3D space can be identified from the crossing of two or more straight lines in 3D space. Therefore, if we have a system of cameras all see a common particle, then the particles' position is estimated by searching for the point in which rays of light connecting the particle with the different cameras cross each other. To perform this task we use a 3D model -- a mathematical representation of the way in which cameras "see" the world. Thus, the 3D model is a function that can convert 3D points into pixel coordinates ($\eta,\, \zeta$ in Fig.~\ref{fig:3dmodel}) and pixel coordinates back into rays of light~\cite{Virant1997, Maas1993}.
+3D-PTV is a method used to measure the trajectories of particles in 3D space. It utilizes the principles of stereoscopic vision to reconstruct 3D positions of particles from images taken from several orientations. A scheme of a typical 3D-PTV experiment using a four-camera system is shown in Fig.~\ref{fig:3dptv_exp}. The main components comprising the 3D-PTV method are the co-linearity condition and the 3D model. According to the co-linearity condition, the position of a point in 3D space can be identified from the crossing of two or more straight lines in 3D space. Therefore, if we have a system of cameras that all of them see a common particle, then the particles' position can be estimated by finding the point in which rays of light connecting the particle with the different cameras cross each other. To perform this task we use a 3D model -- a mathematical representation of the way in which cameras "see" the world. Thus, the 3D model is a function that can convert 3D points into pixel coordinates ($\eta,\, \zeta$ in Fig.~\ref{fig:3dmodel}) and pixel coordinates back into rays of light~\cite{Virant1997, Maas1993}.
 For example, A commonly used 3D model is the pin-hole camera model, in which each camera is associated with a position and orientation in 3D space ($O'$ and $\theta$ in Fig.~\ref{fig:3dmodel}). MyPTV has two 3D models that the user can choose from and they are described below.
 
 
@@ -120,7 +120,7 @@ For example, A commonly used 3D model is the pin-hole camera model, in which eac
 
 
 
-Once the experiment, namely data acquisition, is done, there are six intrinsic steps to follow in order to complete the analysis. The six steps are outlined in Fig.~\ref{fig:steps}. In the camera calibration step, we use images of known calibration targets to estimate the position, orientation, and internal parameters of the cameras. In particle segmentation, we use image analysis to obtain the particles' image space coordinates ($\eta, \, \zeta$). In the Particle matching step, we use the ray crossing principle to decide which particle image in each camera corresponds to the same physical particle, and triangulate their positions through stereo matching. In particle tracking, we connect the positions of particles in 3D space to form trajectories. In data conditioning, we might use smoothing and re-tracking algorithms to enhance our data quality according to some physical heuristics. Lastly, we can analyze the data to obtain information on the physics of the particles we are studying. The MyPTV package is meant to handle the first five of these steps.    
+Once the experiment, namely data acquisition, is done, there are six intrinsic post-processing steps to follow in order to complete the analysis and obtain the particles' trajectories. The six steps are outlined in Fig.~\ref{fig:steps}. In the camera calibration step, we use images of known calibration targets to fit our physical cameras to the 3D model. In particle segmentation, we use image analysis to obtain the particles' image space coordinates ($\eta, \, \zeta$). In the particle matching step, we use the co-linearity condition to identify which particle images in the different cameras correspond to the same physical particle, and triangulate their positions. In particle tracking, we connect the positions of particles in 3D space to form trajectories. In data conditioning, we might use smoothing and re-tracking algorithms to enhance our data quality according to some physical heuristics. Lastly, we can analyze the data to obtain information on the physics of the particles we are studying. The MyPTV package is meant to handle the first five of these steps.    
 
 
 
@@ -131,7 +131,7 @@ Once the experiment, namely data acquisition, is done, there are six intrinsic s
 \end{figure}
 
 
-The sections that follow outline the code used to handle the 3D-PTV method in MyPTV.
+The sections that follow outline both how MyPTV can be used by end users and also details on the code used internally to comply with the 3D-PTV method.
 
 
 
@@ -171,8 +171,8 @@ The internal structure of MyPTV is made of separate "modules", each of which dea
 \section{MyPTVs 3D models}
 
 
-The 3D model is a core element of the PTV method, as it allows to do the transformation between the coordinates of objects in the 3D world (so-called lab-space) and the 2D coordinates in the image space seen by the cameras (namely, pixel coordinates) and vise-versa. 
-In MyPTV there are two such models that have been implemented thus far, each having certain advantages and disadvantages with respect to the other. Other PTV programs can also use other 3D models. The models implemented are introduced below.
+The 3D model is a core element of the 3D-PTV method, as it allows us to do the transformation between the coordinates of objects in the 3D world--lab-space--and the 2D coordinates of the camera images--image space--seen by the cameras and vise-versa. 
+In MyPTV there are two such models that have been implemented thus far, each having certain advantages and disadvantages with respect to the other. Other PTV software might use other 3D models. The models implemented are introduced below.
 
 
 
@@ -256,31 +256,95 @@ Here, $[E]$ is a $3\times5$ matrix that holds the coefficients of the correction
 
 
 
-The extended Zolof model is a nother approach to obtaining the transformation between 3D lab-space and 2D image space. 
-Here, the transformation is inherently mathematical, namely, in its basic version it does not involve any physical assumption about how cameras perceive the world. Thus the projection of 3D coordinates into the 2D lab coordinates is simply achieved using interpolating functions
+The extended Zolof model is used for the transformation between 3D lab-space and 2D image space. 
+Here, the transformation from lab-space to image-space does not involve any physical assumption about how cameras perceive the world--it is purely mathematical. However, a physical assumption is used in the transformation back from image-space to lab-space. 
+
+
+The projection of 3D lab-space coordinates into the 2D image-space is achieved using interpolating functions
 %
 \begin{equation}
 \left[ 
 \begin{matrix}
-\eta \\
+\eta \\[.2cm]
 \zeta
 \end{matrix}
 \right]
 =
 \left[ 
 \begin{matrix}
-P_\eta(\vec{r}) \\
+P_\eta(\vec{r}) \\[.2cm]
 P_\zeta(\vec{r})
-
 \end{matrix}
-\right]
+\right]\,\, .
 \end{equation}
 %
-In MyPTV, $P_\eta$ and $P_\zeta$ are simply polynomial functions of the $\vec{r}=(x,y,z)$ coordinates: ....
+In MyPTV, $P_\eta$ and $P_\zeta$ are polynomial functions of the $\vec{r}=(x,y,z)$ coordinates defined as the product 
+\begin{equation}
+\left[ 
+\begin{matrix}
+P_\eta(\vec{r}) \\[.2cm]
+P_\zeta(\vec{r})
+\end{matrix}
+\right] = S \, A^{\top}
+\end{equation}
+where $S$ is the 19 polynomial components
+%
+\begin{align}
+\label{eq:SoloffVector}
+\begin{split}
+S\left(x,y,z\right) = [\,&1,\,x,\,y,\,z,\,x^2,\,y^2,\,z^2,\,xy,\,yz,\,xz,\\
+&x^3,\,y^3,\,xyz,\,x^2y,\,x^2z,\,xy^2,\,y^2z,\,xz^2,\,yz^2\,]
+\end{split}
+\end{align}
+%
+and $A$ is the polynomial coefficients matrix 
+%
+\begin{align}
+\label{eq:SoloffVector2}
+A =
+\begin{bmatrix}
+a^\eta_{0},\, a^\eta_{0},\, \ldots , a^\eta_{18} \\[.2cm]
+a^\zeta_{0},\, a^\zeta_{1},\, \ldots , a^\zeta_{18}
+\end{bmatrix}\,\,.
+\end{align}
 
 
 
-The extended Zolof model is a later addition to MyPTV, and its allows the software users to 
+For the transformation from image-space to lab-space a we use a unified approach, utilizing a pinhole model in which the direction vector is obtained for each 2D image point via a polynomial of degree 3. Specifically, intrinsic to this model is the assumption that each 2D camera position $(\eta,\, \zeta)$ is associated with a (straight) line of sight and that all the lines of sight cross at some points in the 3D physical world at the camera position $\vec{O}_i$ of camera $i$. Therefore, each 3D line of sight for image coordinates from camera $i$ is given as
+%
+\begin{equation}
+\vec l_i(x_i, \, y_i) = \vec{O}_i + \mu\,\vec{U}_i(x_i, \, y_i) 
+\end{equation}
+%
+where $\mu$ is a free parameter and $\vec{U}_i$ represents the unit vector associated with each 2D image coordinate of camera $i$, defined as
+%
+\begin{align}
+\label{Eq::extendedSoloff_backwards}
+\vec{U}_i(x_i, \, y_i) = \mathbf{B}_i \cdot u(\eta, \, \zeta)^\top
+\end{align}
+%
+Here, the matrix $\mathbf{B}_i$ stores of the polynomials coefficients of camera $i$ and vector $\vec{u}$ defines the polynomial over the 2D camera coordinates.
+\begin{align}
+\mathbf{B}_i = 
+\begin{bmatrix}
+b^{(i)}_{0x} & b^{(i)}_{1x} & b^{(i)}_{2x} &  \cdots & b^{(i)}_{9x}\\[2pt]
+b^{(i)}_{0y} & b^{(i)}_{1y} & b^{(i)}_{2y} &  \ldots & b^{(i)}_{9y}\\[2pt]
+b^{(i)}_{0z} & b^{(i)}_{1z} & b^{(i)}_{2z} &  \ldots & b^{(i)}_{9z}
+\end{bmatrix}
+\end{align} 
+%
+\begin{align}
+u(\eta, \, \zeta) = \left[1, \eta,\,  \zeta,\, \eta^2,\, \zeta^2,\, \eta \zeta,\, \eta^3,\, \zeta^3,\, \eta^2 \zeta,\, \eta \zeta^2\right]
+\end{align}
+%
+All in all, each camera in the unified polynomial calibration method is characterized using $19\times 2$ coefficients stored in matrix $\mathbf{A}_i$ for the projection from 3D to 2D, plus three coordinates of the 3D camera position ($\vec{O}_i$), plus $10\times 3$ coefficients stored in matrix $\mathbf{B}_i$ of the backward projection, giving a total of 71 parameters per camera. 
+
+
+
+
+
+
+The extended Zolof model is a later addition to MyPTV, and its main advantage is that it is easier to calibrate than the Tsai model. Specifically, the transformation can be formalized as a linear least square problem such that its globally optimal parameters can be found exactly. In comparison, the Tsai model calibration process must employ a non-convex optimization, making it very difficult to converge to the optimal solution. The disadvantage of this model is that it does not comply with a physical principle, and so, extrapolation of the model to regions beyond the region of the calibration, or careless application of high degree polynomials ($P_\eta$ and $P_\zeta$) could lead to errors.
 
 
 
