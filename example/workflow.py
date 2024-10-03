@@ -55,6 +55,7 @@ class workflow(object):
                                 'match_target_file', '2D_tracking', 
                                 'manual_matching',
                                 'fiber_orientations',
+                                'plot_trajectories',
                                 'run_extention']
         
         
@@ -104,6 +105,9 @@ class workflow(object):
                 
             elif action == 'fiber_orientations':
                 self.do_orientations()
+                
+            elif action == 'plot_trajectories':
+                self.do_plot_trajectories()
             
             elif action == 'run_extention':
                 self.do_run_extention()    
@@ -1385,6 +1389,29 @@ class workflow(object):
                        ['%d', '%.3f', '%.3f', '%.3f', '%d', '%d', '%.2f', '%.2f'], delimiter='\t')
         print('\n', 'Done.')
     
+    
+    
+    
+    
+    def do_plot_trajectories(self):
+        '''
+        This function is used to generate a 3D plot of the trajectories in 
+        a given file.
+        '''
+        from myptv.makePlots.plot_trajectories import plot_trajectories
+        
+        # fetching the parameters
+        file_name = self.get_param('plot_trajectories', 'file_name')
+        min_length = self.get_param('plot_trajectories', 'min_length')
+        write_trajID = self.get_param('plot_trajectories', 'write_trajID')
+        t0 = self.get_param('plot_trajectories', 't0')
+        te = self.get_param('plot_trajectories', 'te')
+        
+        plot_trajectories(file_name, 
+                          min_length, 
+                          write_trajID=write_trajID, 
+                          t0=t0, 
+                          te=te)
     
     
     

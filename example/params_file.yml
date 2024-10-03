@@ -104,7 +104,14 @@
     fibers_file: particles
     trajectory_file: trajectories
     save_name: fiber_orientations
-    
+
+- plot_trajectories:
+    file_name: smoothed_trajectories
+    min_length: 2
+    write_trajID: False 
+    t0: 0
+    te: -1
+
 - run_extension:
     path_to_extention: the_absolute_path_to_the_script_containing_the_code 
     action_name: the_name_of_the_class_that_needs_to_run  
