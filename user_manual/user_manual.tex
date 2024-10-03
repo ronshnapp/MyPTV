@@ -796,7 +796,7 @@ However, in some PTV systems another solution is taken such that the calibration
 		
 		\texttt{plot\_result} & if \texttt{True} the segmented particles will be plotted over the processed image (after applying blur, local mean subtraction and masking); if \texttt{False} will not plot the results \\[.3em]
 		
-		\texttt{method} & ihe name of the method used for segmenting the blobs; can be either 'labeling' or 'dilation' \\
+		\texttt{method} & The name of the method used for segmenting the blobs; can be either 'labeling' or 'dilation' \\
 		
 		\texttt{particle\_size} & in the 'dilation' method, this gives the diameter of blobs in the image (an integer number of pixels); this parameter is not used when method is set to 'labeling' \\
 		
@@ -1038,7 +1038,7 @@ The smoothing step is used to smooth trajectories in time and to calculate the v
 		
 		\texttt{polynom\_order} & degree of the polynomial used in the smoothing \\[.5em]
 		
-		\texttt{min\_traj\_length} & the length of the shortest trajectories to be smoothed; has to be larger than \texttt{min\_traj\_length} \\[.5em]
+		\texttt{min\_traj\_length} & the length of the shortest trajectories to be smoothed; has to be larger than \texttt{polyorder} \\[.5em]
 		
 		\texttt{repetitions} & the smoothing operation will be repeated this many times over each trajectory \\[.5em]
 				
@@ -1059,19 +1059,19 @@ This step is used to re-track trajectories once velocities are known and to "sti
 
 \begin{table}[!ht]
 	\centering
-	\caption{The \texttt{params\_file.yml} parameters for the smoothing step. All paths to files are relative to the \texttt{workflow.py} script.}
+	\caption{The \texttt{params\_file.yml} parameters for the stitching step. All paths to files are relative to the \texttt{workflow.py} script.}
 	\begin{tabular}{l m{12cm}}
 		\hline
-		Parameter & Description\\
+		Parameter & Description\\[.5em]
 		\hline
 		
-		\texttt{trajectory\_file} & name of the smoothed trajectory file used in the stitching \\
+		\texttt{trajectory\_file} & name of the smoothed trajectory file used in the stitching \\[.5em]
 		
-		\texttt{max\_time\_separation} & maximum time separation over which to stitch broken trajectories \\
+		\texttt{max\_time\_separation} & maximum time separation over which to stitch broken trajectories \\[.5em]
 		
-		\texttt{max\_distance} & maximum distance in the position-velocity space \\
+		\texttt{max\_distance} & maximum distance in the position-velocity space \\[.5em]
 		
-		\texttt{save\_name} & file name to save the results; if \texttt{None} the results will not be save on the disk \\
+		\texttt{save\_name} & file name to save the results; if \texttt{None} the results will not be save on the disk \\[.5em]
 		
 		\hline
 	\end{tabular}
