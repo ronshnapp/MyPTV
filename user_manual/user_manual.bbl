@@ -11,16 +11,6 @@ H.~G. Maas, D.~Gruen, and D.~Papantoniou.
   Photogrammetric} determination of particle coordinates.
 \newblock {\em Experiments in Fluid}, 15:133--146, 1993.
 
-\bibitem{Luthi2005}
-B.~L{\"u}thi, A.~Tsinober, and W.~Kinzelbach.
-\newblock Lagrangian measurement of vorticity dynamics in turbulent flow.
-\newblock {\em Journal of Fluid mechanics}, 528:87--118, 2005.
-
-\bibitem{Xu2008}
-H.~Xu.
-\newblock Tracking {Lagrangian} trajectories in position--velocity space.
-\newblock {\em Measurement Science and Technology}, 19(7):075105, 2008.
-
 \bibitem{Bourgoin2020}
 M.~Bourgoin and S.~G. Huisman.
 \newblock Using ray-traversal for {3D} particle matching in the context of
@@ -32,6 +22,21 @@ N.~T. Ouellette, H.~Xu, and E.~Bodenschatz.
 \newblock A quantitative study of three-dimensional {Lagrangian} particle
   tracking algorithms.
 \newblock {\em Experiments in Fluids}, 40(2):301--313, 2006.
+
+\bibitem{Luthi2005}
+B.~L{\"u}thi, A.~Tsinober, and W.~Kinzelbach.
+\newblock Lagrangian measurement of vorticity dynamics in turbulent flow.
+\newblock {\em Journal of Fluid mechanics}, 528:87--118, 2005.
+
+\bibitem{Xu2008}
+H.~Xu.
+\newblock Tracking {Lagrangian} trajectories in position--velocity space.
+\newblock {\em Measurement Science and Technology}, 19(7):075105, 2008.
+
+\bibitem{Shnapp2023}
+R.~Shnapp, S.~Brizzolara, M.~M. Neamtu~Halic, A.~Gambino, and M.~Holzner.
+\newblock Universal alignment in turbulent pair dispersion.
+\newblock {\em Nature Communications}, 14(1), 2023.
 
 \bibitem{Shnapp2019}
 R.~Shnapp, E.~Shapira, D.~Peri, Y.~Bohbot-Raviv, E.~Fattal, and A.~Liberzon.

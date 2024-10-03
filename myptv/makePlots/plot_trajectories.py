@@ -13,25 +13,6 @@ import matplotlib.pyplot as plt
 
 
 
-
-
-# ===========  Your Input goes here ================= #
-
-# insert here the name of the trajectory file:
-fname = '/home/ron/Desktop/Research/jetArrayTank/20240821/Rec2/trajectories'
-
-
-# insert here the IDs of the trajectories you wish to plot. 
-# if no number is given, then we plot all the trajectories in the file:
-min_length = 20
-
-# =================================================== #
-
-
-
-
-
-
 def plot_trajectories(fname, min_length, write_trajID=False, t0=0, te=-1):
     '''
     This function plots trajectories from a given file in 3D.

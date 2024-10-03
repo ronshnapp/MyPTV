@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2023.7.13)  3 OCT 2024 13:12
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2023.7.13)  3 OCT 2024 22:23
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -764,64 +764,74 @@ Overfull \hbox (17.3725pt too wide) in paragraph at lines 1215--1233
  [][] 
  []
 
-[19] [20] [21] [22] [23]
+<./figs/trajectory_plot.pdf, id=657, 459.96844pt x 392.96812pt>
+File: ./figs/trajectory_plot.pdf Graphic file (type pdf)
+<use ./figs/trajectory_plot.pdf>
+Package pdftex.def Info: ./figs/trajectory_plot.pdf  used on input line 1249.
+(pdftex.def)             Requested size: 227.62204pt x 194.46884pt.
+
+Overfull \hbox (1.62634pt too wide) in paragraph at lines 1258--1273
+ [][] 
+ []
+
+[19 <./figs/trajectory_plot.pdf>] [20] [21] [22] [23] [24]
 LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <14.4> not available
-(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 1269.
+(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 1294.
 LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <12> not available
-(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 1276.
-<./figs/camera_files.pdf, id=691, 508.10204pt x 141.02348pt>
+(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 1301.
+<./figs/camera_files.pdf, id=707, 508.10204pt x 141.02348pt>
 File: ./figs/camera_files.pdf Graphic file (type pdf)
 <use ./figs/camera_files.pdf>
-Package pdftex.def Info: ./figs/camera_files.pdf  used on input line 1306.
+Package pdftex.def Info: ./figs/camera_files.pdf  used on input line 1331.
 (pdftex.def)             Requested size: 426.79135pt x 118.45676pt.
- [24
+ [25
 
  <./figs/camera_files.pdf>]
-Overfull \hbox (1.44354pt too wide) in paragraph at lines 1376--1377
+Overfull \hbox (1.44354pt too wide) in paragraph at lines 1401--1402
 []\T1/cmtt/m/n/10 fineCalibration(maxiter=500) \T1/cmr/m/n/10 - This func-tion 
 will solve for the co-ef-fi-cients of the quadratic
  []
 
-[25] [26]
-<./figs/blob_file.pdf, id=762, 223.10614pt x 155.32921pt>
+[26] [27]
+<./figs/blob_file.pdf, id=778, 223.10614pt x 155.32921pt>
 File: ./figs/blob_file.pdf Graphic file (type pdf)
 <use ./figs/blob_file.pdf>
-Package pdftex.def Info: ./figs/blob_file.pdf  used on input line 1505.
+Package pdftex.def Info: ./figs/blob_file.pdf  used on input line 1530.
 (pdftex.def)             Requested size: 284.52756pt x 198.10016pt.
- [27] [28 <./figs/blob_file.pdf>]
-<./figs/particle_file.pdf, id=803, 390.14703pt x 291.52518pt>
+ [28] [29 <./figs/blob_file.pdf>]
+<./figs/particle_file.pdf, id=820, 390.14703pt x 291.52518pt>
 File: ./figs/particle_file.pdf Graphic file (type pdf)
 <use ./figs/particle_file.pdf>
-Package pdftex.def Info: ./figs/particle_file.pdf  used on input line 1582.
+Package pdftex.def Info: ./figs/particle_file.pdf  used on input line 1607.
 (pdftex.def)             Requested size: 341.43306pt x 255.13727pt.
 
-Overfull \hbox (18.38263pt too wide) in paragraph at lines 1591--1592
+Overfull \hbox (18.38263pt too wide) in paragraph at lines 1616--1617
 \T1/cmr/m/n/10 we run the rel-e-vant func-tions: \T1/cmtt/m/n/10 get_voxel_dict
 ionary() $\OMS/cmsy/m/n/10 !$ \T1/cmtt/m/n/10 list_candidates() $\OMS/cmsy/m/n/
 10 !$ \T1/cmtt/m/n/10 get_particles()\T1/cmr/m/n/10 ,
  []
 
-[29] [30 <./figs/particle_file.pdf>]
-<./figs/trajectory_files.pdf, id=840, 470.98941pt x 297.17282pt>
+[30] [31 <./figs/particle_file.pdf>]
+<./figs/trajectory_files.pdf, id=856, 470.98941pt x 297.17282pt>
 File: ./figs/trajectory_files.pdf Graphic file (type pdf)
 <use ./figs/trajectory_files.pdf>
-Package pdftex.def Info: ./figs/trajectory_files.pdf  used on input line 1653.
+Package pdftex.def Info: ./figs/trajectory_files.pdf  used on input line 1678.
 (pdftex.def)             Requested size: 284.52756pt x 179.52937pt.
- [31 <./figs/trajectory_files.pdf>]
-<./figs/smoothed_trajfile.pdf, id=864, 514.2885pt x 471.065pt>
+ [32 <./figs/trajectory_files.pdf>]
+<./figs/smoothed_trajfile.pdf, id=880, 514.2885pt x 471.065pt>
 File: ./figs/smoothed_trajfile.pdf Graphic file (type pdf)
 <use ./figs/smoothed_trajfile.pdf>
-Package pdftex.def Info: ./figs/smoothed_trajfile.pdf  used on input line 1699.
+Package pdftex.def Info: ./figs/smoothed_trajfile.pdf  used on input line 1724.
 
 (pdftex.def)             Requested size: 341.43306pt x 312.73677pt.
 
-[32 <./figs/smoothed_trajfile.pdf>] (./user_manual.bbl)
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 1751.
- [33]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 1751.
+[33 <./figs/smoothed_trajfile.pdf>] (./user_manual.bbl)
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 1776.
+ [34]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 1776.
  (./user_manual.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 1751.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 1751.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 1776.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 1776.
 
 Package rerunfilecheck Info: File `user_manual.out' has not changed.
 (rerunfilecheck)             Checksum: 6B1FC7423BCD656429F1554E9D5FD6BE;4619.
@@ -829,13 +839,13 @@ Package rerunfilecheck Info: File `user_manual.out' has not changed.
 
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 1751.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 1776.
  ) 
 Here is how much of TeX's memory you used:
- 10222 strings out of 493756
- 149042 string characters out of 6152244
- 283327 words of memory out of 5000000
- 13307 multiletter control sequences out of 15000+600000
+ 10236 strings out of 493756
+ 149362 string characters out of 6152244
+ 285708 words of memory out of 5000000
+ 13316 multiletter control sequences out of 15000+600000
  25774 words of font info for 69 fonts, out of 8000000 for 9000
  645 hyphenation exceptions out of 8191
  36i,14n,49p,1169b,458s stack positions out of 5000i,500n,10000p,200000b,80000s
@@ -858,10 +868,10 @@ sr/share/texmf/fonts/type1/public/cm-super/sfsx2488.pfb></usr/share/texmf/fonts
 er/sftt0900.pfb></usr/share/texmf/fonts/type1/public/cm-super/sftt1000.pfb></us
 r/share/texmf/fonts/type1/public/cm-super/sftt1200.pfb></usr/share/texmf/fonts/
 type1/public/cm-super/sftt1440.pfb>
-Output written on user_manual.pdf (36 pages, 4316897 bytes).
+Output written on user_manual.pdf (37 pages, 4446892 bytes).
 PDF statistics:
- 1019 PDF objects out of 1200 (max. 8388607)
- 876 compressed objects within 9 object streams
- 235 named destinations out of 1000 (max. 500000)
- 572 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 1038 PDF objects out of 1200 (max. 8388607)
+ 891 compressed objects within 9 object streams
+ 239 named destinations out of 1000 (max. 500000)
+ 577 words of extra memory for PDF output out of 10000 (max. 10000000)
 

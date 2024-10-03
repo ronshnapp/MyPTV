@@ -1060,7 +1060,7 @@ This step is used to re-track trajectories once velocities are known and to "sti
 
 \begin{table}[!ht]
 	\centering
-	\caption{The \texttt{params\_file.yml} parameters for the smoothing step. All paths to files are relative to the \texttt{workflow.py} script.}
+	\caption{The \texttt{params\_file.yml} parameters for the \texttt{smoothing} command. All paths to files are relative to the \texttt{workflow.py} script.}
 	\begin{tabular}{l m{12cm}}
 		\hline
 		Parameter & Description\\
@@ -1121,21 +1121,21 @@ The 2D particle tracking procedure requires following these steps:
 %
 \begin{table}[!ht]
 	\centering
-	\caption{The \texttt{params\_file.yml} parameters for the 2D tracking step. All paths to files are relative to the \texttt{workflow.py} script. \label{tab:2d_tracking}}
+	\caption{The \texttt{params\_file.yml} parameters for 2D tracking. All paths to files are relative to the \texttt{workflow.py} script. \label{tab:2d_tracking}}
 	\begin{tabular}{l m{12cm}}
 		\hline
-		Parameter & Description\\
+		Parameter & Description\\[.2cm]
 		\hline
 		
-		\texttt{blob\_file} & The name of the file that contains the segmentation results \\
-		\texttt{frame\_start} & The number of the first frame from which we want to perform 2D tracking \\
-		\texttt{N\_frames} & The number of frames to be analyzed; If \texttt{None}, then all the frames will be analyzed \\
-		\texttt{camera\_name} & the name of the camera from which the images were taken (must be a calibrated camera) \\
-		\texttt{camera\_resolution} & A tuple representing the camera resolution, for example, (1280, 1024) \\
-		\texttt{z\_particles} & The value of the z coordinate of the plane on which the particles are found, e.g. 0.0 \\
-		\texttt{d\_max} &  The maximum allowable particle translation between frame in lab-coordinates\\
-		\texttt{dv\_max} & The maximum allowable change of velocity for the particles in lab-space coordinates per frame (e.g. mm/frame) \\
-		\texttt{save\_name} & The name of the file used to save the results \\
+		\texttt{blob\_file} & The name of the file that contains the segmentation results \\[.2cm]
+		\texttt{frame\_start} & The number of the first frame from which we want to perform 2D tracking \\[.2cm]
+		\texttt{N\_frames} & The number of frames to be analyzed; If \texttt{None}, then all the frames will be analyzed \\[.2cm]
+		\texttt{camera\_name} & the name of the camera from which the images were taken (must be a calibrated camera) \\[.2cm]
+		\texttt{camera\_resolution} & A tuple representing the camera resolution, for example, (1280, 1024) \\[.2cm]
+		\texttt{z\_particles} & The value of the z coordinate of the plane on which the particles are found, e.g. 0.0 \\[.2cm]
+		\texttt{d\_max} &  The maximum allowable particle translation between frame in lab-coordinates\\[.2cm]
+		\texttt{dv\_max} & The maximum allowable change of velocity for the particles in lab-space coordinates per frame (e.g. mm/frame) \\[.2cm]
+		\texttt{save\_name} & The name of the file used to save the results \\[.2cm]
 		
 		\hline
 	\end{tabular}
@@ -1164,12 +1164,12 @@ To match a point we need to identify it from the different camera views. In the 
 	\caption{The \texttt{params\_file.yml} parameters for the manual matching operation. All paths to files are relative to the \texttt{workflow.py} script. \label{tab:man_match}}
 	\begin{tabular}{l m{12cm}}
 		\hline
-		Parameter & Description\\[.3em]
+		Parameter & Description\\[.2cm]
 		\hline
 		%
-		\texttt{cameras} & a list that holds the names of the cameras used; for example [cam1, cam2, cam3]. Note that the camera files need to be in the same folder where we are running the workflow script\\[.3em]
+		\texttt{cameras} & a list that holds the names of the cameras used; for example [cam1, cam2, cam3]. Note that the camera files need to be in the same folder where we are running the workflow script\\[.2cm]
 		%
-		\texttt{images} & the paths of the images from which matching should be performed. \\[.3em]
+		\texttt{images} & the paths of the images from which matching should be performed. \\[.2cm]
 		\hline
 	\end{tabular}
 \end{table}
@@ -1214,20 +1214,20 @@ To measure fiber orientations, we use, again the workflow script. We do this via
 	\caption{The \texttt{params\_file.yml} parameters for the \texttt{fiber\_orientations} operation. All paths to files are relative to the \texttt{workflow.py} script. \label{tab:fibers}}
 	\begin{tabular}{l m{12cm}}
 		\hline
-		Parameter & Description\\
+		Parameter & Description\\[.2cm]
 		\hline
 		%
-		\texttt{camera\_names} & a list of the camera names, e.g. [cam1, cam2, cam3]. Note that the camera files need to be in the same folder where we are running the workflow script\\[.3em]
+		\texttt{camera\_names} & a list of the camera names, e.g. [cam1, cam2, cam3]. Note that the camera files need to be in the same folder where we are running the workflow script\\[.2cm]
 		%
-		\texttt{cam\_resolution} & A tuple for the number of pixels in each axis. \\[.3em]
+		\texttt{cam\_resolution} & A tuple for the number of pixels in each axis. \\[.2cm]
 		%
-		\texttt{blob\_files} & The name of the files that hold the results of the \textbf{blob orientations}. \\[.3em]
+		\texttt{blob\_files} & The name of the files that hold the results of the \textbf{blob orientations}. \\[.2cm]
 		%
-		\texttt{fibers\_file} & The file name with the results of the matching stage. \\[.3em]
+		\texttt{fibers\_file} & The file name with the results of the matching stage. \\[.2cm]
 		%
-		\texttt{trajectory\_file} & The file name with the results of the tracking stage. \\[.3em]
+		\texttt{trajectory\_file} & The file name with the results of the tracking stage. \\[.2cm]
 		%
-		\texttt{save\_name} & The file name that should be used to save the results of the orientation measurements. \\[.3em]
+		\texttt{save\_name} & The file name that should be used to save the results of the orientation measurements. \\[.2cm]
 		\hline
 	\end{tabular}
 \end{table}
@@ -1240,12 +1240,37 @@ To measure fiber orientations, we use, again the workflow script. We do this via
 
 \subsection{Plotting the results} \label{sec:plot_trajectories}
 
-Once the post processing is finished, you might want to plot the results. 
-A basic 3D rendering pf the trajectories obtained can be established with
-the workflow command \texttt{plot\_trajectories}.
+Once the post processing is finished, we might want to plot trajectories in order to visualize the results. A basic 3D rendering of measured trajectories can be established with the workflow command \texttt{plot\_trajectories}. As example is shown in Fig.~\ref{fig:trajectory_plot}. The parameters for the plotting function are explained in Tab.~\ref{tab:plotting_parameter}.
 
 
 
+\begin{figure}
+	\centering
+	\includegraphics[width=8cm]{trajectory_plot.pdf}
+	\caption{Trajectory segments plotted using the workflow \texttt{plot\_trajectories} command. A 30 frames long segment is shown from a turbulent flow dataset taken from Ref.~\cite{Shnapp2023}. \label{fig:trajectory_plot}}
+\end{figure}
+
+
+%
+\begin{table}[!ht]
+	\centering
+	\caption{The \texttt{params\_file.yml} parameters for the \texttt{plot\_trajectories} operation. All paths to files are relative to the \texttt{workflow.py} script. \label{tab:plotting_parameter}}
+	\begin{tabular}{l m{12cm}}
+		\hline
+		Parameter & Description\\[.2cm]
+		\hline
+		%
+		\texttt{file\_name} & the path to the file that contains the trajectories; the file can be either in trajectories format or in smoothed trajectories format. \\[.2cm]
+		%
+		\texttt{min\_lenth} & only trajectories that have more samples than this number will be plotted.\\[.2cm]
+		%
+		\texttt{write\_trajID} & If True this will desplay the trajectory ID on top of them.\\[.2cm]
+		%
+		\texttt{t0} and \texttt{te} & Used to delineate the time range for which we plot the data. We only plot the samples in the time range starting at frame \texttt{t0} and ending at frame \texttt{te}. Set \texttt{t0=0} and \texttt{te=-1} to plot trajectories at all times available. \\[.2cm]
+		%
+		\hline
+	\end{tabular}
+\end{table}
 
 
 
