@@ -343,8 +343,12 @@ All in all, each camera in the unified polynomial calibration method is characte
 
 
 
+\subsection{Advantage and disadvantage of each model}
 
-The extended Zolof model is a later addition to MyPTV, and its main advantage is that it is easier to calibrate than the Tsai model. Specifically, the transformation can be formalized as a linear least square problem such that its globally optimal parameters can be found exactly. In comparison, the Tsai model calibration process must employ a non-convex optimization, making it very difficult to converge to the optimal solution. The disadvantage of this model is that it does not comply with a physical principle, and so, extrapolation of the model to regions beyond the region of the calibration, or careless application of high degree polynomials ($P_\eta$ and $P_\zeta$) could lead to errors.
+The extended Zolof model is a later addition to MyPTV, and its main advantage is that it is easier to calibrate than the Tsai model. Specifically, the transformation can be formalized as a linear least square problem such that its globally optimal parameters can be found exactly. In comparison, the Tsai model calibration process must employ a non-convex optimization, making it difficult to converge to the optimal solution. In addition, the extended Zolof calibration does not require that the user to input an initial guess, which posses one of the main difficulties in the calibration process. 
+
+
+The disadvantage of the extended Zolof model is that it does not comply with a physical principle. Therefore, extrapolation of the model to regions beyond the region of the calibration, or careless use of high degree polynomials ($P_\eta$ and $P_\zeta$) could lead to errors. The Tsai model on the other hand uses the pin hole camera physical model, and so it is expected to perform better in extrapolations beyond the calibration region.
 
 
 
@@ -447,7 +451,10 @@ In the process called camera calibration, our goal is to determine what are the 
 Importantly, since our goal in calibration is to find the cameras' positions, once calibration images were taken in an experiment it is crucial that the cameras are not moved. Even minor vibrations can ruin an experiment. Also, the calibration target needs to be in the same medium in which the experiment will be performed to ensure that any refraction is corrected by the error terms (for example, if you are using a tank of water, place the calibration target inside the tank of water). 
 
 
-The calibration in MyPTV is performed in two steps: \textit{initial calibration} and \textit{final calibration}. The initial calibration is used to obtain a rough estimation of some of the camera's parameters using a small number of calibration points, as well as to extract the information for all the calibration points on the calibration target. In the final calibration we fine tune the camera's parameters in order to minimize the \textit{calibration error}. The process is explained in detail in the following sub sections. 
+Once calibration images have been obtains, we use MyPTV to fit the cameras to the 3D-model chosen and estimate the model's parameters. 
+The calibration in MyPTV is performed in two steps: \textit{initial calibration} and \textit{final calibration}. The initial calibration is used to obtain a rough estimation of some of the camera's parameters using a small number of calibration points, as well as to extract the information for all the calibration points on the calibration target. In the final calibration we fine tune the camera's parameters in order to minimize the \textit{calibration error}. 
+The initial and final calibration steps are slightly different for each of the 3D models, so note which model is chosen.
+The process is explained in detail in the following sub sections. 
 
 
 %A schematic block diagram for the calibration process of each camera is given in Fig.~\ref{fig:calibsteps}. The calibration is divided into two sub-processes: 1) initial calibration, in which we use only 6 calibration points to obtain an approximate calibration estimation, and, 2) final calibration, in which we use all the calibration points on the calibration target to improve the accuracy of the initial calibration. The various steps of the process are performed in MyPTV through the workflow script, and detailed instructions are given below. 
@@ -478,19 +485,19 @@ As in any step of MyPTV, we make sure that the \texttt{params\_file.yaml} in our
 	\caption{The \texttt{params\_file.yml} parameters for the calibration step. All paths to files are relative to the \texttt{workflow.py} script. \label{tab:cal_paramsfile}}
 	\begin{tabular}{l m{10cm}}
 		\hline
-		Parameter & Description\\
+		Parameter & Description\\[.2cm]
 		\hline
-		\texttt{camera\_name} & the name of the camera to be calibrated; for example, \texttt{cam1}, etc. \\
 		
-		%\texttt{calibration\_points\_file} & path to the file that lists the correlated lab space and image space coordinates \\
+		\texttt{3D\_model} & The name of the 3D model used; can be either "\texttt{Tsai}" or "\texttt{extendedZolof}". \\[.2cm]
 		
-		\texttt{target\_file} & path to the file that lists the calibration target's lab points \\
+		\texttt{camera\_name} & The name of the camera to be calibrated; for example, \texttt{cam1}, etc. \\[.2cm]
 		
-		%\texttt{segmented\_points\_file} & path of the file with segmented calibration points \\
+		\texttt{resolution} & Camera resolution; for example: \texttt{1280, 1024}. \\[.2cm]
 		
-		\texttt{calibration\_image} & path of the calibration image \\
+		\texttt{target\_file} & Path to the file that lists the calibration target's lab points (for example \texttt{./Calibration/target\_file}) \\[.2cm]
 		
-		\texttt{resolution} & camera resolution; for example: 1280, 1024\\
+		\texttt{calibration\_image} & Path of the calibration image (for example \texttt{./Calibration/cal1.tif})\\[.2cm]
+		
 		\hline
 	\end{tabular}
 \end{table}
@@ -512,7 +519,7 @@ which should open the a window like the one shown in Fig.~\ref{fig:init_cal_gui}
 
 \begin{figure}
 	\includegraphics[width=1.0\textwidth]{initial_calibration.pdf}
-	\caption{The initial calibration GUI. \label{fig:init_cal_gui}}
+	\caption{The initial calibration GUI when using the Tsai 3D-model. \label{fig:init_cal_gui}}
 \end{figure}
 
 
@@ -522,7 +529,7 @@ The initial calibration is composed of four steps, and each one has a dedicated 
 Here are the details regarding each of the initial calibration steps:
 
 \begin{enumerate}
-	\item \texttt{cam file generation}: Here we produce a text file that stores the camera parameters. We first have to give a first guess for the six different external parameters, $\vec{O}$ and $\vec{\theta}$, and the focal length, $f$. It's important to give a reasonably good initial guess, because the calibration problem often has local minima that make the convergence to solution difficult. To understand the how to choose the values, consult Section~\ref{sec:camera_external_params}. When done, click the \texttt{Generate cam file} button.  
+	\item \texttt{cam file generation}: Here we produce a text file that stores the camera parameters. If using the \textit{extended Zolof model}, everything is done automatically and the user only needs to click the \texttt{Generate cam file} button. If using the \textit{Tsai model}, we first have to give a first guess for the six different external parameters, $\vec{O}$ and $\vec{\theta}$, and the focal length, $f$. It's important to give a reasonably good initial guess, because the calibration problem often has local minima that make the convergence to solution difficult. To understand the how to choose the values, consult Section~\ref{sec:camera_external_params}. When done, click the \texttt{Generate cam file} button.  
 	
 	\item \texttt{image segmentation}: In this step we use MyPTV to detect the points on the calibration image and to store their pixel coordinates in a file. Choose and tweak the segmentation parameters until all the calibration points are detected (or at least most of them if the images are not ideal). Detected points are indicated by green squares on the image. Also, a reference for the segmentation parameters can be found in Section~\ref{sec:workflow_segment}. Once done, save the file using the \texttt{save} button.
 	
@@ -533,21 +540,6 @@ Here are the details regarding each of the initial calibration steps:
 \end{enumerate}
  
 This concludes the initial calibration step.
-
-%
-%For the initial calibration, follow these steps:
-%
-%\begin{enumerate}
-%	\item \textit{Generate the camera file:} The camera file holds the camera parameters (see Fig.~\ref{fig:camfiles}). An empty camera file can be generated automatically by the workflow script when we start the calibration sequence in a directory that doesn't havea  camera file in it (by running \texttt{python workflow.py params\_file.yml calibration} in the command line).
-%	
-%	\item \textit{Enter an initial guess:} Open the camera file just generated and insert an initial guess for the camera's position ($\vec{O}$ in the first line), orientation ($\vec{\theta}$ in the second line), and the focal depth ($f$ in the third line). See Section~\ref{sec:camera_external_params} (Understanding camera external parameters) and Fig.~\ref{fig:cam_pos_example} for a reference on how camera translations and orientations and focal lengths are defined. 
-%	
-%	\item \textit{Segment 6 calibration points:} We start by choosing six points (or more) of the calibration target. The points should not be coplanar and it is best to choose them such that there is some assymetry (e.g. see the blue crosses in Fig.~\ref{fig:Cal_point_GUI}). Then, we need to prepare a file that lets MyPTV know their coordinates in image space and in lab space (see Fig.~\ref{fig:calpointfile} for the format). The name of the file should be inserted under \texttt{calibration\_points\_file} in the \texttt{params\_file.yml}. \\
-%	The calibration points file can be generated easily using a dedicated graphical user interface (GUI). To run the GUI, enter \texttt{python workflow.py params\_file calibration\_point\_gui} in the command line. Alternatively, if MyPTV can't find the \texttt{calibration\_points\_file}, the GUI will start automatically. Instruction are given in Fig.~\ref{fig:Cal_point_GUI}.
-%	
-%	\item \textit{Calibrate using 6 points:} We now calibrate the camera, namely, we optimize the camera parameters such that the calibration error is minimized). This is done using the calibration graphical user interface (GUI), which is initiated by entering \texttt{python workflow.py params\_file.yml calibration} in the command line. The calibration GUI is shown in Fig.~\ref{fig:calibration_gui} and the functionalities are listed in Tab.~\ref{tab:calibration_gui}. In general, we want to observe the calibration error decreasing (the error is the RMS deviation in pixel units). Once the error had converged to a low level, about 1.0 pixels, save the results.
-%\end{enumerate}
-
 
 
 
@@ -595,11 +587,11 @@ This concludes the initial calibration step.
 
 
 
-\subsubsection{Understanding camera external parameters} \label{sec:camera_external_params}
+\subsubsection{Tsai model: Understanding camera external parameters} \label{sec:camera_external_params}
 
 
 
-The external parameters of a camera in MyPTV include its position, its orientation, and its focal length, $\vec{O}$, $\vec{\theta}$, and $f$, respectively. In the calibration process, it is important to understand these parameters to be able to give a good initial guess and judge the results of the calibration procedure. Thus, let us explain how these parameters are defined.
+The external parameters of the Tsai model in MyPTV include its position, its orientation, and its focal length, $\vec{O}$, $\vec{\theta}$, and $f$, respectively. In the calibration process, it is important to understand these parameters to be able to give a good initial guess and judge the results of the calibration procedure. Thus, let us explain how these parameters are defined.
 
 
 Each camera is associated with an image space reference frame, shown in Fig.~\ref{fig:cam_pos_example} as the $x',$ $y'$, and $z'$ axes. The $z'$ axis is normal to the imaging plane (the camera's sensor), while $x',$ and $y'$ are tangent to it; the system is right-handed. 
@@ -623,57 +615,7 @@ The focal length parameter,$f$, is essentially an extension factor. In MyPTV $f$
 
 
 
-%\vspace{.5cm}
-%
-%\begin{figure}[!ht]
-%\begin{center}
-%	
-%	\fcolorbox{white}{bcolor}{
-%	\begin{minipage}[c][][c]{0.95\textwidth}
-%		
-%		\vspace{.1cm}
-%		
-%		\textbf{Understanding camera external parameters:} The external parameters of a camera in MyPTV include its position, its orientation, and its focal length, $\vec{O}$, $\vec{\theta}$, and $f$, respectively. In the calibration process, it is important to understand these parameters to be able to give a good initial guess and judge the results of the calibration procedure. Thus, let us explain how these parameters are defined.
-%		
-%		\vspace{.5cm}
-%		
-%		Each camera is associated with an image space reference frame, shown in Fig.~\ref{fig:cam_pos_example} as the $x',$ $y'$, and $z'$ axes. The $z'$ axis is normal to the imaging plane (the camera's sensor), while $x',$ and $y'$ are tangent to it; the system is right-handed. 
-%		
-%		\vspace{.25cm}
-%		
-%		The position parameter, $\vec{O}$, is defined as a vector pointing from the origin of the lab space coordinate system to the origin of the camera's reference frame. It is measured in lab-space units (e.g. millimeters). Therefore, one could estimate $\vec{O}$ directly by using a ruler or a measuring tape to measure where the camera is in the lab-space coordinates. 
-%		
-%		\vspace{.25cm}
-%		
-%		The orientation parameter, $\vec{\theta}$, is a vector of three angles that describe the rotation of the camera's reference frame with respect to the lab space frame, namely the camera's Euler angles. The first angle describes the rotation around the $x'$ axis, the second describes rotation around $y'$, and the third angle describes rotation around $z'$. Rules of thumb in trying to guess $\vec{\theta}$ are: 1) ask yourself "how should one rotate the lab's frame of reference so that it aligns with the camera's frame of reference?"; 2) we first rotate around the $x'$ axis, then around $y'$ and then around $z'$. Note: in many cases, the origin of the images is on the top left corner, so half a turn rotation around the $z'$ axis is often needed. See Fig.~\ref{fig:cam_pos_example} for an example.
-%		
-%		\vspace{.25cm}
-%		
-%		The focal length parameter,$f$, is essentially an extension factor. In MyPTV $f$ is measured in units of pixels. The focal length is normally more or less equal to the camera's lens focal length. For example, if one uses a camera with a 60mm lens in their experiment, and the size of one camera pixel is 10$\mu$m=0.01mm, then $f$ would roughly be equal to 6000 (pixels). Potentially, one could also estimate $f$ in an experiment: 1) place the camera in a known position facing a calibration target (as e.g. in Fig.4a) and take a picture 2) prepare a calibration points file for a few of the points on the calibration target; 3) preparing a camera file using the known position and orientation 4) insert some initial value for $f$; 5) using the \texttt{workflow.py} file to compare the distribution of the points using this value of $f$; 6) repeat steps 4 and 5 until a fair agreement is found.  
-%		
-%		\vspace{.25cm}
-%		
-%		\begin{center}
-%			\includegraphics[width=\textwidth]{Cam_pos_examples.pdf}
-%			\caption{Two examples for camera setups. The (x, y, z) system represents the lab space, and the (x', y', z') represents the camera's system of reference. In (a) the camera's position is roughly $\vec{O} = (0,0,1)$, and an appropriate rotation vector could be $\vec{\theta} = (0,\pi,0)$. In (b) the camera's position might be $\vec{O} = (1,1,1)$, and the orientation vector might approximately be $\vec{\theta} = (-\frac{1}{2}\pi,-\frac{3}{4}\pi,0)$. \label{fig:cam_pos_example}}
-%		\end{center}
-%		
-%		
-%		\vspace{.1cm}
-%		
-%	\end{minipage}
-%	}
-%\end{center}
-%
-%\end{figure}
 
-
-
-%\begin{figure}[!ht]
-%	\centering
-%	\includegraphics[width=0.85\textwidth]{Cal_point_GUI.pdf}
-%	\caption{The calibration point segmentation GUI. 1 - the calibration image, with points to be segmented. 2 and 3 - scroll bars to explore the image. When the image is clicked a red cross apears (7) and its coordinates in image space are pronted in 4; to mark a calibration point click on it. 5 - to specify the lab space coordinates of the point, enter them in the correct tabs. 6 - once 'mark point' is clicked, the cross becomes blue (8), which means that the point's data was registered in the memory. to remove points from the register click 'Forget last point'. To save the points in the register click 'Save points' (the file name is the one given in \texttt{calibration\_points\_file}). To zoom in use the +/- buttons. To move the red cross more accurately, use Shift-Arrowkey. \label{fig:Cal_point_GUI}}
-%\end{figure}
 
 
 \begin{figure}[!ht]
@@ -696,112 +638,57 @@ The focal length parameter,$f$, is essentially an extension factor. In MyPTV $f$
 
 \subsubsection{Final calibration}
 
-In the final calibration we use all the calibration points to find the parameters of the camera. We do this by minimizing the calibration error, defined as the root mean square of the distances between the image-space calibration points positions and the projection of the lab-space points on the image plane. The minimization is solved numerically using the \textit{final calibration gui}. 
-
-
-To start the final calibration gui, use the workflow script with the following command:
+In the final calibration we use all the calibration points to find the parameters of the camera. We do this by minimizing the calibration error, defined as the root mean square of the distances between the image-space calibration points positions and the projection of the lab-space points on the image plane.
+The procedure is performed using the final calibration gui, which is initiated by using the workflow script with the command
 %
 \begin{verbatim}
 python workflow.py params_file.yml final_calibration
 \end{verbatim}
 %
-which should start the interface shown in Fig.~\ref{fig:calibration_gui}. The description of each of the possible functionalities are given in Table~\ref{tab:calibration_gui}. In principal, the lower the calibration error, the results of the measurements will be more reliable, and it will become possible to track a higher number of particles in each frame. A good calibration will have an error lower than about 0.5, or even 0.3 pixels. Once a good error value is achieved, the calibration process is complete. 
 
 
 
-%
-%
-%For the final calibration, follow these steps:
-%
-%
-%\begin{enumerate}
-%	\item \textit{Prepare a target file:} If there is no target file in the experimental folder, this is the time to generate one. A \textit{target file} is a text file which lists the lab-space coordinates of all the points on our calibration target according to the format shown in Fig.~\ref{fig:target_file}. Prepare such a file and save it in the experiment's calibration folder.
-%	
-%	\item \textit{Segment the calibration points:} To obtain the image space coordinates of all the calibration points we use the segmentation operation of the workflow script. To do so: 1) insert the name of the calibration image under the \texttt{Segmentation -> single\_image\_name} tab; 2) run the segmentation command - \texttt{python workflow.py params\_file.yml segmentation}. If the results are not satisfactory, change the segmentation parameters and re-run the segmentation command until you get it; then save the results (the file name used is the one under the \texttt{segmented\_points\_file} field in the \texttt{params\_file}). See also Sec.~\ref{sec:workflow_segment} for more details on the segmentation process.  
-%	
-%	\item \textit{Match points to target file:} Here we let MyPTV know which of the segmented points corresponds to which point in the target file. To do this, we used the command \texttt{python workflow.py params\_file.yml match\_target\_file}. This will generate a figure, highlighting the target file and the segmented results  by one another. Make sure that the two data match each other (see Fig.~\ref{fig:match_target_file}. If the results are good, save them by quitting the figure and entering 1 when prompted. If the match is not good, then the initial calibration was not good enough; enter 2 when prompted, and return to Sec.~\ref{sec:init_calibration} to improve the initial calibration.
-%	
-%	\item \textit{Calibrate using all points:} Now that we have segmented the necessary data, we return to the calibration GUI by running \texttt{python workflow.py params\_file.yml calibration} in the command line. Use the GUI to reduce the calibration error as much as possible. Values lower that 0.5 pixels or even 0.3 should be sought.  
-%\end{enumerate}
+The final calibration gui is different for each 3D-model.
+For the \textit{extended Zolof}, the minimization is done by solving an exact least squares problem, and for a given set of calibration points there is only one solution which is found by the solver. Therefore, to complete the calibration simply click on the \texttt{calibrate} button, and once the process is finished the calibration was found. Click \texttt{save} to save the results into the camera file. You can inspect the calibration using the histogram and the calibration target plots. 
+
+
+For the \textit{Tsai model}, the minimization is solved numerically in iterations using the \textit{final calibration gui}. 
+The gui for the Tsai model is shown in Fig.~\ref{fig:calibration_gui}. The description of each of the possible functionalities are given in Table~\ref{tab:calibration_gui}. In principal, the lower the calibration error, the results of the measurements will be more reliable, and it will become possible to track a higher number of particles in each frame. Once a sufficiently low error value is achieved, the calibration process is complete. 
+
+
+
+Note: A "good" calibration will have a low error value - how much exactly is difficult to say and it strongly depends on the imaging setup used and in particular the imaging resolution. Typically, we would want to get down to approximately 1 pixel or lower.  
 
 
 
 
 
+\subsubsection{Calibration error analysis, validation and uncertainty}
 
-
-
-
-
-
-
-
-
-%
-%\subsubsection{Segmenting the calibration images and matching the target file}
-%
-%
-%To prepare for the final calibration, we need to prepare a \textit{calibration points file} for the rest of the calibration points on our target. To avoid inserting the information for each point manually, we use a semi-automated process as follows:
-%%
-%\begin{enumerate}
-%	\item Segment the calibration target points in the calibration image using the workflow script, as outlined in Sec.~\ref{sec:workflow_segment}. Save the segmented calibration points in the experiment's Calibration folder with a name such as \texttt{blobs\_cam1}. Insert the name of this file under the \texttt{segmented\_points\_file} field of the \texttt{params\_file.yml} file.
-%	
-%	\item Open the command line on the experiment directory, and run the workflow script with the following command:
-%	\begin{verbatim}
-%	python workflow.py params_file.yml match_target_file
-%	\end{verbatim}
-%	
-%	\item After automated sorting, a figure window should appear. Make sure that the blue points are overlaid with the red X's and close the figure window. Follow the instructions to save the calibration points file (under the name given in the \texttt{params\_file.yml} under\\ \texttt{calibration\_points\_file}). 
-%\end{enumerate}
-%
-%You should now have a file that contains the full information of the calibration points. Proceed with the fine calibration process.
-%
-%
-%
-%
-%
-%
-%\subsubsection{Calibration workflow}\label{sec:cam_cal}
-%
-%
-%Once all the data files are ready in the experiment folder, we use the workflow script to minimize the calibration error by tuning the cameras' external parameters and correction terms. Thus:
-%
-%\begin{enumerate}
-%	
-%	\item Start a terminal (or command line prompt), and change directory to the experiment's folder:
-%	\begin{verbatim}
-%	cd \path\to\the\experiment\folder
-%	\end{verbatim}
-%	
-%	\item Enter the following command:
-%	\begin{verbatim}
-%	python workflow.py params_file.yml calibration
-%	\end{verbatim}
-%	
-%	\item If a camera file does not yet exist in the folder, MyPTV had just generated an empty one for you. Locate this file in the experiment folder, enter an initial guess for the external parameters and save the file.
-%	
-%	\item If a camera file exists in the exprimental folder, an interactive dialogue should now appear in the terminal which offers:
-%	\begin{verbatim}
-%	1 - external parameters minimization 
-%	2 - correction error term calibration
-%	3 - print current camera parameters
-%	4 - plot the projection of the calibration points
-%	8 - save the current calibration results
-%	9 - quit
-%	\end{verbatim}
-%	Thus, proceed using options 1 and 2 in iterations and note the calibration error decreasing. Once satisfied, save the results.
-%	
-%\end{enumerate}
-%	
-
-
-\subsubsection{Important notes}
-
-\begin{enumerate}
-	\item A "good" calibration will have a low error value - how much exactly is hard to say and depends on the imaging setup used. Typically you would want to get down to 1 pixel or lower.  
 	
-	\item Validation - After all the cameras have been calibrated, it is good practice to verify the calibration quality by stereo matching the calibration points. We do this through the workflow command "\verb!analyze\_calibration\_error!", which prints statistics of the calibration error and plots the histogram of the error for individual calibration points.
+Once all the cameras have been calibrated, it is important to verify the calibration quality, as this gives us information on the uncertainty of the results. We analyze the calibration error by stereo matching the calibration points, which is done through the workflow command "\verb!analyze\_calibration\_error!". 
+
+The \texttt{analyze calibration error} command calculates statistics of the deviation between the ground truth of the calibration points and the estimate that is obtained using stereo matching. The command outputs two types of information: 
+\begin{enumerate}
+	\item it prints the root mean square of the deviations both in total distance and for each direction;
+	
+	\item it plots histograms of the deviations' total distance and in each direction.
 \end{enumerate}
+%
+The results are shown in lab-space coordinates (i.e. in millimeters). Therefore, the values obtained can be taken as the \underline{lower bound} for the uncertainty in the measurements of the particle positions in the experiment. Figure~\ref{fig:cal_error} shows an example for the output of this type of analysis. 
+
+
+
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[height=8cm]{Cal_error_analysis.pdf}
+	\caption{Example results of the calibration error analysis. In this experiment, the lower bound for the uncertainty for position measurements based on the RMS deviation value was approximately $100 \, \mu m$, with the largest deviations in the $z$ direction.}
+	\label{fig:cal_error}
+\end{figure}
+
+
+
 
 
 
@@ -989,12 +876,15 @@ To improve the results of segmenting over non-ideal images, MyPTV can be set to 
 
 \subsection{Matching}\label{sec:workflow_match}
 
-In the matching step, particles images in the various images are used to stereo-locate (triangulate) the 3D positions of particles in the lab-space coordinates. 
+In the matching step, particles that were segmented from the various images are used to stereo-locate (triangulate) the 3D positions of particles in the lab-space coordinates. 
 
-One of the difficult challenges in the PTV method is to determine which particles in each image correspond to the same particles in other images, as the number of combinations can be very large for particle dense images. Here, we solve this issue using a new algorithm called "particle marching". In brief, we begin by having initial guesses for particle positions, and we check whether these initial guesses correspond to real particles with epipolar geometry. If they do, we store the found locations and if not, we throw them out. Then, in the next frame we use the particles found in the previous frame as initial new guesses. For the first round of initial guess, we use two methods: 1) a set of random points in space (the number of points is denoted N0 in MyPTV), 2) by dividing the measurement volume into smaller sub-volumes (called voxels, with a given size), and search for particles inside each voxel using the ray-traversal algorithm.
+
+
+One of the big challenges in the PTV method is to determine which particle in each image correspond to the same particle in other images. As the number of combinations can be very large for particle dense images this can be a time consuming computation. In MyPTV, we approach this issue using a new algorithm called "particle marching". In brief, the algorithm begins by assuming we have an initial guess for particle positions in an image, and we then check whether these initial guesses correspond to physical particles using the co-linearity condition. If an initial guess turns out to be correct, we store its location and if not, we throw it out. Then, in the next frame we use the particles found in the previous frame as new initial guess. For the first iteration of initial guess, we use two methods: 1) a random set of points in lab-space (the number of points is denoted N0 in MyPTV), 2) by dividing the measurement volume into smaller sub-volumes (called voxels, with a given size), and search for particles inside each voxel using the ray-traversal algorithm described in~\cite{Bourgoin2020}.
      
 
-Getting the parameters N0 and the voxel size right will be able to generate good results. If they are given too large values this step could take up lon computational times. To optimize the values, run first only on several images to find optimal values, and only after that iterate over all frames by setting \texttt{N\_frames: None} and save the results. 
+Getting the parameters N0 and the voxel size right was shown to yield good results. If they are given too large values this step could take up a lot of computational time. To optimize the values, run first only on several images to find optimal values, and only after that iterate over all frames by setting \texttt{N\_frames: None} and save the results. 
+A detailed description of the input parameters used in the matching step is shown in Tab.~\ref{tab:matching}.
 
 
 Note: to easily perform manual stereo matching of several points in a given image, use the manual matching GUI. See Section~\ref{sec:man_match} and Fig.~\ref{fig:man_match}.
@@ -1003,38 +893,37 @@ Note: to easily perform manual stereo matching of several points in a given imag
 \begin{table}[!ht]
 	\centering
 	\caption{The \texttt{params\_file.yml} parameters for the \textbf{matching} step. All paths to files are relative to the \texttt{workflow.py} script.}
+	\label{tab:matching}
 	\begin{tabular}{l m{13cm}}
 		\hline
-		Parameter & Description\\
+		Parameter & Description\\[.1cm]
 		\hline
 		
-		\texttt{blob\_files} & names of files that hold the segmented particles for each camera, separated by commas; for example: \texttt{blobs\_cam1, blobs\_cam2, blobs\_cam3} \\
+		\texttt{blob\_files} & Names of files that hold the segmented particles for each camera, separated by commas; for example: \texttt{blobs\_cam1, blobs\_cam2, blobs\_cam3} \\[.1cm]
 		
-		\texttt{frame\_start} & if \texttt{None} will start matching from the first available frame. If an integer it will start the matching from this given number. \\
+		\texttt{frame\_start} & If \texttt{None} will start matching from the first available frame. If an integer it will start the matching from this given number. \\[.1cm]
 		
-		\texttt{N\_frames} & if \texttt{None} will match particles in all available frames; if an integer will match only particles in the first \texttt{N} frames. \\
+		\texttt{N\_frames} & If \texttt{None} will match particles in all available frames; if an integer will match only particles in the first \texttt{N} frames. \\[.1cm]
 		
-		\texttt{march\_forwards} & if \texttt{True} then the particle marching sequence includes a pass forwards in time. \\
+		\texttt{march\_forwards} & If \texttt{True} then the particle marching sequence includes a pass forwards in time. \\[.1cm]
 		
-		\texttt{march\_backwards} & if \texttt{True} then the particle marching sequence includes a pass backwards in time. \\
+		\texttt{march\_backwards} & If \texttt{True} then the particle marching sequence includes a pass backwards in time. \\[.1cm]
 		
-		\texttt{camera\_names} & names of cameras used separated by commas; for example, \texttt{cam1, cam2, cam3} \\
+		\texttt{camera\_names} & Names of cameras used separated by commas; for example, \texttt{cam1, cam2, cam3} \\[.1cm]
 		
-		\texttt{cam\_resolution} & camera resolution; for example, \texttt{1280, 1024} \\
+		\texttt{cam\_resolution} & Camera resolution; for example, \texttt{1280, 1024} \\[.1cm]
 		
-		\texttt{ROI} & region of interest for the matching in lab space coordinates, and according to the format of \texttt{xmin, xmax, ymin, ymax, zmin, zmax} \\
+		\texttt{ROI} & Region of interest for the matching in lab space coordinates, and according to the format of \texttt{xmin, xmax, ymin, ymax, zmin, zmax} \\[.1cm]
 		
-		\texttt{voxel\_size} & Can be either a float or None. If it is a float, then this is the side length of voxels used in the \textit{Ray Traversal} algorithm; note - too high values lead to long computation times and too low value result in matching errors and long computation times. If this is None then Ray Traversal is not used to generate initial guesses. \\
+		\texttt{voxel\_size} & Can be either a float or None. If it is a float, then this is the side length of voxels used in the \textit{Ray Traversal} algorithm; note - too high values lead to long computation times and too low value result in matching errors and long computation times. If this is None then Ray Traversal is not used to generate initial guesses. \\[.1cm]
 		
-		\texttt{N0} &  The number of random initial points to try as random initial guesses in each frame.\\
+		\texttt{N0} &  The number of random initial points to try as random initial guesses in each frame.\\[.1cm]
 		
-		\texttt{min\_cam\_match} & Only particle that are recognized by this many of more cameras are considered real particles. particles seen by fewer than this are thrown away. Needs to be 2 or higher. \\
+		\texttt{min\_cam\_match} & Only particle that are recognized by this many of more cameras are considered real particles. particles seen by fewer than this are thrown away. Needs to be 2 or higher. \\[.1cm]
 		
+		\texttt{max\_err} & Maximum value of the RMS triangulation error in lab space coordinates (e.g. millimeters). Too low values of this parameter will lead to no particles that are found, but too high values will lead to erroneous results. As a general guide, this should be set much lower than the typical separation distance between particles in the experiment.  \\[.1cm]
 		
-		
-		\texttt{max\_err} & Maximum value of the RMS triangulation error in lab space coordinates (e.g. millimeters). \\
-		
-		\texttt{save\_name} & path name used for saving the results; if \texttt{None} the results are not saved \\
+		\texttt{save\_name} & Path name used for saving the results; if \texttt{None} the results are not saved \\[.1cm]
 		
 		\hline
 	\end{tabular}
@@ -1043,46 +932,12 @@ Note: to easily perform manual stereo matching of several points in a given imag
 
 
 
-%\vspace{.5cm}
-%
-%\begin{center}	
-%	\fcolorbox{white}{bcolor}{
-%		\begin{minipage}[c][][c]{1.0\textwidth}
-%			
-%			\vspace{.1cm}
-%			
-%			\textbf{How segmentation works:} Segmentation in MyPTV is performed in one of two methods: \textit{labeling}, or \textit{dilation}, and includes several optional image processing steps. 
-%			
-%			\vspace{.2cm}
-%			
-%			\begin{enumerate}
-%				\item In the labeling method, we first choose all pixels in an image whose grey value is higher than a given threshold. Then, such pixels that are touching each other are considered to be "blobs", so we group them together. For each blob, we calculate a \textit{center of mass}, being the grey value weighted average of the blob, a \textit{bounding box} size, and a \textit{mass}, being the sum of grey values of the blobs' pixels.
-%				
-%				\item In the dilation method, we are looking for pixels that their grey value is higher than that of all their neghbours within a box of a given size (\texttt{particle\_size}), and thet their grey value is higher than a given threshold. After that, all the neighbouring pixels inside the particle size box are considered to be a blob. We then calculate the center of mass of the blob to achieve a better estimation of its position, thus redifining the blob. This process is iterated a maxinum of 3 times untill convergence is obtained. Finally, we calculate the same blob's \textit{center of mass}, \textit{bounding box} size, \textit{mass}.
-%			\end{enumerate}
-%			
-%			\vspace{.2cm}
-%			
-%			To imrove the results of segmenting over non-ideal images, MyPTV can be set to apply image processing before the blob extraction. The fiters that can be used are a gaussian blur filter, a median noise removal filter, local mean subtraction filter, and a mask. The first three filters may increase the computational time, however they may be necessary depending on the experimental conditions, such as uneven illumination or noisy images. Examples of the results of using several combinations of the filters on a calibration image is shown below. 
-%			
-%			\vspace{.2cm}
-%			
-%			\begin{center}
-%				\includegraphics[width=7cm]{filters_effect.pdf}
-%			\end{center}
-%			
-%			\vspace{.1cm}
-%			
-%		\end{minipage}
-%	}
-%	
-%\end{center}
 
 
 
 \subsection{Tracking}\label{sec:workflow_track}
 
-The tracking step is used to link particle in the lab space coordinates in time, thus forming the 3D trajectories.
+The tracking step is used to link particles in the lab-space coordinates in time, thus forming the 3D trajectories. The tracking algorithm in MyPTV uses the 4 frames best estimate method described in~\cite{Ouellette2006}. The description of the parameters used in the tracking step are given in Tab.~\ref{tab:tracking_params}. 
 
 
 
@@ -1090,6 +945,7 @@ The tracking step is used to link particle in the lab space coordinates in time,
 \begin{table}[!ht]
 	\centering
 	\caption{The \texttt{params\_file.yml} parameters for the \textbf{tracking} step. All paths to files are relative to the \texttt{workflow.py} script.}
+	\label{tab:tracking_params}
 	\begin{tabular}{l m{12cm}}
 		\hline
 		Parameter & Description\\
