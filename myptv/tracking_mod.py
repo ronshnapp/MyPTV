@@ -9,9 +9,12 @@ Contains classes for tracking particles to form trajectories.
 
 """
 
-from numpy import loadtxt, array, savetxt, hstack, ones, where
+from numpy import loadtxt, array, savetxt, hstack, ones, where, mean, zeros
+from numpy import sum as npsum
 from scipy.spatial import KDTree
 from pandas import read_csv
+import tqdm
+import time
 
 
 
@@ -29,8 +32,8 @@ class tracker_four_frames(object):
                 should be performed.
                 
         mean_flow - a numpy array of the mean flow vector, in units of the 
-        calibrations spatial units per frame (e.g. mm per frame). The mean 
-        flow is assumed not to change in space and time.
+                    calibrations spatial units per frame (e.g. mm per frame). 
+                    The mean flow is assumed not to change in space and time.
         
         d_max - maximum allowable translation between two frames for the 
                 nearest neighbour search, after subtracting the mean flow. 
@@ -51,21 +54,6 @@ class tracker_four_frames(object):
         
         # particles are stored in a dictionary. Keys are frame numbers, values
         # are lists of arrays, each array representing a particle
-        
-        # =========== old method for reading the matched particles =========
-        # self.particles = {}
-        # data = loadtxt(self.fname)
-        # for tm in self.times:
-        #     self.particles[tm] = []
-        #     p_ = data[data[:,-1]==tm]
-        #     for i in range(p_.shape[0]):
-        #         #p = array([-1] + list(p_[i,[0,1,2,-1]]))
-        #         p = array([-1] + list(p_[i,:]))
-        #         self.particles[tm].append(p)
-        
-        # for k in self.particles.keys():
-        #     self.particles[k] = array(self.particles[k])
-        # ==================================================================
             
         data = read_csv(self.fname, header=None, sep='\t')
         timeIndex = data.shape[1] - 1
@@ -701,3 +689,714 @@ class tracker_nearest_neighbour(object):
         fmt += ['%.3f', '%.3f']
         savetxt(fname , data_to_save,
                 delimiter='\t', fmt=fmt)
+
+
+
+
+
+
+
+
+
+
+
+
+
+class tracker_multiframe(object):
+    '''
+    A muti-frame tracker that connects trajetories over more than one
+    frame. This is meant to overcome issues of missed particle images based
+    on ideas coming from the 4-frame algorithm best estimate method.
+    '''
+    
+    def __init__(self, fname, max_dt, Ns, mean_flow = 0.0, d_max=1e10, 
+                 dv_max=1e10, NSR_th=0.25):
+        '''
+        fname - string, path of the particles containing file to which tracking
+                should be performed.
+                
+        max_dt - Ihe maximal number of frames over which a skip in tracking
+                 is allowed. For example, if max_dt=2 then a trajectory can 
+                 be constructed by linking a particle at frame i with another
+                 particle at time i+2.
+                 
+        Ns - The number of frames used to calculate trajectory noise level.
+             Should be an odd integer.
+                
+        mean_flow - a numpy array of the mean flow vector, in units of the 
+                    calibrations spatial units per frame (e.g. mm per frame). 
+                    The mean flow is assumed not to change in space and time.
+        
+        d_max - maximum allowable translation between two frames for the 
+                nearest neighbour search, after subtracting the mean flow. 
+                
+        dv_max - maximum allowable change in velocity for the two-frame 
+                 velocity projection search. The radius around the projection
+                 is therefore dv_max/dt (where dt = 1 frame^{-1})
+                 
+        NSR_th - Maximum allowed noise level to store a trajectory. We only 
+                 store trajectories whose NSR is lower than this number. Note
+                 that NSR_th=1 corresponds to a very wiggley trajectory with
+                 path length equal to twice its total displacement.
+        '''
+        self.fname = fname
+        self.U = mean_flow
+        self.max_dt = max_dt
+        self.Ns = Ns
+        self.d_max = d_max
+        self.dv_max = dv_max
+        self.NSR_th = NSR_th
+        
+        # particles are stored in a dictionary. Keys are frame numbers, values
+        # are lists of arrays, each array representing a particle
+            
+        data = read_csv(self.fname, header=None, sep='\t')
+        timeIndex = data.shape[1] - 1
+        self.particles = dict([(g, hstack([ones((len(k),1))*-1, k.values])) 
+                               for g,k in data.groupby(timeIndex)])
+        
+        self.times = sorted(list(self.particles.keys()))
+        
+        # setting up a dictionary to hold KDTrees for candidate searches
+        self.trees = {}
+        
+        # A dictionary to hold the identifiers of particles that were used up
+        # already. Keys are frame numbers, items are indexes of used particles
+        self.used_particles = dict([(tm, []) for tm in self.times])
+        
+        # a list to store trajectories
+        self.trajs = []
+
+
+
+    def build_trajectory(self, particle_index, backwards=False):
+        '''
+        Given an inital particle this function attempts to construct a
+        trajectory out of it by linking it forward in time using the "best 
+        estimate" heuritic. The initial particle is given by the frame number
+        and its index: particle_index = (time, particle index).
+        
+        If backwards=True then the tracking is backwards in time.
+        '''
+        
+        t0, ind0 = particle_index
+        p0 = self.particles[t0][ind0]
+        traj = [p0]
+        traj_indexes = [particle_index]
+        continue_search = True
+        
+        while continue_search:
+
+            # 1) get properties at last frame
+            tm_i = traj[-1][-1]
+            x_i = traj[-1][1:4]
+            
+            if len(traj)==1: 
+                v_i= self.U
+                
+            else:
+                dt_i = traj[-1][-1] - traj[-2][-1]
+                dx_i = traj[-1][1:4] - traj[-2][1:4]
+                v_i = dx_i / dt_i 
+            
+            if tm_i == self.times[-1]:
+                break
+            
+            # 2) if this is the first sample we use nearest neighbor search
+            if len(traj)==1:
+                
+                if backwards==False:
+                    if tm_i+1 in self.times:
+                        cand = self.get_nearest_neighbor(x_i+self.U, tm_i+1)
+                    else: 
+                        continue_search = False
+                        continue
+                
+                elif backwards==True:
+                    if tm_i-1 in self.times:
+                        cand = self.get_nearest_neighbor(x_i-self.U, tm_i-1)
+                    else:
+                        continue_search = False
+                        continue
+                        
+                
+                c_tm, c_ind = cand[0]
+                test1 = cand[1]<=self.d_max 
+                test2 = c_ind not in self.used_particles[c_tm]
+                
+                if test1 and test2:
+                    traj.append(self.particles[c_tm][c_ind])
+                    traj_indexes.append(cand[0])
+                
+                else: continue_search = False
+                
+                continue
+                    
+            
+            # 3) using "best estimate" heuristic we iterate over all allowable 
+            # time separations, j: 1 -> max_dt
+            for j in range(1, self.max_dt+1):
+                
+                # 3.0 ensure that frame ipj exists. Otherwise, stop the search
+                if backwards==False:
+                    tm_ipj = tm_i + j
+                    if tm_ipj > self.times[-1]:
+                        continue_search = False
+                        break
+                
+                elif backwards==True:
+                    tm_ipj = tm_i - j
+                    if tm_ipj < self.times[0]:
+                        continue_search = False
+                        break
+                
+                if tm_ipj not in self.times:
+                    break
+                
+                # 3.1 project the particle to frame i+j
+                x_ipj = x_i + v_i * (tm_ipj - tm_i)
+                
+                # 3.2 search for neighbors of the projection within d_max
+                candidates = self.search_neighbors(x_ipj, 
+                                                   tm_ipj, 
+                                                   dist=self.dv_max)
+                
+                
+                # 3.3 remove candidates with dv larger than self.max_dv and 
+                # candidates that were used up already
+                if len(traj)>1:
+                    def get_dv(cand):
+                        x_cand = self.particles[cand[0]][cand[1]][1:4]
+                        v_cand = (x_cand - x_i) / (cand[0] - tm_i)
+                        dv = sum((v_cand - v_i)**2)**0.5
+                        return dv
+                    
+                    candidates[:] = [cand for cand in candidates if 
+                                      get_dv(cand)<=self.dv_max]
+                
+                candidates[:] = [cand for cand in candidates if 
+                                 cand[1] not in self.used_particles[cand[0]]]
+                
+                
+                # 3.4 if there are no candidates, continue to next j value
+                if len(candidates)==0: continue
+            
+                # 3.5 if there is no i+j+1 frame, choose the i+j projection's 
+                # nearest neighbour given that it is sufficiently close. 
+                # Otherwise, stop the search.
+                if tm_ipj+1 > self.times[-1]: 
+                    NN = self.get_nearest_neighbor(x_ipj, tm_ipj)
+                    if NN[1] <= self.d_max:
+                        traj_indexes.append(NN[0])
+                        traj.append(self.particles[NN[0][0]][NN[0][1]])
+                        continue_search = False
+                        break
+                        
+                # 3.6 if there's only one candidate, we choose it and continue
+                # to the next frame
+                elif len(candidates)==1:
+                    traj_indexes.append((tm_ipj, candidates[0][1]))
+                    traj.append(self.particles[tm_ipj][candidates[0][1]])
+                    break
+                
+                # 3.7 if there are multiple candidates we choose the one whose
+                # projection to frame i+j+1 has the nearest neighbor distance
+                cand_nnd_list = []
+                for cand in candidates:
+                    
+                    # 3.7.1 project candidate to i+j+1
+                    tm_ipjp1 = tm_i + j + 1
+                    x_cand = self.particles[cand[0]][cand[1]][1:4]
+                    v_cand = (x_cand - x_i) / (tm_ipj - tm_i)
+                    x_ipjp1 = x_cand + v_cand * (tm_ipjp1 - tm_ipj)
+                    
+                    # 3.7.2 get the i+j+1 projections' nearest neihbor distance
+                    nnd = self.get_nearest_neighbor(x_ipjp1, tm_ipjp1)[1]
+                    cand_nnd_list.append(nnd)
+                # 3.7.3 choose the candidate with minimal nnd
+                chosen = candidates[cand_nnd_list.index(min(cand_nnd_list))]
+                traj_indexes.append((chosen[0], chosen[1]))
+                traj.append(self.particles[chosen[0]][chosen[1]])
+                break
+            
+            
+            # 4) if no valid candidates were found then we terminate 
+            # the trajectory
+            if traj[-1][-1] == tm_i:
+                
+                continue_search = False
+                
+        return array(traj), traj_indexes
+
+
+
+    
+    def get_nearest_neighbor(self, pos, tm):
+        '''
+        Given a location, pos (= [x,y,z]), this function returns its nearest 
+        neighbor at frame tm and the distance to it.
+        '''
+        # 1) Get the relevant KDTree
+        try:
+            tree = self.trees[tm]
+        except:
+            tree = KDTree(self.particles[tm][:,1:4])
+            self.trees[tm] = tree
+        
+        # 2) return particles in the neighborhood
+        nn = tree.query(pos) 
+        
+        return ((tm, nn[1]), nn[0]) 
+    
+    
+    
+    
+    def search_neighbors(self, pos, tm, dist=None):
+        '''
+        Given a location, pos (= [x,y,z]), this function returns particles 
+        that their distance from pos is up to self.d_max at time tm. The 
+        function does not return the particles themselves but their tuple 
+        identifires: (time, particle index)
+        '''
+        # 1) Get the relevant KDTree
+        try:
+            tree = self.trees[tm]
+        except:
+            tree = KDTree(self.particles[tm][:,1:4])
+            self.trees[tm] = tree
+        
+        
+        # 2) return particles in the neighborhood
+        if dist is None: dist=self.d_max
+        neighbor_inds = tree.query_ball_point(pos, dist)
+        
+        return [(tm, ind) for ind in neighbor_inds] 
+    
+    
+    
+    
+    def build_trajectories_from_frame(self, frame_num, backwards=False, 
+                                      p_bar=True):
+        '''
+        Builds trajectories from particles at a given frame number. We do not
+        use particles that have been used up already.
+        
+        If backwards=True then the tracking is backwards in time.
+        '''
+        # a list to hold trajectories and trajectory particle identifiers
+        trajs = []
+        
+        # a list to hold the trajectory noise levels
+        NSRs = []
+        
+        # 0) if above 20% of particles in the frame were used, clear them
+        uf = len(self.used_particles[frame_num])/len(self.particles[frame_num])
+        if uf > 0.2:
+            self.clear_used_particles()
+        
+        # 1) building trajectories from particles in the given frame number
+        if backwards==False: 
+            msg = 'Forwards tracking frame %d'%frame_num
+        else: 
+            msg = 'Backwards tracking frame %d'%frame_num
+        
+        if p_bar==True:
+            iter_ = tqdm.tqdm(range(len(self.particles[frame_num])), desc=msg)
+        
+        else:
+            iter_ = range(len(self.particles[frame_num]))
+            
+        for i in iter_:
+            
+            # 1.1 check if the particle was used up already
+            if i in self.used_particles[frame_num]: continue
+            
+            # 1.2 build a trajectory, calculate its noise level and store them
+            p_id = (frame_num, i)
+            trajs.append(self.build_trajectory(p_id, backwards=backwards))
+            NSR = traj_NSR(trajs[-1][0], self.Ns)
+            if len(trajs[-1][0])<self.Ns: noise_lvl = 1
+            else: noise_lvl = mean(NSR[int(self.Ns/2):-int(self.Ns/2)])
+            NSRs.append(noise_lvl)
+        
+        
+        # 2) prune the "good" trajectories
+        
+        # 2.1 sorting the results according to trajectory length
+        res = sorted(zip(trajs, NSRs), key=lambda x: len(x[0][0]),reverse=True)
+        
+        # 2.2 if a trajectory has low NSR we make sure it doesn't have used up
+        # particles and if so we add it to self.trajs
+        for (tr, tr_ids), NSR in res:
+            
+            # check noise level
+            if NSR > self.NSR_th: continue
+                
+            # check it wasn't used up
+            for p_id in tr_ids:
+                if p_id[1] in self.used_particles[p_id[0]]: continue
+            
+            # add to self.trajs
+            if backwards==False:
+                self.trajs.append(tr)
+            elif backwards==True:
+                self.trajs.append(tr[::-1])
+            
+            # write up the trajectories particles
+            for p_id in tr_ids:
+                self.used_particles[p_id[0]].append(p_id[1])
+    
+    
+    
+    
+    def clear_used_particles(self):
+        '''
+        This function removes the particles that have been used up to make
+        good trajectories from self.particles and renews the KDTrees in order
+        to make the search for candidates more efficient.
+        '''
+        
+        for tm in self.times:
+            used_ind = self.used_particles[tm]
+            unused = [i for i in range(len(self.particles[tm])) if i not in used_ind]
+            self.particles[tm] = self.particles[tm][unused]
+        
+        self.trees = {}
+        self.used_particles = dict([(tm, []) for tm in self.times])
+        
+        
+        
+        
+    def track_frames(self, f0=None, fe=None, frame_skips=2):
+        '''
+        Will build trajectories starting from frames in the range f0 -> fe,
+        with given skips. We build trajectories both forward and backwards in 
+        time. 
+        
+        f0 - The frame from which we start. If None then we start from the 
+             first available frame.
+        
+        fe - The frame at which we end. If None then we end at the last 
+             available frame.
+             
+        frame_skips - within the frame range given, we use skips with this 
+                      many frames. For example if equal to 2 then we use: 
+                      0, 2, 4, 6, ... for tracking forward in time and 
+                      -1, -3, -5, -7, ... for tracking backwards in time.
+        '''
+        
+        if f0 is None: f0 = int(self.times[0])
+        if fe is None: fe = int(self.times[-1])
+
+        t0 = time.time()
+        
+        msg = 'Tracking forward and backward, round 1'
+        
+        for frm in tqdm.tqdm(range(f0, fe, frame_skips), desc=msg):
+            tmf.build_trajectories_from_frame(frm, p_bar=False)
+            tmf.build_trajectories_from_frame(int(tmf.times[-1])-frm-1, 
+                                              backwards=True, p_bar=False)
+            
+        msg = 'Tracking forward and backward, round 2'
+        
+        for frm in tqdm.tqdm(range(f0+int(frame_skips/2), 
+                                   fe-int(frame_skips/2), 
+                                   frame_skips), desc=msg):
+            
+            tmf.build_trajectories_from_frame(frm, p_bar=False)
+            tmf.build_trajectories_from_frame(int(tmf.times[-1])-frm-1, 
+                                              backwards=True, p_bar=False)
+        
+        print('')
+        print('')
+        print('finished tracking frames')
+        print('trajs: ', len(tmf.trajs))
+        print('mean length: ', mean([len(tr) for tr in tmf.trajs]))
+        print('linked particles: ', sum([len(tr) for tr in tmf.trajs]))
+        
+        
+        
+        
+        
+    def save_results(self, fname):
+        '''
+        Will save the tracking results. We save both the trajectories and the
+        particles that were not used.
+        '''
+        to_save = []
+        
+        # 1) add ids to the trajectories and add them to the list
+        for i in range(len(self.trajs)):
+            self.trajs[i][:,0] = i+1
+            to_save += list(self.trajs[i])
+        
+        # 2) sort according to the frame number
+        to_save = sorted(to_save, key=lambda x: x[-1])
+        
+        # 3) add the unused particles to the list
+        self.clear_used_particles()
+        for tm in self.times:
+            to_save += list(self.particles[tm])
+            
+        # 4) save the data in MyPTV format
+        fmt = ['%d', '%.3f', '%.3f', '%.3f']
+        for i in range(len(to_save[0])-6):
+            fmt.append('%d')
+        fmt += ['%.3f', '%.3f']
+        savetxt(fname , to_save, delimiter='\t', fmt=fmt)
+        
+    
+    
+    
+    
+    # ========================================================================
+    # \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+    # ========================================================================
+    #         Tested and not used functions, kept for legacy.
+    # ========================================================================
+    # \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+    # ========================================================================
+        
+    
+    def get_particle(self, particle_identifier):
+        '''
+        Given a particle_identifier (=(frame number, particle index)), this
+        function returns the particle.
+        '''
+        tm, ind = particle_identifier
+        return self.particles[tm][ind]
+    
+    
+    
+    def get_candidate_links(self, traj):
+        '''
+        Given a trajectory, this function returns a list of particle 
+        identifiers that are allowed to be linked to it in the future.
+        '''
+            
+        tm_i = traj[-1][-1] ; x_i = traj[-1][1:4]
+        
+        if len(traj)==1:
+            v_i = self.U
+            x_proj = x_i + v_i
+            candidates = self.search_neighbors(x_proj, tm_i+1)
+            
+        else:
+            tm_prev = traj[-2][-1] ; x_prev = traj[-2][1:4]
+            v_i = (x_i - x_prev) / (tm_i - tm_prev)
+            candidates = []
+            for dt in range(1, self.max_dt+1):
+                x_proj = x_i + v_i * dt
+                candidates += self.search_neighbors(x_proj, 
+                                                    tm_i+dt, 
+                                                    dist=self.dv_max)
+                if len(candidates)>0: break
+        
+        return candidates
+    
+    
+    
+    
+    def build_candidate_trajectories(self, particle_identifier):
+        '''
+        Given an initial particle_identifier, this function returns a list of 
+        all possible trajectories that could be built from this particle.
+        '''
+        p0 = self.get_particle(particle_identifier)
+        trajs = [[p0]]
+        traj_indexes = [[particle_identifier]]
+        broken_checks = [True]
+        
+        test_cands = [True]
+        it = 0
+        while any(test_cands):
+                
+            ntraj = len(trajs)
+            test_cands = [False for i in range(ntraj)]
+            
+            for i in range(ntraj):
+                
+                if broken_checks[i]==False: break
+                
+                cand_links = self.get_candidate_links(trajs[i])
+                
+                if len(cand_links)>0:
+                    test_cands[i] = True
+                
+                else:
+                    broken_checks[i] = False
+
+                for j in range(len(cand_links)):
+                    if j==0:
+                        traj_indexes[i].append(cand_links[j])
+                        trajs[i].append(self.get_particle(cand_links[j]))
+
+                    else:
+                        trajs.append(trajs[i][:-1])
+                        trajs[-1].append(self.get_particle(cand_links[j]))
+                        traj_indexes.append(traj_indexes[i][:-1])
+                        traj_indexes[-1].append(cand_links[j])
+                        broken_checks.append(True)
+
+            it+=1
+            #if it>3: break
+            
+        return [array(tr) for tr in trajs], traj_indexes
+
+
+
+    def tracking_movie(self, particle_identifier):
+        '''
+        This animates the tracking of a given particle with all the candidates
+        '''
+        
+        ret = tmf.build_candidate_trajectories(particle_identifier)[0]
+        
+        for tr in ret:
+            xmin = min(min(tr, key=lambda x: min(x[:,1]))[:,1]) - 2*self.d_max
+            xmax = max(max(tr, key=lambda x: max(x[:,1]))[:,1]) + 2*self.d_max
+            ymin = min(min(tr, key=lambda x: min(x[:,2]))[:,2]) - 2*self.d_max
+            ymax = max(max(tr, key=lambda x: max(x[:,2]))[:,2]) + 2*self.d_max
+            t0 = min(min(tr, key=lambda x: min(x[:,-1]))[:,-1]) - 2*self.d_max
+            te = max(max(tr, key=lambda x: max(x[:,-1]))[:,-1]) + 2*self.d_max
+        
+        
+        import matplotlib.pyplot as plt
+        fig, ax = plt.subplots()
+        
+        for fe in range(t0, te+1):    
+            f0 = max([0, fe-2])
+            ax.clear()    
+                
+            for tr in ret:
+                whr = tr[:,-1] <= fe
+                ax.plot(tr[whr,1], tr[whr,2], 'o-', alpha=0.3)
+            
+            for frm in range(f0, fe+1):
+                for p in tmf.particles[frm]:
+                    if xmin<p[1]<xmax and ymin<p[2]<ymax:
+                        ax.plot(p[1], p[2], 'ko', ms=2)
+              
+            ax.set_xlim(xmin, xmax)
+            ax.set_ylim(ymin, ymax)
+            ax.set_aspect('equal')
+            plt.tight_layout()
+            fig.savefig('%2d.jpg'%fe)
+    
+    # ========================================================================
+    # \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+    # ========================================================================
+    # ========================================================================
+    # \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+    # ========================================================================
+        
+        
+        
+        
+        
+def traj_NSR(traj, Ns):
+    '''
+    A trajectory is considered noisy at a given scale if its path is long as
+    compared to the displacements it makes at this scale. We thus define the
+    noise level (NSR) of a trajectory sample with scale parameter Ns to be
+    the path length it makes over a window of size Ns samples around it minus
+    the diplacement over this window devided by the displacement:
+        
+        path_length[i] = sum( dx[i-Ns/2:i+Ns/2] )
+        displacement[i] = x[i+Ns/2] - x[i-Ns/2]
+        NSR[i] = (path_length[i] - displacement[i]) / displacement[i]
+        
+    '''
+    
+    if Ns%2 != 1:
+        raise ValueError('Ns must be an odd interger')
+        
+    w = int(Ns/2)
+    
+    if len(traj)<=Ns:
+        NSR = zeros(len(traj))
+        return NSR
+    
+    NSR = []
+    
+    for i in range(w):
+        NSR.append(0)
+        
+    for i in range(w, len(traj)-w):
+        x_ = traj[i-w:i+w+1, 1:4]
+        signal = sum((x_[-1] - x_[0])**2)**0.5
+        noise = sum(npsum((x_[1:]-x_[:-1])**2, axis=1)**0.5) - signal
+        NSR.append(noise/signal)
+    
+    for i in range(-w,0):
+        NSR.append(0)
+    
+    return NSR
+        
+        
+        
+        
+        
+
+def smooth_trajectory(traj, Ns):
+    '''
+    Returns a trajectory smoothed over windows with size Ns via a 
+    polynomial with degree 2. 
+    '''
+    from numpy import polyfit, poly1d
+    
+    if Ns%2 != 1:
+        raise ValueError('Ns must be an odd interger')
+    
+    w = int(Ns/2)
+    
+    if len(traj)<=Ns:
+        signal = traj
+        return signal
+    
+    signal = []
+    
+    for i in range(w):
+        signal.append([traj[i,1], traj[i,2], traj[i,3]])
+    
+    for i in range(w, len(traj)-w):
+        x_ = traj[i-w:i+w+1, -1] - traj[i-w, -1]
+        signal.append([])
+        for j in range(3):
+            y_ = traj[i-w:i+w+1, j+1]
+            p = poly1d(polyfit(x_, y_, 2))
+            signal[-1].append(p(w))
+    
+    for i in range(-w,0):
+        signal.append([traj[i,1], traj[i,2], traj[i,3]])
+    
+    return array(signal)
+    
+        
+        
+        
+        
+        
+        
+        
+# Tests:
+    
+fname = '/home/ron/Desktop/Research/jetArrayTank/20240821/Rec2/particles'
+max_dt = 3 
+Ns = 11
+NSR_th = 0.25
+tmf = tracker_multiframe(fname, max_dt, Ns, d_max=0.5, dv_max=0.5, NSR_th=NSR_th)    
+
+tmf.track_frames(f0=None, fe=None, frame_skips=5)
+
+
+
+
+
+
+
+
+
+
+
+
