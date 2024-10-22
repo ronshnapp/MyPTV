@@ -14,7 +14,7 @@ from myptv.utils import match_calibration_blobs_and_points
 
 from PIL import Image, ImageTk
 from tkinter import Label, Canvas, LabelFrame, Entry, Tk, Scrollbar, Button
-from numpy import array
+from numpy import array, amax
 import os
 
 
@@ -41,7 +41,7 @@ class initial_cal_gui(object):
         target_fname - the file name of the calibration target's target file.
         '''
         self.image_name = image_name
-        self.image = Image.open(self.image_name)
+        self.image = Image.open(self.image_name).convert('F')
         image_size = self.image.size
         
         self.target_fname = target_fname
@@ -83,7 +83,7 @@ class initial_cal_gui(object):
         # (1) Image frame, first column
         
         # load the image
-        photo = ImageTk.PhotoImage(self.image)
+        photo = ImageTk.PhotoImage(Image.fromarray(self.image/amax(self.image)*255))
         
         
         
@@ -484,11 +484,13 @@ class initial_cal_gui(object):
         '''Plots the calibration points images on the calibration image'''
         
         # refresh the image
-        image = Image.open(self.image_name)
+        image = Image.open(self.image_name).convert('F')
         s = image.size
         image = image.resize((int(s[0]*self.z),int(s[1]*self.z)),
-                             Image.ANTIALIAS)
-        new_bird = ImageTk.PhotoImage(image)
+                             Image.LANCZOS)
+        #new_bird = ImageTk.PhotoImage(image)
+        new_bird = ImageTk.PhotoImage(Image.fromarray(image/amax(image)*255))
+        
         self.board.configure(image = new_bird)
         self.board.image = new_bird
         self.canvas.delete('all')
@@ -630,11 +632,12 @@ class initial_cal_gui(object):
             self.segmented.append((b[0][1], b[0][0], b[1][1], b[1][0]))
             
         # plot the segmented particles over a refreshed image
-        image = Image.open(self.image_name)
+        image = Image.open(self.image_name).convert('F')
         s = image.size
         image = image.resize((int(s[0]*self.z),int(s[1]*self.z)),
-                             Image.ANTIALIAS)
-        new_bird = ImageTk.PhotoImage(image)
+                                                  Image.LANCZOS)
+        #new_bird = ImageTk.PhotoImage(image)
+        new_bird = ImageTk.PhotoImage(Image.fromarray(image/amax(image)*255))
         self.board.configure(image = new_bird)
         self.board.image = new_bird
         self.canvas.delete('all')
@@ -715,11 +718,12 @@ class initial_cal_gui(object):
     def zoomIn(self, event):
         '''zoom in the image with + key'''
         self.z = self.z*1.15
-        image = Image.open(self.image_name)
+        image = Image.open(self.image_name).convert('F')
         s = image.size
         image = image.resize((int(s[0]*self.z),int(s[1]*self.z)),
-                             Image.ANTIALIAS)
-        new_bird = ImageTk.PhotoImage(image)
+                                             Image.LANCZOS)
+        #new_bird = ImageTk.PhotoImage(image)
+        new_bird = ImageTk.PhotoImage(Image.fromarray(image/amax(image)*255))
         self.board.configure(image = new_bird)
         self.board.image = new_bird
         self.canvas.delete('all')
@@ -739,11 +743,12 @@ class initial_cal_gui(object):
     def zoomIn_btn(self):
         '''zoom in the Zoom in button'''
         self.z = self.z*1.15
-        image = Image.open(self.image_name)
+        image = Image.open(self.image_name).convert('F')
         s = image.size
         image = image.resize((int(s[0]*self.z),int(s[1]*self.z)),
-                             Image.ANTIALIAS)
-        new_bird = ImageTk.PhotoImage(image)
+                                         Image.LANCZOS)
+        #new_bird = ImageTk.PhotoImage(image)
+        new_bird = ImageTk.PhotoImage(Image.fromarray(image/amax(image)*255))
         self.board.configure(image = new_bird)
         self.board.image = new_bird
         self.canvas.delete('all')
@@ -763,11 +768,12 @@ class initial_cal_gui(object):
     def zoomOut(self, event):
         '''zoom out with - key'''
         self.z = self.z*(1/1.15)
-        image = Image.open(self.image_name)
+        image = Image.open(self.image_name).convert('F')
         s = image.size
         image = image.resize((int(s[0]*self.z),int(s[1]*self.z)),
-                             Image.ANTIALIAS)
-        new_bird = ImageTk.PhotoImage(image)
+                                             Image.LANCZOS)
+        #new_bird = ImageTk.PhotoImage(image)
+        new_bird = ImageTk.PhotoImage(Image.fromarray(image/amax(image)*255))
         self.board.configure(image = new_bird)
         self.board.image = new_bird
         self.canvas.delete('all')
@@ -787,11 +793,12 @@ class initial_cal_gui(object):
     def zoomOut_btn(self):
         '''zoom out with - key'''
         self.z = self.z*(1/1.15)
-        image = Image.open(self.image_name)
+        image = Image.open(self.image_name).convert('F')
         s = image.size
         image = image.resize((int(s[0]*self.z),int(s[1]*self.z)),
-                             Image.ANTIALIAS)
-        new_bird = ImageTk.PhotoImage(image)
+                                                  Image.LANCZOS)
+        #new_bird = ImageTk.PhotoImage(image)
+        new_bird = ImageTk.PhotoImage(Image.fromarray(image/amax(image)*255))
         self.board.configure(image = new_bird)
         self.board.image = new_bird
         self.canvas.delete('all')
