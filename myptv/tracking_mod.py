@@ -1296,7 +1296,7 @@ class tracker_multiframe(object):
         
 def traj_NSR(traj, Ns):
     '''
-    A trajectory is considered noisy at a given scale if its path is long as
+    A trajectory is considered "noisy at a scale Ns" if its path is long as
     compared to the displacements it makes at this scale. We thus define the
     noise level (NSR) of a trajectory sample with scale parameter Ns to be
     the path length it makes over a window of size Ns samples around it minus
