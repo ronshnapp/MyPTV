@@ -230,6 +230,7 @@ class match_calibration_blobs_and_points(object):
         self.cam = camera
         self.blobs = loadtxt(blob_fname)
         self.targets = loadtxt(target_file_fname)
+        self.get_neighbor_separation()
         
     
     def pair_points(self):
@@ -250,12 +251,32 @@ class match_calibration_blobs_and_points(object):
                     d_min = d
                     j_min = j
             
-            if d_min < 30:
+            if d_min < self.dmin/2:
                 blob_point_pair = NPappend(self.blobs[i][1::-1],
                                             self.targets[j_min])
                 point_pairs.append(blob_point_pair)
         
         self.point_pairs = point_pairs
+        
+        
+    def get_neighbor_separation(self):
+        '''
+        returns an estimate for the minimum separation distance between blobs.
+        '''
+        bxy = self.blobs[:,1::-1]
+        dmin = 1e20
+        N = len(bxy)
+        i=0
+        
+        for i in range(min([N,20])):
+            for j in range(N):
+                if j==i: continue
+                d = sum((bxy[i] - bxy[j])**2)**0.5
+                if d<dmin:
+                    dmin = d
+        print('dmin: ', dmin)
+        self.dmin = dmin
+        
         
         
     def save_results(self, fname):
