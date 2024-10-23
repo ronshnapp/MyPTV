@@ -983,6 +983,11 @@ class tracker_multiframe(object):
         
         If backwards=True then the tracking is backwards in time.
         '''
+        
+        # ensure there are particles to track in this frame number
+        if frame_num not in list(self.particles.keys()):
+            return None
+        
         # a list to hold trajectories and trajectory particle identifiers
         trajs = []
         
@@ -990,9 +995,12 @@ class tracker_multiframe(object):
         NSRs = []
         
         # 0) if above 20% of particles in the frame were used, clear them
-        uf = len(self.used_particles[frame_num])/len(self.particles[frame_num])
-        if uf > 0.2:
-            self.clear_used_particles()
+        if frame_num in list(self.used_particles.keys()):
+            Nused = len(self.used_particles[frame_num])
+            Nf = len(self.particles[frame_num])
+            uf = Nused / Nf
+            if uf > 0.2:
+                self.clear_used_particles()
         
         # 1) building trajectories from particles in the given frame number
         if backwards==False: 
@@ -1380,14 +1388,17 @@ def smooth_trajectory(traj, Ns):
         
         
 # Tests:
+if __name__ == "__main__":
+    fname = '/home/ron/Desktop/Research/jetArrayTank/20241020_puffs/Rec18/particles'
+    max_dt = 3 
+    Ns = 11
+    NSR_th = 0.25
+    tmf = tracker_multiframe(fname, max_dt, Ns, d_max=0.5, dv_max=0.5, NSR_th=NSR_th)
     
-fname = '/home/ron/Desktop/Research/jetArrayTank/20240821/Rec2/particles'
-max_dt = 3 
-Ns = 11
-NSR_th = 0.25
-tmf = tracker_multiframe(fname, max_dt, Ns, d_max=0.5, dv_max=0.5, NSR_th=NSR_th)    
-
-tmf.track_frames(f0=None, fe=None, frame_skips=5)
+    f0 = 134
+    fe = None
+    frame_skips = 5
+    tmf.track_frames(f0=f0, fe=fe, frame_skips=frame_skips)
 
 
 
