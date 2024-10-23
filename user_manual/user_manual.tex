@@ -424,6 +424,7 @@ where \texttt{"command"} should be replaced with one of the following options, d
 	"manual_matching"
 	"fiber_orientations"
 	"plot_trajectories"
+	"animate_trajectories"
 	"run_extention"
 \end{verbatim}
 %
@@ -1240,7 +1241,7 @@ To measure fiber orientations, we use, again the workflow script. We do this via
 
 \subsection{Plotting the results} \label{sec:plot_trajectories}
 
-Once the post processing is finished, we might want to plot trajectories in order to visualize the results. A basic 3D rendering of measured trajectories can be established with the workflow command \texttt{plot\_trajectories}. As example is shown in Fig.~\ref{fig:trajectory_plot}. The parameters for the plotting function are explained in Tab.~\ref{tab:plotting_parameter}.
+Once the post processing is finished, we might want to plot trajectories in order to visualize the results. There are two basic options to do so using the workflow script: 1) A basic 3D rendering of measured trajectories can be established with the workflow command \texttt{plot\_trajectories}. As example is shown in Fig.~\ref{fig:trajectory_plot}. The parameters for the plotting function are explained in Tab.~\ref{tab:plotting_parameter}. 2) Basic 3D animations of trajectories in a trajectory file can be prepared with the workflow command \texttt{animate\_trajectories}. See Tab.~\ref{tab:animation_parameter} for the animation parameters.
 
 
 
@@ -1272,6 +1273,29 @@ Once the post processing is finished, we might want to plot trajectories in orde
 	\end{tabular}
 \end{table}
 
+
+
+
+\begin{table}[!ht]
+	\centering
+	\caption{The \texttt{params\_file.yml} parameters for the \texttt{plot\_trajectories} operation. All paths to files are relative to the \texttt{workflow.py} script. \label{tab:animation_parameter}}
+	\begin{tabular}{l m{12cm}}
+		\hline
+		Parameter & Description\\[.2cm]
+		\hline
+		%
+		\texttt{file\_name} & the path to the file that contains the trajectories; the file can be either in trajectories format or in smoothed trajectories format. \\[.2cm]
+		%
+		\texttt{min\_lenth} & only trajectories that have more samples than this number will be plotted.\\[.2cm]
+		%
+		\texttt{f\_start} and \texttt{f\_end} & Used to delineate the time range for which we plot the data. We only plot the samples in the time range starting at frame \texttt{t0} and ending at frame \texttt{te}. Set \texttt{f\_start=None} and \texttt{f\_end=None} to plot trajectories at all times available. \\[.2cm]
+		%
+		\texttt{fps} & This number is used as the frame per second for the animation.\\[.2cm]
+		%
+		\texttt{tail\_length} & The length of trajectory segments shown at each time step.\\[.2cm] 
+		\hline
+	\end{tabular}
+\end{table}
 
 
 
