@@ -56,6 +56,7 @@ class workflow(object):
                                 'manual_matching',
                                 'fiber_orientations',
                                 'plot_trajectories',
+                                'animate_trajectories',
                                 'run_extention']
         
         
@@ -108,6 +109,9 @@ class workflow(object):
                 
             elif action == 'plot_trajectories':
                 self.do_plot_trajectories()
+                
+            elif action == 'animate_trajectories':
+                self.do_animate_trajectories()
             
             elif action == 'run_extention':
                 self.do_run_extention()    
@@ -1422,6 +1426,31 @@ class workflow(object):
                           write_trajID=write_trajID, 
                           t0=t0, 
                           te=te)
+    
+    
+    
+    def do_animate_trajectories(self):
+        '''
+        This function is used to generate a 3D animation of the trajectories
+        in a given file.
+        '''
+        from myptv.makePlots.plot_trajectories import animate_trajectories
+        
+        # fetching the parameters
+        fname = self.get_param('animate_trajectories', 'file_name')
+        min_length = self.get_param('animate_trajectories', 'min_length')
+        f0 = self.get_param('animate_trajectories', 'f_start')
+        fe = self.get_param('animate_trajectories', 'f_end')
+        fps = self.get_param('animate_trajectories', 'fps')
+        tail_length = self.get_param('animate_trajectories', 'tail_length')
+                 
+        at = animate_trajectories(fname, min_length, fps=fps, 
+                                  tail_length=tail_length, 
+                                  f0=f0, fe=fe)
+        at.animate()
+        
+        print('')
+        print('animation saved. Done!')
     
     
     
