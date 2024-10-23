@@ -37,6 +37,13 @@ def plot_trajectories(fname, min_length, write_trajID=False, t0=0, te=-1):
     trajectories = dict([(g, array(k.values)) 
                          for g,k in data.groupby(0) if g!=-1])
     
+    xmax = amax(data[1])
+    xmin = amin(data[1])
+    ymax = amax(data[2])
+    ymin = amin(data[2])
+    zmax = amax(data[3])
+    zmin = amin(data[3])
+    
     
     fig = plt.figure()
     ax = fig.add_subplot(projection='3d')
@@ -72,7 +79,10 @@ def plot_trajectories(fname, min_length, write_trajID=False, t0=0, te=-1):
         xs = trajectories[id_][i0:ie,1]
         ys = trajectories[id_][i0:ie,2]
         zs = trajectories[id_][i0:ie,3]
-        l = ax.plot(xs, zs, ys, 'o-', ms=1, lw=0.5)
+        c = (1-(xs[0]-xmin)/(xmax-xmin)*0.97, 
+             (ys[1]-ymin)/(ymax-ymin)*0.97, 
+             (zs[2]-zmin)/(zmax-zmin)*0.97)
+        l = ax.plot(xs, zs, ys, 'o-', ms=1, lw=0.5, color=c)
         
         xm.append(amin(xs)) ; xm.append(amax(xs))
         ym.append(amin(ys)) ; ym.append(amax(ys))
