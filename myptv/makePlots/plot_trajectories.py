@@ -86,8 +86,8 @@ def plot_trajectories(fname, min_length, write_trajID=False, t0=0, te=-1):
         ys = trajectories[id_][i0:ie,2]
         zs = trajectories[id_][i0:ie,3]
         c = (1-(xs[0]-xmin)/(xmax-xmin)*0.97, 
-             (ys[1]-ymin)/(ymax-ymin)*0.97, 
-             (zs[2]-zmin)/(zmax-zmin)*0.97)
+             (ys[0]-ymin)/(ymax-ymin)*0.97, 
+             (zs[0]-zmin)/(zmax-zmin)*0.97)
         l = ax.plot(xs, zs, ys, 'o-', ms=1, lw=0.5, color=c)
         
         xm.append(amin(xs)) ; xm.append(amax(xs))
