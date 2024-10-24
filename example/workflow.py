@@ -1443,10 +1443,16 @@ class workflow(object):
         fe = self.get_param('animate_trajectories', 'f_end')
         fps = self.get_param('animate_trajectories', 'fps')
         tail_length = self.get_param('animate_trajectories', 'tail_length')
+        elevation = self.get_param('animate_trajectories', 'elevation')
+        azimoth = self.get_param('animate_trajectories', 'azimoth')
+        rotation_rate= self.get_param('animate_trajectories', 'rotation_rate')
                  
+        
         at = animate_trajectories(fname, min_length, fps=fps, 
                                   tail_length=tail_length, 
-                                  f0=f0, fe=fe)
+                                  f0=f0, fe=fe,
+                                  view_angles = (elevation, azimoth), 
+                                  rotation_rate = rotation_rate)
         at.animate()
         
         print('')

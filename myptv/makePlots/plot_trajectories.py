@@ -122,7 +122,7 @@ def plot_trajectories(fname, min_length, write_trajID=False, t0=0, te=-1):
 class animate_trajectories(object):
     
     def __init__(self, fname, min_length, f0=None, fe=None, fps=25,
-                 tail_length=4):
+                 tail_length=4, view_angles = (15,70), rotation_rate=0.1):
         
         
         
@@ -156,7 +156,8 @@ class animate_trajectories(object):
         self.duration = (len(self.frames)-1)/self.fps
         self.tl = tail_length
         self.min_length = min_length
-        
+        self.angles = view_angles
+        self.rotation = rotation_rate
         
         
         
@@ -192,6 +193,10 @@ class animate_trajectories(object):
         self.ax.w_zaxis.set_pane_color((0.7,0.6,1,0.2))
         
         self.ax.grid(False)
+        
+        self.ax.view_init(elev=self.angles[0], 
+                          azim=self.angles[1] + self.rotation*self.counter)
+        
         
         self.ax.set_box_aspect((self.xmax-self.xmin, 
                                 self.zmax-self.zmin, 

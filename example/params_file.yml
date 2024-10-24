@@ -119,6 +119,9 @@
     f_end: None
     fps: 25
     tail_length: 3
+    elevation: 15
+    azimoth: 70
+    rotation_rate: 0.2
 
 - run_extension:
     path_to_extention: the_absolute_path_to_the_script_containing_the_code 
