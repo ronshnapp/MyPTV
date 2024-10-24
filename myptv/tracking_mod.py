@@ -10,11 +10,11 @@ Contains classes for tracking particles to form trajectories.
 """
 
 from numpy import loadtxt, array, savetxt, hstack, ones, where, mean, zeros
+from numpy import poly1d, polyfit
 from numpy import sum as npsum
 from scipy.spatial import KDTree
 from pandas import read_csv
 import tqdm
-import time
 
 
 
@@ -1095,33 +1095,64 @@ class tracker_multiframe(object):
         
         if f0 is None: f0 = int(self.times[0])
         if fe is None: fe = int(self.times[-1])
-
-        t0 = time.time()
         
         msg = 'Tracking forward and backward, round 1'
         
         for frm in tqdm.tqdm(range(f0, fe, frame_skips), desc=msg):
             tmf.build_trajectories_from_frame(frm, p_bar=False)
-            tmf.build_trajectories_from_frame(int(tmf.times[-1])-frm-1, 
+            tmf.build_trajectories_from_frame(fe+f0-frm-1, 
                                               backwards=True, p_bar=False)
             
         msg = 'Tracking forward and backward, round 2'
         
         for frm in tqdm.tqdm(range(f0+int(frame_skips/2), 
-                                   fe-int(frame_skips/2), 
-                                   frame_skips), desc=msg):
+                                    fe-int(frame_skips/2), 
+                                    frame_skips), desc=msg):
             
             tmf.build_trajectories_from_frame(frm, p_bar=False)
-            tmf.build_trajectories_from_frame(int(tmf.times[-1])-frm-1, 
+            tmf.build_trajectories_from_frame(fe+f0-frm-1, 
                                               backwards=True, p_bar=False)
         
         print('')
         print('')
         print('finished tracking frames')
-        print('trajs: ', len(tmf.trajs))
-        print('mean length: ', mean([len(tr) for tr in tmf.trajs]))
-        print('linked particles: ', sum([len(tr) for tr in tmf.trajs]))
+        print('trajs: ', len(self.trajs))
+        print('mean length: ', mean([len(tr) for tr in self.trajs]))
+        print('linked particles: ', sum([len(tr) for tr in self.trajs]))
         
+        
+        
+        
+        
+    def interpolate_trajs(self):
+        '''
+        Will interpolate trajectories that have skipped frames. We interpolate
+        the missing points by using a 3nd order polynomial, namely assuming 
+        linear acceleration in the interpolated range.
+        '''
+        
+        N_links_0 = sum([len(tr)+1 for tr in self.trajs])
+        
+        msg = 'Interpolating skipped frames'
+        for i in tqdm.tqdm(range(len(self.trajs)), desc=msg):
+            
+            tr = self.trajs[i]
+            
+            # 1) check if the trajectory has skipped frames; if not, we
+            #    continue to the next trajectory
+            dt = tr[-1,-1] - tr[0,-1]
+            l = len(tr)
+            if dt == l-1: continue
+            
+            # 2) interpolate the missing points by interpolation
+            interpolated = fill_in_trajectory(tr)
+            self.trajs[i] = interpolated
+            
+        N_links_e = sum([len(tr)+1 for tr in self.trajs])
+        N_new = N_links_e-N_links_0
+        stats = (N_new, N_new/N_links_e*100)
+        print('')
+        print('interpolated %d points (%.1f percent)'%stats)
         
         
         
@@ -1383,6 +1414,68 @@ def smooth_trajectory(traj, Ns):
         
         
         
+
+
+def fill_in_trajectory(tr):
+    '''
+    This function takes in a trajectory and fills in points that were skipped
+    in the tracking stage. This is done by interpolating with a 3nd degree
+    polynomial.
+    '''
+    new_points = []
+    
+    for i in range(len(tr)-1):
+        # 1) check if t_i+1 was skipped; if not, we continue
+        if tr[i+1,-1] - tr[i,-1] == 1: continue
+        
+        # 2) get data from 2 frames before and 2 frames after the skipped gap
+        # if the missing link is at the second point
+        if i==0: 
+            tm = tr[:i+4,-1]
+            x = tr[:i+4,1]
+            y = tr[:i+4,2]
+            z = tr[:i+4,3]
+        
+        # if the missing link is at the second last point
+        elif i==len(tr)-2: 
+            tm = tr[-4:,-1]
+            x = tr[-4:,1]
+            y = tr[-4:,2]
+            z = tr[-4:,3]
+        
+        # the normal case of missing point in the middle section
+        elif i!=0:
+            tm = tr[i-1:i+3,-1]
+            x = tr[i-1:i+3,1]
+            y = tr[i-1:i+3,2]
+            z = tr[i-1:i+3,3]
+        
+        
+        # 3) get a list of the times that have been skipped around i
+        tm_interp = [tr[i,-1]+j for j in range(1, int(tr[i+1,-1] - tr[i,-1]))]
+        
+        # 4) for each axis we calculate the missing data
+        t0 = tr[i,-1]
+        px = poly1d(polyfit(tm-t0, x, 3)) ; x_interp = px(array(tm_interp)-t0)
+        py = poly1d(polyfit(tm-t0, y, 3)) ; y_interp = py(array(tm_interp)-t0)
+        pz = poly1d(polyfit(tm-t0, z, 3)) ; z_interp = pz(array(tm_interp)-t0)
+        
+        # 5) add the new points to the list
+        for j in range(len(tm_interp)):
+            new_point = [-1 for k in range(len(tr[i]))]
+            new_point[0] = tr[i,0]
+            new_point[1] = x_interp[j]
+            new_point[2] = y_interp[j]
+            new_point[3] = z_interp[j]
+            new_point[-1] = tm_interp[j]
+            new_points.append(array(new_point))
+        
+    # 6) combine the original and interpolated points to a new trajectory
+    new_traj = array(sorted(list(tr) + new_points, key=lambda x: x[-1]))
+    
+    return new_traj
+        
+            
         
         
         
@@ -1399,7 +1492,7 @@ if __name__ == "__main__":
     fe = None
     frame_skips = 5
     tmf.track_frames(f0=f0, fe=fe, frame_skips=frame_skips)
-
+    tmf.interpolate_trajs()
 
 
 
