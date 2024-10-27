@@ -1,6 +1,6 @@
-October 04, 2024
+October 27, 2024
 
-Version: 1.0.3
+Version: 1.1.0
 
 
 <img src="./user_manual/figs/logo.png" style="zoom:20%;" />

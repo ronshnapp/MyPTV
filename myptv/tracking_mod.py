@@ -1099,8 +1099,8 @@ class tracker_multiframe(object):
         msg = 'Tracking forward and backward, round 1'
         
         for frm in tqdm.tqdm(range(f0, fe, frame_skips), desc=msg):
-            tmf.build_trajectories_from_frame(frm, p_bar=False)
-            tmf.build_trajectories_from_frame(fe+f0-frm-1, 
+            self.build_trajectories_from_frame(frm, p_bar=False)
+            self.build_trajectories_from_frame(fe+f0-frm-1, 
                                               backwards=True, p_bar=False)
             
         msg = 'Tracking forward and backward, round 2'
@@ -1109,8 +1109,8 @@ class tracker_multiframe(object):
                                     fe-int(frame_skips/2), 
                                     frame_skips), desc=msg):
             
-            tmf.build_trajectories_from_frame(frm, p_bar=False)
-            tmf.build_trajectories_from_frame(fe+f0-frm-1, 
+            self.build_trajectories_from_frame(frm, p_bar=False)
+            self.build_trajectories_from_frame(fe+f0-frm-1, 
                                               backwards=True, p_bar=False)
         
         print('')
@@ -1289,7 +1289,7 @@ class tracker_multiframe(object):
         This animates the tracking of a given particle with all the candidates
         '''
         
-        ret = tmf.build_candidate_trajectories(particle_identifier)[0]
+        ret = self.build_candidate_trajectories(particle_identifier)[0]
         
         for tr in ret:
             xmin = min(min(tr, key=lambda x: min(x[:,1]))[:,1]) - 2*self.d_max
@@ -1312,7 +1312,7 @@ class tracker_multiframe(object):
                 ax.plot(tr[whr,1], tr[whr,2], 'o-', alpha=0.3)
             
             for frm in range(f0, fe+1):
-                for p in tmf.particles[frm]:
+                for p in self.particles[frm]:
                     if xmin<p[1]<xmax and ymin<p[2]<ymax:
                         ax.plot(p[1], p[2], 'ko', ms=2)
               
@@ -1371,48 +1371,7 @@ def traj_NSR(traj, Ns):
         NSR.append(0)
     
     return NSR
-        
-        
-        
-        
-        
-
-def smooth_trajectory(traj, Ns):
-    '''
-    Returns a trajectory smoothed over windows with size Ns via a 
-    polynomial with degree 2. 
-    '''
-    from numpy import polyfit, poly1d
     
-    if Ns%2 != 1:
-        raise ValueError('Ns must be an odd interger')
-    
-    w = int(Ns/2)
-    
-    if len(traj)<=Ns:
-        signal = traj
-        return signal
-    
-    signal = []
-    
-    for i in range(w):
-        signal.append([traj[i,1], traj[i,2], traj[i,3]])
-    
-    for i in range(w, len(traj)-w):
-        x_ = traj[i-w:i+w+1, -1] - traj[i-w, -1]
-        signal.append([])
-        for j in range(3):
-            y_ = traj[i-w:i+w+1, j+1]
-            p = poly1d(polyfit(x_, y_, 2))
-            signal[-1].append(p(w))
-    
-    for i in range(-w,0):
-        signal.append([traj[i,1], traj[i,2], traj[i,3]])
-    
-    return array(signal)
-    
-        
-        
         
 
 
@@ -1477,22 +1436,26 @@ def fill_in_trajectory(tr):
         
             
         
-        
-        
-        
-# Tests:
-if __name__ == "__main__":
-    fname = '/home/ron/Desktop/Research/jetArrayTank/20241020_puffs/Rec18/particles'
-    max_dt = 3 
-    Ns = 11
-    NSR_th = 0.25
-    tmf = tracker_multiframe(fname, max_dt, Ns, d_max=0.5, dv_max=0.5, NSR_th=NSR_th)
     
-    f0 = 134
-    fe = None
-    frame_skips = 5
-    tmf.track_frames(f0=f0, fe=fe, frame_skips=frame_skips)
-    tmf.interpolate_trajs()
+        
+        
+# =============================================================================
+# # Tests:
+# if __name__ == "__main__":
+#     fname = '/home/ron/Desktop/Research/jetArrayTank/20241020_puffs/Rec18/particles'
+#     max_dt = 3 
+#     Ns = 11
+#     NSR_th = 0.25
+#     tmf = tracker_multiframe(fname, max_dt, Ns, d_max=0.5, dv_max=0.5, NSR_th=NSR_th)
+#     
+#     f0 = None
+#     fe = None
+#     frame_skips = 3
+#     tmf.track_frames(f0=f0, fe=fe, frame_skips=frame_skips)
+#     tmf.interpolate_trajs()
+#     
+#     tmf.save_results('trajectories_multiframe')
+# =============================================================================
 
 
 

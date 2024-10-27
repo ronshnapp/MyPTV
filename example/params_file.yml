@@ -51,10 +51,14 @@
 
 - tracking:
     particles_file_name: particles
+    method: multiframe
     frame_start: 0
     N_frames: None
     d_max: 1.0
     dv_max: 1.0
+    max_dt: 3
+    Ns: 5
+    NSR_threshold: 0.25
     mean_flow: [0.0, 0.0, 0.0]
     plot_candidate_graph: False
     save_name: trajectories
