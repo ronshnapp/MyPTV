@@ -8,7 +8,7 @@ Created on Fri May 31 15:01:48 2024
 """
 
 from pandas import read_csv
-from numpy import ptp, array, arange, amin, amax
+from numpy import ptp, array, arange, amin, amax, percentile
 import matplotlib.pyplot as plt
 
 from moviepy.video.io.bindings import mplfig_to_npimage
@@ -216,13 +216,16 @@ class animate_trajectories(object):
         '''
         #self.prepare_for_animation()
         
-        self.vscale = 0
+        v_lst = []
         for i in self.longs:
             tr = self.trajectories[i]
             dt = int(self.min_length/2)
             dx = sum([(tr[dt,j] - tr[0,j])**2 for j in [1,2,3]])**0.5
-            if self.vscale<dx/dt:
-                self.vscale = dx/dt
+            #if self.vscale<dx/dt:
+            #    self.vscale = dx/dt
+            v_lst.append(dx/dt)
+            
+        self.vscale = percentile(v_lst, 95)
         
         self.fig = plt.figure(figsize=(9,9))
         self.ax = self.fig.add_subplot(projection='3d')
