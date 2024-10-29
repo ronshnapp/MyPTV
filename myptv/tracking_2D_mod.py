@@ -163,12 +163,13 @@ class track_2D(tracker_four_frames):
 
 if __name__=='__main__':
     
-    from imaging_mod import camera
+    from imaging_mod import camera_wrapper #camera
     
     fname = '/home/ron/working_PTV_data/blobs_cam1'
     
-    cam = camera('cam1', (1024,1280))
-    cam.load('/home/ron/working_PTV_data')
+    #cam = camera('cam1', (1024,1280))
+    cam = camera_wrapper('cam1', '../example/')
+    cam.load()
     
     z = 10.0
     d_max = 1.0
