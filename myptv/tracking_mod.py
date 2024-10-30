@@ -772,11 +772,12 @@ class tracker_multiframe(object):
     def build_trajectory(self, particle_index, backwards=False):
         '''
         Given an inital particle this function attempts to construct a
-        trajectory out of it by linking it forward in time using the "best 
-        estimate" heuritic. The initial particle is given by the frame number
+        trajectory out of it by linking it using the "best estimate"
+        heuritic. The initial particle is given by the frame number
         and its index: particle_index = (time, particle index).
         
-        If backwards=True then the tracking is backwards in time.
+        If backwards=True then the tracking is backwards in time. Else it is
+        forwards.
         '''
         
         t0, ind0 = particle_index
@@ -884,7 +885,9 @@ class tracker_multiframe(object):
                 # 3.5 if there is no i+j+1 frame, choose the i+j projection's 
                 # nearest neighbour given that it is sufficiently close. 
                 # Otherwise, stop the search.
-                if tm_ipj+1 > self.times[-1]: 
+                if backwards==False: tm_ipjp1 = tm_ipj+1
+                elif backwards==True: tm_ipjp1 = tm_ipj-1
+                if tm_ipjp1 > self.times[-1]: 
                     NN = self.get_nearest_neighbor(x_ipj, tm_ipj)
                     if NN[1] <= self.d_max:
                         traj_indexes.append(NN[0])
@@ -905,16 +908,23 @@ class tracker_multiframe(object):
                 for cand in candidates:
                     
                     # 3.7.1 project candidate to i+j+1
-                    tm_ipjp1 = tm_i + j + 1
+                    #tm_ipjp1 = tm_i + j + 1
                     x_cand = self.particles[cand[0]][cand[1]][1:4]
                     v_cand = (x_cand - x_i) / (tm_ipj - tm_i)
                     x_ipjp1 = x_cand + v_cand * (tm_ipjp1 - tm_ipj)
-                    
+
                     # 3.7.2 get the i+j+1 projections' nearest neihbor distance
-                    nnd = self.get_nearest_neighbor(x_ipjp1, tm_ipjp1)[1]
-                    cand_nnd_list.append(nnd)
+                    try:
+                        nnd = self.get_nearest_neighbor(x_ipjp1, tm_ipjp1)[1]
+                        cand_nnd_list.append(nnd)
+                    except:
+                        continue
+                
                 # 3.7.3 choose the candidate with minimal nnd
-                chosen = candidates[cand_nnd_list.index(min(cand_nnd_list))]
+                if len(cand_nnd_list)==0:
+                    chosen = candidates[0]
+                else:
+                    chosen = candidates[cand_nnd_list.index(min(cand_nnd_list))]
                 traj_indexes.append((chosen[0], chosen[1]))
                 traj.append(self.particles[chosen[0]][chosen[1]])
                 break
@@ -1365,7 +1375,17 @@ def traj_NSR(traj, Ns):
         x_ = traj[i-w:i+w+1, 1:4]
         signal = sum((x_[-1] - x_[0])**2)**0.5
         noise = sum(npsum((x_[1:]-x_[:-1])**2, axis=1)**0.5) - signal
-        NSR.append(noise/signal)
+        
+        if signal!=0:
+            NSR.append(noise/signal)
+        
+        if signal==0:
+            if noise==0:
+                NSR.append(0.0)
+            elif noise!=0:
+                NSR.append(1.0)
+                
+                
     
     for i in range(-w,0):
         NSR.append(0)

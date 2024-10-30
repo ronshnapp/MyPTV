@@ -179,7 +179,7 @@ class track_2D_multiframe(tracker_multiframe):
        self.save_results(save_name)
     '''
     
-    def __init__(self, camera, blob_fnames, z_particles, max_dt, Ns, 
+    def __init__(self, camera, blob_fname, z_particles, max_dt, Ns, 
                  mean_flow = 0.0, 
                  d_max=1e10, dv_max=1e10,
                  NSR_th=0.25,
@@ -222,7 +222,7 @@ class track_2D_multiframe(tracker_multiframe):
         '''
         
         self.cam = camera
-        self.fname = blob_fnames
+        self.fname = blob_fname
         self.z_particles = z_particles
         self.U = mean_flow
         self.max_dt = max_dt

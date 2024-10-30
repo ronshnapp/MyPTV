@@ -8,6 +8,9 @@ Created on Fri Dec  7 18:02:07 2018
 contains a class for segmentation of circular particles
 """
 
+from tracking_2D_mod import track_2D_multiframe
+from myptv.TsaiModel.camera import camera_Tsai
+
 from numpy import ones, savetxt, meshgrid
 from numpy import sum as npsum
 from numpy import abs as npabs
@@ -601,12 +604,142 @@ class loop_segmentation(object):
         
         
     
+
+
+
+
+
+
+from numpy import array 
+from numpy import append as npappend
+from pandas import read_csv
+from tracking_mod import fill_in_trajectory
+
+class tracking_augmented_segmentation(track_2D_multiframe):
     
+    def __init__(self, fname, max_dt, Ns, d_max=1e10, dv_max=1e10, NSR_th=0.25):
+        '''
+        fname - name of a file with blobs to be tracking augmented
+        '''
+        
+        self.fname = fname
+        self.reverse_eta_zeta = False
+        self.z_particles = 0.0
+        self.U = 0
+        
+        self.max_dt = max_dt
+        self.Ns = Ns
+        self.d_max = d_max
+        self.dv_max = dv_max
+        self.NSR_th = NSR_th
+        
+        self.blobs = dict([(k, array(g)) for k,g in 
+                           read_csv(self.fname,header=None,sep='\t').groupby(5)])
+        
+        self.times = sorted(list(self.blobs.keys()))
+        
+        self.trees = {}
+        
+        self.used_particles = dict([(tm, []) for tm in self.times])
+        
+        # a list to store trajectories
+        self.trajs = []
+        
+        self.blobs_len = len(self.blobs[self.times[0]][0])
+        
+
+    def blobs_to_particles(self):
+        '''
+        This function uses the blob data to generate a dicionary of particles 
+        in the format used by tracker_multiframe. 
+        '''
+        self.particles = {}
+        
+        for k in self.blobs.keys():
+            self.particles[k] = []
+            
+            for i in range(len(self.blobs[k])):
+                blob = self.blobs[k][i]
+
+                p = array([-1, blob[0], blob[1], 0.0, i, 0.0, blob[-1]])
+                self.particles[k].append(p)
+                
+            self.particles[k] = array(self.particles[k])
+            
+            
     
+    def augment_blobs(self):
+        '''
+        Will interpolate trajectories that have skipped frames. We interpolate
+        the missing points by using a 3nd order polynomial, namely assuming 
+        linear acceleration in the interpolated range. Then, we add the 
+        interpolated points to the blobs dictionary.
+        '''
+        
+        frame_skips = max([1, int(self.Ns/3)])
+        self.track_frames(f0=None, fe=None, frame_skips=frame_skips)
+        
+        N_links_0 = sum([len(tr)+1 for tr in self.trajs])
+        
+        msg = 'Interpolating skipped frames'
+        for i in tqdm.tqdm(range(len(self.trajs)), desc=msg):
+            
+            tr = self.trajs[i]
+            
+            # 1) check if the trajectory has skipped frames; if not, we
+            #    continue to the next trajectory
+            dt = tr[-1,-1] - tr[0,-1]
+            l = len(tr)
+            if dt == l-1: continue
+            
+            # 2) interpolate the missing points by interpolation
+            interpolated = fill_in_trajectory(tr)
+            self.trajs[i] = interpolated
+            
+            # 3) get the interpolated points
+            tr_times = tr[:,-1]
+            interp_points = [interpolated[i] for i in range(len(interpolated))
+                             if interpolated[i][-1] not in tr_times]
+            
+            # 4) add the interpolated points to self.blobs
+            for ip in interp_points:
+                zeros = [-1 for i in range(self.blobs_len-3)]
+                blob = [ip[1], ip[2]] + zeros + [ip[-1]]
+                self.blobs[ip[-1]] = npappend(self.blobs[ip[-1]], [blob],
+                                              axis=0)
+                
+            
+        N_links_e = sum([len(tr)+1 for tr in self.trajs])
+        N_new = N_links_e-N_links_0
+        stats = (N_new, N_new/N_links_e*100)
+        print('')
+        print('interpolated %d points (%.1f percent)'%stats)
+        
+        
+        
+    def save_augmented_blobs(self, fname):
+        '''
+        Will save the blobs with a given file name
+        '''
+        
+        tosave = []
+        for k in self.blobs.keys():
+            tosave += list(self.blobs[k])
+        
+        savetxt(fname, tosave, delimiter='\t', 
+                fmt=['%.02f','%.02f','%d','%d','%d','%d'])
+        
 
 
-
-
+if __name__ == '__main__':
+    fn = '/home/ron/Desktop/Research/jetArrayTank/20241020_puffs/Rec18/blobs_cam4'
+    dt_max = 3 
+    Ns = 9
+    t2d = tracking_augmented_segmentation(fn, dt_max, Ns, d_max=3, dv_max=3)
+    t2d.blobs_to_particles()
+    t2d.augment_blobs()
+    
+    t2d.save_augmented_blobs('blobs_cam4_augmented')
 
 
 
