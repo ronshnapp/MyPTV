@@ -619,7 +619,14 @@ class tracking_augmented_segmentation(track_2D_multiframe):
     
     def __init__(self, fname, max_dt, Ns, d_max=1e10, dv_max=1e10, NSR_th=0.25):
         '''
+        A class that uses 2D tracking of segmented blobs using the multiframe
+        algorithm, and then "missing particle" interpolation in attempt to 
+        fill in for occlusions.
+        
         fname - name of a file with blobs to be tracking augmented
+        
+        max_dt, Ns, d_max, dv_max, NSR_th - tracking related to the multiframe
+        tracking used. See the class over in tracking_mod for details. 
         '''
         
         self.fname = fname
@@ -731,15 +738,17 @@ class tracking_augmented_segmentation(track_2D_multiframe):
         
 
 
-if __name__ == '__main__':
-    fn = '/home/ron/Desktop/Research/jetArrayTank/20241020_puffs/Rec18/blobs_cam4'
-    dt_max = 3 
-    Ns = 9
-    t2d = tracking_augmented_segmentation(fn, dt_max, Ns, d_max=3, dv_max=3)
-    t2d.blobs_to_particles()
-    t2d.augment_blobs()
-    
-    t2d.save_augmented_blobs('blobs_cam4_augmented')
+# =============================================================================
+# if __name__ == '__main__':
+#     fn = '/home/ron/Desktop/Research/jetArrayTank/20241020_puffs/Rec18/blobs_cam4'
+#     dt_max = 3 
+#     Ns = 9
+#     t2d = tracking_augmented_segmentation(fn, dt_max, Ns, d_max=3, dv_max=3)
+#     t2d.blobs_to_particles()
+#     t2d.augment_blobs()
+#     
+#     t2d.save_augmented_blobs('blobs_cam4_augmented')
+# =============================================================================
 
 
 
