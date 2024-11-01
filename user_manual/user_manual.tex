@@ -66,7 +66,7 @@
 
 \begin{minipage}{14cm}
 	{\small \sffamily
-	Version: 1.1.1 \\
+	Version: 1.1.2 \\
 	Last updated: \today \\
 	Github repository: \url{https://github.com/ronshnapp/MyPTV} \\
 	Get help \& interact with our community: \url{https://github.com/ronshnapp/MyPTV/discussions}\\
@@ -769,8 +769,7 @@ However, in some PTV systems another solution is taken such that the calibration
 		
 		\texttt{plot\_result} & if \texttt{False} will not plot the results; if \texttt{True} the results will be plotted but only if number of images is 1 \\[.3em]
 		
-		\texttt{mask} & if this is 1.0, no mask is used; if this is set to a path to a file, the file will be used as a mask for the segmentation \\[.3em]
-		
+		\texttt{mask} & if this is 1.0, no mask is used; if this is set to a path to a file, the file will be used as a mask for the segmentation, where the file should be a black and white image where white marks the region of interest \\[.3em]
 		
 		\texttt{ROI} & region of interest; specify by indicating the xmin, xmax, ymin, ymax coordinates \\[.3em]
 		
@@ -782,7 +781,7 @@ However, in some PTV systems another solution is taken such that the calibration
 		
 		\texttt{blur\_sigma} & the float standard deviation of a Gaussian blur filter; set to \texttt{None} in order to not apply the filter \\[.3em]
 		
-		\texttt{local\_filter} & the integer widow size of a local mean subtraction filter; set to \texttt{None} in order to not apply the filter \\[.3em]
+		\texttt{local\_filter} & the scale of Gaussian filter used to normalized brightness intensity (see~\ref{sec:segment_filters}); set to \texttt{None} in order to not apply the filter \\[.3em]
 		
 		\texttt{min\_xsize} & minimum particle size (pixels) in $x$ direction \\[.3em]
 		
@@ -842,7 +841,27 @@ The basics of the segmentation step are done via the \texttt{workflow.py} script
 While the dilation method can take more computational time, it can sometimes be used to solve segmentation of large objects where overlap is an issue (see Fig.~\ref{fig:Labeling_vs_Dilation}). 
 
 
-To improve the results of segmenting over non-ideal images, MyPTV can be set to apply image processing before the blob extraction. The filters that can be used are a Gaussian blur filter, a median noise removal filter, local mean subtraction filter, and a mask. The first three filters may increase the computational time, however they may be necessary depending on the experimental conditions, such as uneven illumination or noisy images. Examples of the results of using several combinations of the filters on a calibration image is shown in Fig.~\ref{fig:image_filters}. 
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=9cm]{Labeling_vs_Dilation.pdf}
+	\caption{An example showing that segmentation using the dilation method can be very useful when segmenting large objects as it can resolve overlap issues.\label{fig:Labeling_vs_Dilation}}
+\end{figure}
+
+
+
+
+\subsubsection{Segmentation filters}\label{sec:segment_filters}
+
+To improve the results of particle segmentation in non-ideal images, MyPTV can be set to apply image processing before the blob extraction. The filters that can be used are: 
+\begin{enumerate}
+	\item \textbf{Gaussian blur} - blurring the image with a given scale, used to remove salt and pepper kind of noise; 
+	\item \textbf{Median filter} - subtraction of the local median in over a pixels local neighborhood 
+	\item \textbf{Local filter} - used to filter out low intensity regions relative to their neighborhood; each pixel brightness is normalized with the local mean and variance at a given scale (blur standard deviation), and the image is then conditioned to pass only local high brightness pixels.
+	\item \textbf{Mask} - masking out of regions not needed for the analysis;  
+\end{enumerate}
+These filters are often necessary to properly segment the particles in an image depending on the experimental conditions, such as uneven illumination or noisy images. Examples of the results of using several combinations of the filters on a calibration image is shown in Fig.~\ref{fig:image_filters}. 
+
+
 
 
 \begin{figure}[h!]
@@ -851,13 +870,6 @@ To improve the results of segmenting over non-ideal images, MyPTV can be set to 
 	\caption{The effect oft various image filters on the segmentation.\label{fig:image_filters}}
 \end{figure}
 
-
-
-\begin{figure}[h!]
-	\centering
-	\includegraphics[width=9cm]{Labeling_vs_Dilation.pdf}
-	\caption{An example showing that segmentation using the dilation method can be very useful when segmenting large objects as it can resolve overlap issues.\label{fig:Labeling_vs_Dilation}}
-\end{figure}
 
 
 

@@ -8,13 +8,18 @@ Created on Fri Dec  7 18:02:07 2018
 contains a class for segmentation of circular particles
 """
 
-from tracking_2D_mod import track_2D_multiframe
+from myptv.tracking_2D_mod import track_2D_multiframe
 from myptv.TsaiModel.camera import camera_Tsai
+from myptv.tracking_mod import fill_in_trajectory
 
-from numpy import ones, savetxt, meshgrid
+from pandas import read_csv
+
+from numpy import ones, savetxt, meshgrid, float32
 from numpy import sum as npsum
 from numpy import abs as npabs
 from numpy import median as npmedian
+from numpy import array 
+from numpy import append as npappend
 
 from skimage.io import imread
 from skimage import io
@@ -101,13 +106,23 @@ class particle_segmentation(object):
     def local_filter(self, image):
         '''returns a new image where the local mean neighbourhood of
         each pixel is subtracted.'''
-        w = self.loc_filter
-        window = ones((w, w)) / w**2
-        local_mean = convolve2d(image, window, mode='same')
-        new_im = image - local_mean
-        new_im[new_im<0] = 0
-        new_im = new_im.astype('uint8')
-        return new_im
+        # w = self.loc_filter
+        # window = ones((w, w)) / w**2
+        # local_mean = convolve2d(image, window, mode='same')
+        # new_im = image - local_mean
+        # new_im[new_im<0] = 0
+        # new_im = new_im.astype('uint8')
+        
+        S = self.loc_filter
+        flt = image.astype(float32) #/ 255.0
+        blur = gaussian_filter(flt, S)
+        num = flt - blur
+        
+        blur = gaussian_filter(num*num, S)
+        den = blur**0.5        
+        normed = num / den
+
+        return image * (normed>1)
         
     
     
@@ -610,10 +625,6 @@ class loop_segmentation(object):
 
 
 
-from numpy import array 
-from numpy import append as npappend
-from pandas import read_csv
-from tracking_mod import fill_in_trajectory
 
 class tracking_augmented_segmentation(track_2D_multiframe):
     
