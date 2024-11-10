@@ -18,7 +18,7 @@ from numpy import ones, savetxt, meshgrid, float32
 from numpy import sum as npsum
 from numpy import abs as npabs
 from numpy import median as npmedian
-from numpy import array 
+from numpy import array, divide, zeros_like
 from numpy import append as npappend
 
 from skimage.io import imread
@@ -120,7 +120,9 @@ class particle_segmentation(object):
         
         blur = gaussian_filter(num*num, S)
         den = blur**0.5        
-        normed = num / den
+        # normed = num / den
+        # to ensure no accidental zero division 
+        normed = divide(num, den, out = zeros_like(num), where = (den != 0.0))
 
         return image * (normed>1)
         
