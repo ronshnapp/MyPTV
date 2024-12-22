@@ -131,7 +131,8 @@ class smooth_trajectories(object):
             
             # setting a new trajectories
             new_traj = []
-            for i in range(len(traj_dic[tr_num])):
+            N = int(self.window/2)+1
+            for i in range(N, len(traj_dic[tr_num]) - N):
                 new_traj.append([])
                 new_traj[-1].append(traj[i][0])
                 new_traj[-1].append(p[0][i])
@@ -162,8 +163,8 @@ class smooth_trajectories(object):
         '''
         Will save the smoothed trajectories in a text file.
         '''
-        fmt = ['%d', '%.3f', '%.3f', '%.3f', '%.3f', '%.3f', '%.3f', '%.3f', 
-               '%.3f', '%.3f', '%.3f']
+        fmt = ['%d', '%.3f', '%.3f', '%.3f', '%.6f', '%.6f', '%.6f', '%.9f', 
+               '%.9f', '%.9f', '%.3f']
         savetxt(fname, self.smoothed_trajs, fmt=fmt, delimiter='\t')
 
 
