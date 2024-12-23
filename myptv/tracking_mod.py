@@ -1008,9 +1008,12 @@ class tracker_multiframe(object):
         if frame_num in list(self.used_particles.keys()):
             Nused = len(self.used_particles[frame_num])
             Nf = len(self.particles[frame_num])
-            uf = Nused / Nf
-            if uf > 0.2:
-                self.clear_used_particles()
+            try:
+                uf = Nused / Nf
+                if uf > 0.2:
+                    self.clear_used_particles()
+            except:
+                pass
         
         # 1) building trajectories from particles in the given frame number
         if backwards==False: 
