@@ -66,7 +66,7 @@
 
 \begin{minipage}{14cm}
 	{\small \sffamily
-	Version: 1.1.2 \\
+	Version: 1.2.0 \\
 	Last updated: \today \\
 	Github repository: \url{https://github.com/ronshnapp/MyPTV} \\
 	Get help \& interact with our community: \url{https://github.com/ronshnapp/MyPTV/discussions}\\
@@ -767,6 +767,9 @@ However, in some PTV systems another solution is taken such that the calibration
 		
 		\texttt{shape} & Can be either 'particles' or 'fibers'. The 'particles' option is used for isotropic particles to follow traditional PTV, and the 'fibers' option is used for analyzing the orientations in 3D of anisotropic particles (elongated fibers or rods), see Sec.~\ref{sec:fibers}. \\[.3em]
 		
+		
+		\texttt{pca\_limit} & This parameter applies only when \texttt{shape} is set to 'fibers'. It specifies the maximum allowable ratio of eigenvalues from the PCA decomposition of fibers in image space. For values greater than 1, only fibers with an aspect ratio below this threshold will be segmented, and particles in the same frame will be ignored.  \\[.3em]
+		
 		\texttt{plot\_result} & if \texttt{False} will not plot the results; if \texttt{True} the results will be plotted but only if number of images is 1 \\[.3em]
 		
 		\texttt{mask} & if this is 1.0, no mask is used; if this is set to a path to a file, the file will be used as a mask for the segmentation, where the file should be a black and white image where white marks the region of interest \\[.3em]
@@ -875,11 +878,30 @@ These filters are often necessary to properly segment the particles in an image 
 
 
 
+\subsubsection{Fiber segmentation}\label{sec:fibers_segmentation}
+
+This module segments both positions and orientations of elongated particles in the image, here called \textit{fibers} or \textit{rods}. The segmentation principle for center recognition remains the same as for particles from section \ref{sec:workflow_segment}, while the 2D orientation is found with the principle of Principal Component Analysis (PCA). This method consists on selecting the pixel clusters making up a fiber blob and calculate the $2 \times 2$ covariance matrix $\textbf{C}$ using the matrix of pixel cluster coordinates centered at $\widetilde{\textbf{X}}_i = \left[ x_i - \langle x \rangle, y_i - \langle y \rangle \right]$
+\begin{equation*}
+\textbf{C} = \widetilde{\textbf{X}}^{T} \widetilde{\textbf{X}},
+\end{equation*}  
+where $[ \langle x \rangle, \langle y \rangle ]$ is the image fiber centroid. By performing an eigenvalue analysis of \textbf{C}, i.e. $\textbf{C}\textbf{e}_{i} = \lambda_{i} \textbf{e}_{i}$ with $i=\{1,2\}$ , the eigenvector $\textbf{e}_{1}$ corresponding to the largest eigenvalue $\lambda_1$  denotes the orientation vector of the fiber in the image (see Fig. \ref{fig:fibers_pca}(a)).
 
 
 
+\begin{figure}[ht!]
+	\centering
+	\includegraphics[width=12cm]{fiber_pca.jpg}
+	\caption{(a) An example of the segmentation of fibers in image space with the PCA analysis. (b) Consecutive superimposed images of heavy fibers settling in turbulence, with $\texttt{pca\_limit}=1.3$. As seen in the images, only fibers are segmented while particles in the background are left out. 
+	\label{fig:fibers_pca}}
+\end{figure}
 
 
+An additional feature of the PCA analysis is that the ratio between the larger and smaller eigenvalue $ \lambda_2 / \lambda_1$ gives an estimate of the fiber aspect ratio in image space. This parameter (\texttt{pca\_limit}) is used as a threshold to differentiate particles and fibers in the same image (see Fig. \ref{fig:fibers_pca}(b)).
+
+The latest version of this code uses the functions \texttt{regionprops} and \texttt{labelski} from the \texttt{skimage}\footnote{\url{https://scikit-image.org/}} library available for Python.
+
+%
+%
 
 
 
@@ -1216,23 +1238,39 @@ To match a point we need to identify it from the different camera views. In the 
 
 
 
-\subsection{Fiber tracking} \label{sec:fibers}
+\subsection{Fiber tracking} \label{sec:fiber_tracking}
 
-MyPTV has also capabilities for 3D analysis of the motion of elongated particles, called 'fibers' or 'rods'. Here, both the positions of the particle's centers, and the orientation vector of the elongated particles are analyzed in 3D. 
+This module reconstructs the orientation of fibers in 3D space. After segmenting the fibers as described in Sec. \ref{sec:fibers_segmentation}, and tracking their centroids as described in Sec. \ref{sec:workflow_track}, their orientations are reconstructed with intersections of so-called \textit{epipolar planes}. As shown in Fig. \ref{fig:fiber_planes}, an epipolar plane is defined by three points: two of them are contained on the 2D fiber orientation in image space, and the third one is the camera center. Given two epipolar planes for a camera pair, there exists a unique intersection between them, which defines the fiber orientation vector $\textbf{p} = [p_x, p_y, p_z]$ in laboratory coordinates. 
 
-To measure fiber orientations, we use, again the workflow script. We do this via the following steps:
+This principle is based on the same pin-hole model described in Eq. \eqref{eq:3dmodel}, and it is here briefly explained. As shown in Fig. \ref{fig:fiber_planes}, for each camera image a synthetic point $B$ is created from the 2D position and orientation of a segmented fiber. Then, the 3D directional vectors $\vec{r}_X - \vec{O}$ and $\vec{r}_B - \vec{O}$, pointing from the camera center through the segmented fiber center $X$ and the synthetic point $B$, are calculated from Eq. \eqref{eq:3dmodel}. A plane projecting into 3D space is then obtained in each camera view by the vector triplet $\vec{r}_X - \vec{O}, \vec{r}_B - \vec{O}$, and $\vec{O}$. Finally, the intersection of two epipolar planes from a camera pair allows triangulating a line in 3D, which represents the fiber orientation.
+
+The orientation calculation generates substantial errors when the fiber is parallel to the baseline of the camera pairs, i.e. the line connecting the two camera centers. This occurs when the relative angle between epipolar planes is small, and the intersection line is ill-defined. For this reason, the code outputs a $NaN$ when the fiber is produced by epipolar planes with intersection angle less than the empirical threshold of $ 5^{\circ}$.
+
+\begin{figure}[ht!]
+	\centering
+	\includegraphics[width=12cm]{fiber_epipolar_planes.jpg}
+	\caption{Schematic description of two epipolar planes spanned by the two camera centers. Their intersection generates the symmetry axis $\textbf{p} = [p_x, p_y, p_z]$ of the fiber in laboratory coordinates. To define a plane, two points of a fiber in image space are here defined using the centroid, $X$, and the same point shifted with the 2D orientation vector, $B$. Figure adapted from Fabian Müller's Master thesis. \label{fig:fiber_planes}}
+\end{figure}
+
+This module can be used with more than two cameras. As an example, when three cameras are imaging a fiber, the three possible fiber orientations are first generated from the possible camera pairs combination $(1-2)$, $(1-3)$ and $(2-3)$. The candidate $(1-2)$ is then projected on the image space of the remaining camera $3$, and the \textit{orientation error} is computed as the angle between the projected candidate and the segmented fiber orientation in that camera. The same is repeated for the other two candidates, and the final fiber orientation is the one belonging to the camera pair with the minimum orientation error. 
+
+A multi-camera orientation reconstruction is discarded when the orientation error exceeds the value set as \texttt{ori\_lim}, which is set manually as a parameter. This limit depends on the fiber angular resolution in image space and must be estimated for each experiment as in the following example. Consider an experiment where the average length of a fiber in an image is $20 \ px$. Then the angular resolution of imaged fibers is estimated as $\tan^{-1}(1/20)\approx 3^{\circ}$. In this case, the \texttt{ori\_lim} parameter can be set as $\texttt{ori\_lim} = 5 \times (1 - \cos(3^{\circ})) \approx 0.005$, in this case to exceed 5 times the error given by the camera resolution.
+
+
+To summarize, to reconstruct fiber orientations we use again the workflow script. We do this via the following steps:
 
 \begin{enumerate}
+	
 	\item In the segmentation step, make sure that the 
 	'shape' parameter is set to 'fibers'.
 	
-	\item Perform the segmentation, matching, tracking and smoothing, as normally done for isotropic particles. You will note that once the segmentation is done, two blob files will be saved for each image: a regular one for the blob positions, and another one for the blob shapes. 
+	\item Perform the segmentation, matching, tracking and smoothing, as normally done for spherical particles. You will note that once the segmentation is done, two blob files will be saved for each image: a regular one for the blob positions, and another one for the blob shapes. 
 	
 	\item To calculate the orientations in 3D, use the workflow script with the action '\texttt{fiber\_orientations}'. Following this stage, a new results file will be saved with trajectories corresponding to the rotation angles of each particle. See Tab.~\ref{tab:fibers} for the documentation on the information needed. 
+	
 \end{enumerate}  
 
-
-
+In the current version of MyPTV, the reconstruction works only with two or three cameras.
 
 
 %
@@ -1244,13 +1282,11 @@ To measure fiber orientations, we use, again the workflow script. We do this via
 		Parameter & Description\\[.2cm]
 		\hline
 		%
-		\texttt{camera\_names} & a list of the camera names, e.g. [cam1, cam2, cam3]. Note that the camera files need to be in the same folder where we are running the workflow script\\[.2cm]
+		\texttt{camera\_names} & A list of the camera names, e.g. [cam1, cam2, cam3]. Note that the camera files need to be in the same folder where we are running the workflow script\\[.2cm]
 		%
-		\texttt{cam\_resolution} & A tuple for the number of pixels in each axis. \\[.2cm]
+		\texttt{ori\_lim} & A parameter which defines the threshold for maximum orientation error when more than two cameras are used.\\[.2cm]
 		%
 		\texttt{blob\_files} & The name of the files that hold the results of the \textbf{blob orientations}. \\[.2cm]
-		%
-		\texttt{fibers\_file} & The file name with the results of the matching stage. \\[.2cm]
 		%
 		\texttt{trajectory\_file} & The file name with the results of the tracking stage. \\[.2cm]
 		%
@@ -1260,8 +1296,13 @@ To measure fiber orientations, we use, again the workflow script. We do this via
 \end{table}
 
 
+\subsection{Fiber smoothing} \label{sec:fibers_smoothing}
 
+This module is used to smooth both the fiber centroids and orientations and put them together in the same file. Analogous to particles, this is done by fitting polynomials over sliding windows of the trajectory where velocities and acceleration are calculated through a direct differentiation of the polynomial (see~\cite{Luthi2005}). The data structure of the smoothed fiber data is similar to what is shown in Fig. \ref{fig:smoothedfile}, with the fiber orientation $\textbf{p}$, rotation rate $d \textbf{p}/dt$ and acceleration rate $d^2 \textbf{p}/dt^2$ components respectively from column 11 to 19, and with the frame number at column 20.
 
+\subsection{Fiber stitching} \label{sec:fibers_stitching}
+
+This module is used to stitch broken fiber trajectories using the same algorithm used for particles ~\cite{Xu2008}. Once the centroids are stitched together, the broken orientations are reconstructed using a polynomial fit.
 
 
 
