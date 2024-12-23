@@ -2,7 +2,7 @@
 """
 Created on Fri Dec  7 18:02:07 2018
 
-@author: Erich Aschari Built on Ron's base code 
+@authors: Alessandro Gambino and Eric Aschari, built on Ron's base code 
 
 
 Contains a class for segmentation of elongates particles
@@ -22,7 +22,11 @@ from scipy.ndimage import gaussian_filter, median_filter
 from scipy.ndimage.measurements import label, find_objects
 from scipy.spatial import KDTree
 
-
+#agambino
+import math
+import pandas as pd
+from skimage.measure import regionprops, regionprops_table, centroid
+from skimage.measure import label as labelski
 
 class fiber_segmentation(object):
     '''a class for segmenting out particles (blobs) for a given image'''
@@ -34,7 +38,7 @@ class fiber_segmentation(object):
                  min_xsize=None, max_xsize=None,
                  min_ysize=None, max_ysize=None,
                  min_mass=None, max_mass=None,
-                 pca_limit=1.0,
+                 pca_limit=None,
                  method='labeling'):
         '''
         inputs - 
@@ -62,7 +66,7 @@ class fiber_segmentation(object):
         min/max_( ) - size and area filters for the discovered blobs. If None
                       then filters are not applied.
         
-        pca_limit - Not clear, was added by Eric...    
+        pca_limit - Ratio between height and width of the fitted elipsoid in PCA
         
         method - string. The method used for labeling the blobds. Can be 
                  either 'dilation' or 'labeling'. In dilation, local maxima 
@@ -253,7 +257,7 @@ class fiber_segmentation(object):
     
     
     
-    def get_blobs(self):
+    def get_blobs(self): #agambino
         '''Returns a list of particle centers, their box size, and area
         
         The center is the weighted mean of the blob coordinates using
@@ -265,138 +269,25 @@ class fiber_segmentation(object):
         returns - blobs: a nested list of [ [(center), (box size), area], ...]
         '''    
 
-        if self.method == 'dilation':
-                
-            # get a list of pixel coordinates that are bright local maxima
-            self.bin_im = self.get_binary_image() 
-            self.Y, self.X = meshgrid(range(self.im.shape[1]), 
-                                      range(self.im.shape[0]))
-            coords = list(zip(self.X[self.bin_im>0], self.Y[self.bin_im>0]))
-                
-            blobs = []
-            for coord in coords:
-                
-                # perform iterations (maximum of 3) to refine particles' position
-                for i in range(3) :
-                    C, bbox, mass = self.characterize_blob(coord)
-                    d = ((C[0]-coord[0])**2 + (C[1]-coord[1])**2)**0.5 
-                    coord = C
-                    
-                    if d < 1.0:
-                        break
-                
-                # round the center of mass
-                coord = [round(coord[0], ndigits=2), 
-                         round(coord[1], ndigits=2)]
-                
-                # add final blob to final list
-                blobs.append( [coord, bbox, mass] )
-                
-                
-            # search and remove duplicates; duplicates are points that are 
-            # closer than self.particle_size/2 away. In this case, we keep the
-            # blob with lower mass, 
-            tree = KDTree([b[0] for b in blobs])
-            duplicates = tree.query_pairs(self.p_size/2)
-            to_remove = []
-            for d in duplicates:
-                if blobs[d[0]][-1] < blobs[d[1]][-1]:
-                    to_remove.append(d[1])
-                else:
-                    to_remove.append(d[0])
-            for i in sorted(to_remove, reverse=True): 
-                del blobs[i] 
-            
-            self.blobs = blobs
-            
-            
-            
-        elif self.method=='labeling':
-            
-            self.bin_im = self.get_binary_image() 
-            blob_pixels = self.blob_labeling(self.bin_im)
-            
-            blobs = []
-            
-            stamp_y, stamp_x = meshgrid(range(self.im.shape[1]), 
-                                        range(self.im.shape[0]))
-            
-            for blob in range(len(blob_pixels)):
-                
-                index = np.argwhere(self.labeled == blob+1)/1.0
-                
-                X_vec = index[:,0].astype(int)
-                Y_vec = index[:,1].astype(int)
-                # print(X_vec)
-                loc = blob_pixels[blob]
-                
-                mask = 1.0*(self.labeled[loc]>0)
-                mass = npsum(self.processed_im[loc] * mask)
-                X = npsum(stamp_x[loc] * self.processed_im[loc] * mask) / mass
-                Y = npsum(stamp_y[loc] * self.processed_im[loc] * mask) / mass
-                center = [round(X, ndigits=2), round(Y, ndigits=2)]
-                box_size = list(mask.shape)
-                
-                if True:    # Eric: should be adjusted to be used only for the case of fibers
-                    
-                    mass = npsum(self.processed_im[X_vec,Y_vec])
-                    
-                    X = npsum(X_vec * self.processed_im[X_vec,Y_vec]) / mass
-                    
-                    Y = npsum(Y_vec * self.processed_im[X_vec,Y_vec]) / mass
-                    
-                    center = [round(X, ndigits=2), round(Y, ndigits=2)]
-                    
-                    X_vec = X_vec.astype(float)
-                    Y_vec = Y_vec.astype(float)
-                    
-                    X_vec -= mean(X_vec)
-                    Y_vec -= mean(Y_vec)
-                    
-                    temp1 = array([X_vec,Y_vec])
-                    cov = matmul(temp1,transpose(temp1))
-                                        
-                    a = cov[0,0]
-                    b = cov[0,1]
-                    c = cov[1,0]
-                    d = cov[1,1]
-
-                    temp1 = (d+a)/2
-                    temp2 = (sqrt(square(d+a)-4*(a*d-c*b)))/2
-
-                    l1 = temp1 + temp2
-                    l2 = temp1 - temp2
-                    
-
-                    e1 = array([b,l1-a])
-                    e2 = array([l2-d,c])
-                    
-                    # for bug appearing if eigenvalues are zero -> does not affect particle or fiber segmentation
-                    if l1 == 0:
-                        l1 = 0.1
-                    if l2 == 0:
-                        l2 = 0.1
-                    
-                    if l1 > l2:
-                        if e1[0] != 0 and e1[1] != 0:
-                            e1 = e1/(sqrt(square(e1[0])+square(e1[1])))
-                            
-                        if e1[0] < 0:
-                            e1 = e1*(-1)
-                        
-                        pca = [e1[0],e1[1],l1/l2]
-                    else:
-                        if e2[0] != 0 and e2[1] != 0:
-                            e2 = e2/(sqrt(square(e2[0])+square(e2[1])))
-                        
-                        if e2[0] < 0:
-                            e2 = e2*(-1)
-                        
-                        pca = [e2[0],e2[1],l2/l1]
-                    
+        self.bin_im = self.get_binary_image() 
+        blobs = []
+        label_img = labelski(self.bin_im)
+        regions = regionprops(label_img)
+        for props in regions:
+            x, y = props.centroid
+            minr, minc, maxr, maxc = props.bbox
+            box_size = [maxr - minr, maxc - minc]
+            orientation = props.orientation
+            center = [round(x, ndigits=2), round(y, ndigits=2)] 
+            a = props.axis_major_length
+            b = props.axis_minor_length
+            pca_lim = a / b if b > 0 else -1
+            mass = a * b
+            if pca_lim >= self.pca_limit:
+                pca = [math.cos(orientation), math.sin(orientation), pca_lim]
                 blobs.append( [center, box_size, mass, pca] )
-                                        
-            self.blobs = blobs
+                #print('ecco la pca_lim: ', pca_lim)
+        self.blobs = blobs
    
         
    
@@ -490,9 +381,9 @@ class loop_fiber_segmentation(object):
                  min_xsize=None, max_xsize=None,
                  min_ysize=None, max_ysize=None,
                  min_mass=None, max_mass=None,
-                 pca_limit=1.0,
+                 pca_limit=None,
                  method='labeling',
-                 raw_format=raw_format):
+                 raw_format=False): #agambino
         '''
         dir_name - string with the name of the directory that holds the 
                    images. Images should have a sequential numbers in their
