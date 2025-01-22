@@ -117,8 +117,8 @@ class initial_cal_gui(object):
         self.canvas.bind("<Button-1>", self.location_handler)
         
         # zoom in and zoom out by pressing + and -
-        self.root.bind('+', self.zoomIn)
-        self.root.bind('-', self.zoomOut)
+        self.root.bind('x', self.zoomIn)
+        self.root.bind('z', self.zoomOut)
         
         # move cross with the arrow keys
         self.root.bind('<Shift-Left>', self.leftKey)
@@ -134,11 +134,14 @@ class initial_cal_gui(object):
         frame2.grid(row=1, column=0, padx=(2), pady=5, sticky='nsew')
         
         ZoomIn_button = Button(frame2, text='Zoom in', 
-                                command = self.zoomIn_btn, padx=5, pady=2)
+                                command = self.zoomIn_btn, padx=5, pady=2,
+                                height=1)
         ZoomIn_button.grid(row=0, column=0, padx=7, pady=1, sticky='ew')
         
         ZoomOut_button = Button(frame2, text='Zoom out', 
-                                command = self.zoomOut_btn, padx=5, pady=2)
+                                command = self.zoomOut_btn, padx=5, pady=2,
+                                height=1)
+        
         ZoomOut_button.grid(row=0, column=1, padx=7, pady=1, sticky='ew')
         
         
@@ -276,11 +279,13 @@ class initial_cal_gui(object):
         
         
         segment_button = Button(segmentation_frame, text='Segment image', 
-                                command = self.sementImage, padx=2, pady=7)
+                                command = self.sementImage, padx=2, pady=7, 
+                                height=1)
         segment_button.grid(row=12, column=0, padx=2, pady=7, sticky='ew')
         
         save_segment_button = Button(segmentation_frame, text='Save blobs', 
-                                command = self.save_blobs, padx=2, pady=7)
+                                command = self.save_blobs, padx=2, pady=7, 
+                                height=1)
         save_segment_button.grid(row=12, column=1, padx=2, pady=7, sticky='ew')
         
         
@@ -293,9 +298,18 @@ class initial_cal_gui(object):
         # (3) third column
         
         
-        Column3 = LabelFrame(self.root, padx=2, pady=10, width=100, 
+        #self.vbar2=Scrollbar(self.root,orient='vertical')
+        #self.vbar2.grid(row=0,column=3, sticky='ns')
+        self.bf_canvas = Canvas(self.root, scrollregion=sr)
+                                #yscrollcommand=self.vbar2.set)       
+        self.bf_canvas.grid(row=0,column=3, sticky='ewns', padx=(5), pady=5)
+        
+        # add scrollbars to the image
+        #self.vbar2.config(command=self.bf_canvas.yview)
+        
+        Column3 = LabelFrame(self.bf_canvas, padx=2, pady=10, width=100, 
                                   bg='#c2c2c2')
-        Column3.grid(row=0, column=3, padx=(2), pady=10, sticky='nsew')
+        Column3.grid(row=0, column=0, padx=(2), pady=10, sticky='nsew')
         
         
         
@@ -304,9 +318,8 @@ class initial_cal_gui(object):
         #==================================
         # Marking points for initial calibration
         
-        # Buttons frame
-        
-        
+        #button_frame = LabelFrame(self.bf_canvas, text='3) mark image points', 
+        #                          padx=2, pady=8, width=100)
         
         button_frame = LabelFrame(Column3, text='3) mark image points', 
                                   padx=2, pady=8, width=100)
@@ -320,17 +333,20 @@ class initial_cal_gui(object):
         
         # add point button
         add_button = Button(button_frame, text='Mark point', 
-                                command = self.addPoint, padx=2, pady=4)
+                                command = self.addPoint, padx=2, pady=4, 
+                                height=1)
         add_button.grid(row=4, column=0, padx=2, pady=2, sticky='ew')
         
         # forget last point button
         forget_last_button = Button(button_frame, text='Forget last point', 
-                                command = self.forgetLast, padx=2, pady=4)
+                                command = self.forgetLast, padx=2, pady=4, 
+                                height=1)
         forget_last_button.grid(row=5, column=0, padx=2, pady=2, sticky='ew')
         
         # save points button
         save_button = Button(button_frame, text='Save points', 
-                                command = self.Save, padx=2, pady=4) 
+                                command = self.Save, padx=2, pady=4, 
+                                height=1) 
         save_button.grid(row=6, column=0, padx=2, pady=2, sticky='ew')
         
         
@@ -391,18 +407,20 @@ class initial_cal_gui(object):
         
         init_cal_frame = LabelFrame(Column3, text='4) sortgrid', 
                                   padx=2, pady=8, width=100)
-        init_cal_frame.grid(row=1, column=0, columnspan=2, sticky='s', padx=2, 
+        init_cal_frame.grid(row=1, column=0, columnspan=1, sticky='s', padx=2, 
                           pady=8)
         
         
         
         init_cal = Button(init_cal_frame, text='Initial calibration', 
-                                command = self.calibrate, padx=2, pady=4) 
+                                command = self.calibrate, padx=2, pady=4, 
+                                height=1) 
         init_cal.grid(row=0, column=0, padx=2, pady=2, sticky='new')
         
         
         show_cal = Button(init_cal_frame, text='Show calibration', 
-                                command = self.show_calibration, padx=2, pady=4) 
+                                command = self.show_calibration, padx=2, pady=4, 
+                                height=1) 
         show_cal.grid(row=1, column=0, padx=2, pady=2, sticky='new')
         
         
@@ -420,12 +438,14 @@ class initial_cal_gui(object):
         #sortgrid.grid(row=3, column=0, pady=20)
         
         match_targets = Button(init_cal_frame, text='Match target file', 
-                                command = self.matchTargetPoints, padx=2, pady=4) 
+                                command = self.matchTargetPoints, padx=2, pady=4, 
+                                height=1) 
         match_targets.grid(row=2, column=0, padx=2, pady=2, sticky='new')
         
         
         save_cal_points = Button(init_cal_frame, text='Save cal points', 
-                                command = self.saveTargetPoints, padx=2, pady=4) 
+                                command = self.saveTargetPoints, padx=2, pady=4, 
+                                height=1) 
         save_cal_points.grid(row=3, column=0, padx=2, pady=2, sticky='new')
         
         
@@ -438,7 +458,8 @@ class initial_cal_gui(object):
                           pady=2)
         
         quit_button = Button(quit_frame, text='Quit', width=19,
-                                command = self.Quit, padx=2, pady=2) 
+                                command = self.Quit, padx=2, pady=2, 
+                                height=1) 
         quit_button.grid(row=0, column=0, padx=2, pady=2, sticky='sew')
         
         
@@ -476,6 +497,9 @@ class initial_cal_gui(object):
         err = cal.mean_squared_err()
         self.cam.save('.')
         print('Finished with error: %.3f pixels\n'%(err))
+        
+        if err==0:
+            print('Calibration error is zero -> you need to mark more points.')
             
             
         
@@ -676,6 +700,7 @@ class initial_cal_gui(object):
         self.point_list.append([x_im, y_im, x_lab, y_lab, z_lab])
         
         print('Added to list: ', self.point_list[-1])
+        print('%d marked points'%(len(self.point_list)))
         self.xy_marked = (-1, -1)
         self.mark_points()
             
@@ -883,8 +908,8 @@ class initial_cal_gui(object):
 
 
 if __name__ == '__main__':
-    im_fname = '/home/ron/Desktop/Research/plankton_sweeming/experiments/20220916/MyPTV_analysis/Calibration/cal2.tif'    
-    target_fname = '/home/ron/Desktop/Research/plankton_sweeming/experiments/20220916/MyPTV_analysis/Calibration/target_file'
+    im_fname = '../../example/Calibration/cal1.tif'    
+    target_fname = '../../example/Calibration/target_file'
     gui = initial_cal_gui('camX', im_fname, target_fname)
 
 #cam = camera(cam_name, res)
