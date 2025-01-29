@@ -11,7 +11,7 @@ setup(
     packages=find_packages(include=['myptv', 'myptv.fibers', 'myptv.TsaiModel', 'myptv.extendedZolof', 'myptv.makePlots', 'myptv.sheets']),
     version='1.2.0',
     description='A 3D Particle Tracking Velocimetry library',
-    install_requires=['numpy', 'scipy', 'scikit-image','pandas','matplotlib','pyyaml', 'tk', 'Pillow>=9.5.0'],
+    install_requires=['numpy==1.26.4', 'scipy', 'scikit-image','pandas','matplotlib','pyyaml', 'tk', 'Pillow>=9.5.0', 'moviepy==1.0.1'],
     author='Ron Shnapp',
     author_email='ronshnapp@gmail.com',
     license='MIT',

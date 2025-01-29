@@ -23,4 +23,4 @@ tifffile
 pyyaml
 imagecodecs
 rawpy
-moviepy
+moviepy==1.0.1

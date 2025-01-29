@@ -202,7 +202,7 @@ class animate_trajectories(object):
                                 self.zmax-self.zmin, 
                                 self.ymax-self.ymin))
         
-        plt.tight_layout(0.5)
+        plt.tight_layout()
         
         self.counter += 1
         
