@@ -279,12 +279,21 @@ class calibrate_with_particles_EZ(object):
         self.cal_points = [p[1] 
                            for p in all_valid_points[:self.max_point_number]]
 
+
+    def get_particle_disparity(self):
+        '''
+        Returns a list with the discrepancies between the segmented blob 
+        positions and the projections of their 3D positions onto the camera.
+        '''
+        cam = self.camera
+        disparities = [cam.projection(p[0]) - p[1] for p in self.cal_points]
+        return disparities
         
 
     def get_calibrate_instance(self):
         
         # initiating a calibrate object using this data
-        self.cal = calibrate_extendedZolof(self.camera, 
+        self.cal = calibrate_extendedZolof(self.camera.camera, 
                                            [p[1] for p in self.cal_points], 
                                            [p[0] for p in self.cal_points])
         return self.cal

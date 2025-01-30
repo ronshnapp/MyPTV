@@ -70,7 +70,6 @@
     blobs_fname: 'blobs_cam1'
     min_traj_len: 4
     max_point_number: 1000
-    calibration_image: ./Calibration/cal1.tif
 
 - smoothing:
     trajectory_file: trajectories

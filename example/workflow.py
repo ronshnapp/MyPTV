@@ -456,8 +456,7 @@ class workflow(object):
                                       'min_traj_len')
         max_point_number = self.get_param('calibration_with_particles',
                                       'max_point_number')
-        cal_image = self.get_param('calibration_with_particles', 
-                                   'calibration_image')
+
         print('\n', 'starting calibration with particles')
         
         
@@ -496,24 +495,45 @@ class workflow(object):
             from myptv.extendedZolof.gui_final_cal import cal_gui
             from myptv.extendedZolof.camera import camera_extendedZolof
             from myptv.extendedZolof.calibrate import calibrate_with_particles_EZ
+            from myptv.imaging_mod import camera_wrapper
+            from numpy import mean
             
             # setting up a camera instance            
-            cam = camera_extendedZolof(camera_name)
-            cam.load('./')
+            cam = camera_wrapper(camera_name, './')
+            cam.load()
             
             
             # set up the calibration object
-            cal_with_p = calibrate_with_particles_EZ(traj_filename, cam, 
-                                                       cam_number, 
-                                                       blobs_fname, 
-                                                       min_traj_len=min_traj_len,
-                                                       max_point_number=max_point_number)
+            cwp = calibrate_with_particles_EZ(traj_filename, cam, 
+                                                cam_number, 
+                                                blobs_fname, 
+                                                min_traj_len=min_traj_len,
+                                                max_point_number=max_point_number)
             
-            cal = cal_with_p.get_calibrate_instance()
+            cal = cwp.get_calibrate_instance()
+            
+            p = cwp.get_particle_disparity()
+            err = [sum(pi**2)**0.5 for pi in p]
+            print('')
+            print('mean disparity before: %.4f px'%(mean(err)))
+            print('max disparity before: %.4f px\n'%(max(err)))
             
             # run the final calibration gui
-            print('starting calibration GIU using calibration with particles\n')
-            gui = cal_gui(cal, cal_image) 
+            print('calibrating...\n')
+            cal.calibrate()
+            
+            p = cwp.get_particle_disparity()
+            err = [sum(pi**2)**0.5 for pi in p]
+            print('mean disparity before: %.4f px'%(mean(err)))
+            print('max disparity before: %.4f px\n'%(max(err)))
+            
+            
+            usr_input = input('save results? (1=yes, other=no)')
+            if usr_input=='1':
+                cam.camera.save()
+                print('saved')
+            
+            
         
     
     
@@ -1265,7 +1285,7 @@ class workflow(object):
         Will perform 2D tracking of segmented blobs using give data.
         '''
             
-        from myptv.imaging_mod import camera_wrapper
+        from myptv.imaging_mod import camera
         from myptv.tracking_2D_mod import track_2D
         
         # fetchhing the stitching parameters
@@ -1282,8 +1302,8 @@ class workflow(object):
 
         print('\ninitiating 2D tracking...')
 
-        cam = camera_wrapper(cam_name, '')
-        cam.load()
+        cam = camera(cam_name, res)
+        cam.load('')
         
         print('\nloading blobs and transforming to lab-space coordinates')
         t2d = track_2D(cam, fname, z_particles, d_max=d_max, dv_max = dv_max, 
