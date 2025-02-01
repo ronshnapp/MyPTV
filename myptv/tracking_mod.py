@@ -986,7 +986,7 @@ class tracker_multiframe(object):
     
     
     def build_trajectories_from_frame(self, frame_num, backwards=False, 
-                                      p_bar=True):
+                                      p_bar=True, Ns=None):
         '''
         Builds trajectories from particles at a given frame number. We do not
         use particles that have been used up already.
@@ -997,6 +997,9 @@ class tracker_multiframe(object):
         # ensure there are particles to track in this frame number
         if frame_num not in list(self.particles.keys()):
             return None
+        
+        if Ns is None:
+            Ns = self.Ns
         
         # a list to hold trajectories and trajectory particle identifiers
         trajs = []
@@ -1035,9 +1038,9 @@ class tracker_multiframe(object):
             # 1.2 build a trajectory, calculate its noise level and store them
             p_id = (frame_num, i)
             trajs.append(self.build_trajectory(p_id, backwards=backwards))
-            NSR = traj_NSR(trajs[-1][0], self.Ns)
-            if len(trajs[-1][0])<self.Ns: noise_lvl = 1
-            else: noise_lvl = mean(NSR[int(self.Ns/2):-int(self.Ns/2)])
+            NSR = traj_NSR(trajs[-1][0], Ns)
+            if len(trajs[-1][0])<Ns: noise_lvl = 1
+            else: noise_lvl = mean(NSR[int(Ns/2):-int(Ns/2)])
             NSRs.append(noise_lvl)
         
         
@@ -1088,7 +1091,7 @@ class tracker_multiframe(object):
         
         
         
-    def track_frames(self, f0=None, fe=None, frame_skips=2):
+    def track_frames(self, f0=None, fe=None, frame_skips=2, Ns=None):
         '''
         Will build trajectories starting from frames in the range f0 -> fe,
         with given skips. We build trajectories both forward and backwards in 
@@ -1104,27 +1107,62 @@ class tracker_multiframe(object):
                       many frames. For example if equal to 2 then we use: 
                       0, 2, 4, 6, ... for tracking forward in time and 
                       -1, -3, -5, -7, ... for tracking backwards in time.
+                      
+        Ns - The window size used for NSR calculation. If None, then self.Ns
+             is used (default). If an odd integer then this value is used. If
+             a list of odd integers then these values are used iteratively.
         '''
         
         if f0 is None: f0 = int(self.times[0])
         if fe is None: fe = int(self.times[-1])
         
-        msg = 'Tracking forward and backward, round 1'
         
-        for frm in tqdm.tqdm(range(f0, fe, frame_skips), desc=msg):
-            self.build_trajectories_from_frame(frm, p_bar=False)
-            self.build_trajectories_from_frame(fe+f0-frm-1, 
-                                              backwards=True, p_bar=False)
+        def run_with_NS(Ns):
+              
+            msg = 'Tracking forward and backward, round 1'
             
-        msg = 'Tracking forward and backward, round 2'
+            for frm in tqdm.tqdm(range(f0, fe-Ns+2, frame_skips), desc=msg):
+                self.build_trajectories_from_frame(frm, p_bar=False, Ns=Ns)
+                self.build_trajectories_from_frame(fe+f0-frm-1, 
+                                                  backwards=True, 
+                                                  p_bar=False, Ns=Ns)
+                
+            msg = 'Tracking forward and backward, round 2'
+            
+            for frm in tqdm.tqdm(range(f0+int(frame_skips/2), 
+                                        fe-int(frame_skips/2)-Ns+2, 
+                                        frame_skips), desc=msg):
+                
+                self.build_trajectories_from_frame(frm, p_bar=False, Ns=Ns)
+                self.build_trajectories_from_frame(fe+f0-frm-1, 
+                                                  backwards=True, 
+                                                  p_bar=False, Ns=Ns)
         
-        for frm in tqdm.tqdm(range(f0+int(frame_skips/2), 
-                                    fe-int(frame_skips/2), 
-                                    frame_skips), desc=msg):
+        
+        
+        # run using a single Ns value:
+        if Ns is None or (type(Ns)==int and Ns%2==1):
             
-            self.build_trajectories_from_frame(frm, p_bar=False)
-            self.build_trajectories_from_frame(fe+f0-frm-1, 
-                                              backwards=True, p_bar=False)
+            if Ns is None:
+                Ns = self.Ns
+            
+            run_with_NS(Ns)
+              
+            
+        
+        # run using a list of Ns values:
+        elif type(Ns)==list:
+            Ns = sorted(Ns, reverse=True)
+            if all([x%2==1 for x in Ns]):
+                
+                for Ns_ in Ns:
+                    print('Tracking with Ns=%d'%Ns_)
+                    run_with_NS(Ns_)
+        
+        else:
+            raise ValueError('Ns can be an odd integer or a list of odd integers')
+        
+        
         
         print('')
         print('')

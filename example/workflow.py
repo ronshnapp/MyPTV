@@ -1149,8 +1149,9 @@ class workflow(object):
             
             
             # doing the tracking
-            frame_skips = max([int(Ns/3), 1])
-            tmf.track_frames(f0=ts, fe=te, frame_skips=frame_skips)
+            if type(Ns)==list: frame_skips = max([int(min(Ns)/3), 1])
+            else: frame_skips = max([int(Ns/3), 1])
+            tmf.track_frames(f0=ts, fe=te, frame_skips=frame_skips, Ns=Ns)
             
             # interpolating missing points
             tmf.interpolate_trajs()

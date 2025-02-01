@@ -1,6 +1,6 @@
 November 1, 2024
 
-Version: 1.2.2
+Version: 1.2.3
 
 
 <img src="./user_manual/figs/logo.png" style="zoom:20%;" />

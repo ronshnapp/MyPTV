@@ -66,7 +66,7 @@
 
 \begin{minipage}{14cm}
 	{\small \sffamily
-	Version: 1.2.2 \\
+	Version: 1.2.3 \\
 	Last updated: \today \\
 	Github repository: \url{https://github.com/ronshnapp/MyPTV} \\
 	Get help \& interact with our community: \url{https://github.com/ronshnapp/MyPTV/discussions}\\
@@ -1007,7 +1007,7 @@ There are two tracking methods that have been implemented in MyPTV and the users
 		
 		\texttt{max\_dt} & The maximum allowed skip in frames over which a trajectory will be formed if using the multiframe method; e.g. if a particle is seen in frame 1, 2, 5, and 6, it will only be fully tracked if \texttt{max\_dt}$\geq 2$. Note that the missing frames (3 and 4 in the example) are subsequently interpolated using a cubic polynomial. \\[.2cm]
 		
-		\texttt{Ns} & A parameter of the multiframe method. It should be an odd integer. During tracking, links are formed only if a local signal to noise ratio does not exceed a certain level. The signal to noise ratio is calculated over windows of size \texttt{Ns}, with typical sizes of a few samples (e.g. 11). Note that the algorithm cannot build trajectories shorter than \texttt{Ns}.\\[.2cm]
+		\texttt{Ns} & A parameter of the multiframe method. It should be an odd integer or a list of odd integers. During tracking, links are formed only if a local signal to noise ratio does not exceed a certain level. The signal to noise ratio is calculated over windows of size \texttt{Ns}, with typical sizes of a few samples (e.g. 11). Note that the algorithm cannot build trajectories shorter than \texttt{Ns}. If a list is given then tracking is iterated using all the values in the list.\\[.2cm]
 		
 		\texttt{NSR\_threshold} & The $NSR$ is a parameter of the multiframe algorithm used to assess the quality of a trajectories based on the notion that physical trajectories are smooth. The \texttt{NSR} takes values fraction positive values from 0 to infinity. A trajectory with $NSR=0$ is considered really good while one with $NSR>1$ is considered of quite low quality. Thus the \texttt{NSR\_threshold} is the highest acceptable \texttt{NSR} value. Trajectories with \texttt{NSR} above the given threshold are discarded. \\[.2cm]
 		
