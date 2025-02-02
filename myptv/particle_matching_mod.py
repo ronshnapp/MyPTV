@@ -192,7 +192,9 @@ class matching_with_marching_particles_algorithm(object):
         
         
         # (3) perform the stereo matching; If it fails, return None.
-        res = self.imsys.stereo_match(coords, self.max_d_err*self.Ncams)
+        # res = self.imsys.stereo_match(coords, self.max_d_err*self.Ncams)
+        res = self.imsys.stereo_match(coords, self.max_d_err*self.Ncams, 
+                                      strict_match=True)
         if res is None: return None
         else: xNew, pairedCams, err = res 
         
@@ -428,7 +430,9 @@ class matching_with_marching_particles_algorithm(object):
         candidate_points = []
         for e1, e2 in candidate_pairs:
             coords = {camNum1:blobs1[e1], camNum2:blobs2[e2]}
-            stereoMatch = self.imsys.stereo_match(coords, self.max_d_err)
+            # stereoMatch = self.imsys.stereo_match(coords, self.max_d_err)
+            stereoMatch = self.imsys.stereo_match(coords, self.max_d_err, 
+                                                  strict_match=True)
             if stereoMatch is not None:
                 candidate_points.append(stereoMatch[0])
         
