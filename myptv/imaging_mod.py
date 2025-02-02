@@ -91,25 +91,43 @@ class img_system(object):
                     cams.append(ki)
                     cams.append(kj)
                     d.append(D)
+                   
+                    
+        if len(x)==0:
+            return None
 
 
         if strict_match==True:
-            if len(x)==len(coords):
-                X = sum(x)/1.0/len(x)
+            
+            # calculate the mean of all crossing points
+            X = sum(x)/len(x)
+            
+            # Check the mean crossing point is close to all blobs' lines of 
+            # sight. If not, return None.  
+            for ki in keys:
+                ri = self.cameras[ki].get_r(coords[ki][0],coords[ki][1])
+                di = point_line_dist(self.cameras[ki].O, ri, X)
+                if di>d_max:
+                    return None
                 
-                for ki in keys:
-                    ri = self.cameras[ki].get_r(coords[ki][0],coords[ki][1])
-                    di = point_line_dist(self.cameras[ki].O, ri, X)
-                    if di>d_max:
-                        return None
-                    
-                return sum(x)/1.0/len(x), set(cams), sum(d)/1.0/len(x)
+            return X, set(cams), sum(d)/len(x)
+            
+# =============================================================================
+#             if len(x)==len(coords):
+#                 X = sum(x)/1.0/len(x)
+#                 
+#                 for ki in keys:
+#                     ri = self.cameras[ki].get_r(coords[ki][0],coords[ki][1])
+#                     di = point_line_dist(self.cameras[ki].O, ri, X)
+#                     if di>d_max:
+#                         return None
+#                     
+#                 return sum(x)/1.0/len(x), set(cams), sum(d)/1.0/len(x)
+# =============================================================================
                 
+            
         else:
-            if len(x)>=1:
-                return sum(x)/1.0/len(x), set(cams), sum(d)/1.0/len(x)
-            else:
-                return None
+            return sum(x)/len(x), set(cams), sum(d)/len(x)
 
 
 
