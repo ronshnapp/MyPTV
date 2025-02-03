@@ -49,6 +49,13 @@
     min_cam_match: 3
     save_name: particles
 
+- analyze_disparity:
+    blob_files: blobs_cam1, blobs_cam2, blobs_cam3
+    particle_filename: particles
+    camera_names: cam1, cam2, cam3
+    max_err: 0.25
+    min_cam_match: 3
+
 - tracking:
     particles_file_name: particles
     method: multiframe

@@ -193,7 +193,7 @@ class matching_with_marching_particles_algorithm(object):
         
         # (3) perform the stereo matching; If it fails, return None.
         # res = self.imsys.stereo_match(coords, self.max_d_err*self.Ncams)
-        res = self.imsys.stereo_match(coords, self.max_d_err*self.Ncams, 
+        res = self.imsys.stereo_match(coords, self.max_d_err, 
                                       strict_match=True)
         if res is None: return None
         else: xNew, pairedCams, err = res 

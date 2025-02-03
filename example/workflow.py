@@ -48,7 +48,8 @@ class workflow(object):
         self.allowed_actions = ['help', 'initial_calibration', 
                                 'final_calibration',
                                 'analyze_calibration_error',
-                                'calibration_with_particles', 'matching', 
+                                'calibration_with_particles', 
+                                'matching', 'analyze_disparity',
                                 'segmentation',
                                 'smoothing', 'stitching', 'tracking', 
                                 'calibration', 'calibration_point_gui', 
@@ -88,6 +89,9 @@ class workflow(object):
                 
             elif action == 'matching':
                 self.do_matching()
+                
+            elif action == 'analyze_disparity':
+                self.do_analyze_disparity()
                 
             elif action == 'tracking':
                 self.do_tracking()
@@ -1016,6 +1020,35 @@ class workflow(object):
         
         print('\n', 'Finished Matching.\n')
             
+        
+        
+    def do_analyze_disparity(self):
+        '''
+        Will run the matching_quality_GUI from 
+        myptv -> makePlots -> quality_estimators.
+        '''
+        from myptv.makePlots.quality_estimators import matching_quality_GUI
+        from myptv.imaging_mod import camera_wrapper, img_system
+        
+        # fetching parameters
+        blob_files = self.get_param('analyze_disparity', 'blob_files')
+        blob_files = [val.strip() for val in blob_files.split(',')]
+        particle_filename = self.get_param('analyze_disparity', 'particle_filename')
+        camera_names = self.get_param('analyze_disparity', 'camera_names')
+        camera_names = [val.strip() for val in camera_names.split(',')]
+        max_err = self.get_param('analyze_disparity', 'max_err')
+        min_cam_match = self.get_param('analyze_disparity', 'min_cam_match')
+        
+        
+        cams = [camera_wrapper(cn, './') for cn in camera_names]
+        for c in cams: c.load()
+        imsys = img_system(cams)
+        dmax = max_err
+        min_cam_match = min_cam_match
+    
+        G = matching_quality_GUI(imsys, blob_files, particle_filename, dmax, 
+                                 min_cam_match=min_cam_match)
+        
         
         
     def do_tracking(self):

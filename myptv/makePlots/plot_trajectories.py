@@ -163,7 +163,7 @@ class animate_trajectories(object):
         
     def update(self, frame):
         frame = self.frames[self.counter]
-        cmap = plt.get_cmap('viridis')
+        cmap = plt.get_cmap('jet')
         self.ax.clear()
         
         for k in self.longs:
@@ -188,9 +188,9 @@ class animate_trajectories(object):
         self.ax.set_zlabel('y')
 
         
-        self.ax.w_xaxis.set_pane_color((0.6,0.6,1,0.1))
-        self.ax.w_yaxis.set_pane_color((0.6,0.6,1,0.15))
-        self.ax.w_zaxis.set_pane_color((0.7,0.6,1,0.2))
+        self.ax.w_xaxis.set_pane_color((0.6,0.6,1,0.03))
+        self.ax.w_yaxis.set_pane_color((0.6,0.6,1,0.06))
+        self.ax.w_zaxis.set_pane_color((0.7,0.6,1,0.12))
         
         self.ax.grid(False)
         
