@@ -30,7 +30,8 @@ from scipy.ndimage.measurements import label, find_objects
 from scipy.spatial import KDTree
 
 import tqdm
-
+import os
+from time import time
 
 
 class particle_segmentation(object):
@@ -506,12 +507,9 @@ class loop_segmentation(object):
         
         
         
-        
-                
     
     
     def get_file_names(self):
-        import os
         allfiles = os.listdir(self.dir_name)
         n_ext = len(self.extension)
         fltr = lambda s: s[-n_ext:]==self.extension
@@ -526,6 +524,8 @@ class loop_segmentation(object):
         self.image_files = image_files
     
     
+    
+    
     def calculate_BG(self):
         '''
         Calculates the background image, defined as the median of the given
@@ -533,7 +533,6 @@ class loop_segmentation(object):
         using a subsample of 200 images, to keep the calculation from taking
         too long.
         '''
-        import os
         
         print('calculating background...\n')
         # getting the subsample of images for BG calculation
@@ -559,9 +558,10 @@ class loop_segmentation(object):
         #self.BG = npmedian(ic, axis=0)
         
         
+        
+        
     def segment_folder_images(self):
         '''This loops over the image files in a folder'''
-        import os
         
         self.get_file_names()
         
@@ -578,34 +578,37 @@ class loop_segmentation(object):
         
         i0 = (self.image_start is not None) * self.image_start        
         
-        blob_list = []
+        
+        params = [self.dir_name, self.image_files, self.sigma, self.th, 
+                  self.median, self.loc_filter, self.BG, self.mask, 
+                  self.bbox_limits, self.mass_limits, self.method, 
+                  self.p_size, i0]
+        
         print('Starting loop segmentation.\n')
-        for i in tqdm.tqdm(range(N)):
-            #print('', end='\r')
-            #print(' frame: %d'%(i+i0), end='\r')
-            #im = imread(os.path.join(self.dir_name, self.image_files[i]))
-            im = self.imread_func(os.path.join(self.dir_name, self.image_files[i]))
-            ps = particle_segmentation(im,
-                                       sigma=self.sigma, 
-                                       threshold=self.th,
-                                       median=self.median,
-                                       local_filter=self.loc_filter,
-                                       BG_image=self.BG,
-                                       mask=self.mask,
-                                       max_xsize=self.bbox_limits[1],
-                                       min_xsize=self.bbox_limits[0],
-                                       max_ysize=self.bbox_limits[3],
-                                       min_ysize=self.bbox_limits[2],
-                                       min_mass=self.mass_limits[0],
-                                       max_mass=self.mass_limits[1],
-                                       method = self.method,
-                                       particle_size=self.p_size)
-            ps.get_blobs()
-            ps.apply_blobs_size_filter()
-            for blb in ps.blobs:
-                blob_list.append([blb[0][0], blb[0][1], blb[1][0], blb[1][1],
-                                  blb[2], i+i0])
-        self.blobs = blob_list
+        try:
+            import multiprocessing
+            # Running with paralelization:
+            print('Running with multiplrocessing (cant show progress bar)...')
+            t0 = time()
+            args = [(X, 
+                     self.imread_func(os.path.join(params[0], 
+                                                   params[1][X])),
+                     params) for X in range(N)]
+            with multiprocessing.Pool() as pool:
+                results_list = list(pool.starmap(iter_frame, args))
+            print('finished segmentation loop (%.1f sec)'%(time() - t0))
+    
+        except ImportError as e:
+            # Running without paralelization:
+            print('Cant import multiprocessingm - running on a single core')
+            results_list = [iter_frame(i, 
+                                       self.imread_func(
+                                           os.path.join(params[0], 
+                                                        params[1][i])),
+                                       params) 
+                            for i in tqdm.tqdm(range(N))] 
+            
+        self.blobs = [b for res_i in results_list for b in res_i]
         
                                        
     def save_results(self, fname):
@@ -620,7 +623,32 @@ class loop_segmentation(object):
         
         
         
+
+
+def iter_frame(i, im, params):
+    '''
+    Worker function for the multiprocessing
+    '''
     
+    ps = particle_segmentation(im,
+                               sigma=params[2], 
+                               threshold=params[3],
+                               median=params[4],
+                               local_filter=params[5],
+                               BG_image=params[6],
+                               mask=params[7],
+                               max_xsize=params[8][1],
+                               min_xsize=params[8][0],
+                               max_ysize=params[8][3],
+                               min_ysize=params[8][2],
+                               min_mass=params[9][0],
+                               max_mass=params[9][1],
+                               method = params[10],
+                               particle_size=params[11])
+    ps.get_blobs()
+    ps.apply_blobs_size_filter()
+    res_i = [[b[0][0], b[0][1], b[1][0], b[1][1], b[2], i+params[12]] for b in ps.blobs]
+    return res_i
 
 
 
