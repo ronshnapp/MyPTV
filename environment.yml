@@ -18,3 +18,4 @@ dependencies:
   - pyyaml
   - pillow >=9.5.0
   - tk
+  - multiprocessing

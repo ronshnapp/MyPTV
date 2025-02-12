@@ -588,7 +588,7 @@ class loop_segmentation(object):
         try:
             import multiprocessing
             # Running with paralelization:
-            print('Running with multiplrocessing (cant show progress bar)...')
+            print('Running with multiplrocessing...')
             t0 = time()
             args = [(X, 
                      self.imread_func(os.path.join(params[0], 
@@ -600,7 +600,7 @@ class loop_segmentation(object):
     
         except ImportError as e:
             # Running without paralelization:
-            print('Cant import multiprocessingm - running on a single core')
+            print('Cant import multiprocessing - running on a single core')
             results_list = [iter_frame(i, 
                                        self.imread_func(
                                            os.path.join(params[0], 
@@ -648,6 +648,7 @@ def iter_frame(i, im, params):
     ps.get_blobs()
     ps.apply_blobs_size_filter()
     res_i = [[b[0][0], b[0][1], b[1][0], b[1][1], b[2], i+params[12]] for b in ps.blobs]
+    print('Frame: %d  ;  Blobs: %d'%(i, len(res_i)))
     return res_i
 
 
