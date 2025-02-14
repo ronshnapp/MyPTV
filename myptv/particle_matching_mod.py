@@ -12,6 +12,7 @@ segmented particles' image coordinates.
 
 
 from myptv.utils import line_dist
+from myptv.imaging_mod import camera_wrapper
 from math import ceil, floor
 from itertools import combinations, product
 from numpy import savetxt, array, inf
@@ -21,6 +22,7 @@ from math import isinf
 
 from pandas import read_csv
 
+import multiprocessing
 
 
 
@@ -100,7 +102,7 @@ class matching_with_marching_particles_algorithm(object):
                         etc...
         '''
         
-        print('\ninitializin matcher:\n')
+        print('\ninitializing matcher:\n')
         
         self.imsys = imsys
         self.blob_files = blob_files
@@ -224,10 +226,7 @@ class matching_with_marching_particles_algorithm(object):
         '''
             
         for camNum in range(self.Ncams):
-            # whr = [i for i in range(self.blobs[camNum][frame].shape[0]) 
-            #                              if i not in used_blob_indexes[camNum]]
-            # self.B_ik_trees[camNum] = KDTree(self.blobs[camNum][frame][whr,:2])
-
+            
             if frame not in self.blobs[camNum].keys():
                 self.B_ik_trees[camNum] = None
                 
@@ -336,6 +335,8 @@ class matching_with_marching_particles_algorithm(object):
         # ensure the cameras have blobs in this frame
         if frame not in list(self.blobs[camNum1].keys()): return []
         if frame not in list(self.blobs[camNum2].keys()): return []
+        if frame not in self.matchedBlobs.keys():
+            self.matchedBlobs[frame] = set([])
         
         # fetching the cameras and the blobs
         cam1 = self.imsys.cameras[camNum1] ; cam2 = self.imsys.cameras[camNum2]
@@ -368,7 +369,6 @@ class matching_with_marching_particles_algorithm(object):
             if identifier in self.matchedBlobs[frame]: # this blob has been used
                 continue
             
-            #r = cam2.get_r(b[0], b[1])
             O2, r = cam2.get_epipolarline(b[0], b[1])
             a_center = sum([r[i]*(O_ROI[i]-O2[i]) for i in range(3)]) 
             a1, a2 = a_center - a_range/2 , a_center + a_range/2 
@@ -427,14 +427,44 @@ class matching_with_marching_particles_algorithm(object):
                 a += da
         
         
-        candidate_points = []
-        for e1, e2 in candidate_pairs:
-            coords = {camNum1:blobs1[e1], camNum2:blobs2[e2]}
-            # stereoMatch = self.imsys.stereo_match(coords, self.max_d_err)
-            stereoMatch = self.imsys.stereo_match(coords, self.max_d_err, 
-                                                  strict_match=True)
-            if stereoMatch is not None:
-                candidate_points.append(stereoMatch[0])
+        # ====================================================================
+        # multiprocessing attempt which was much slower
+        
+        candidate_pairs = list(candidate_pairs)
+        cpus = multiprocessing.cpu_count()
+        args = []
+        for i in range(cpus):
+            cam1 = camera_wrapper(self.imsys.cameras[camNum1].fileName,
+                                  self.imsys.cameras[camNum1].dir)
+            cam1.load()
+            
+            cam2 = camera_wrapper(self.imsys.cameras[camNum2].fileName,
+                                  self.imsys.cameras[camNum2].dir)
+            cam2.load()
+            
+            cands_cunk = candidate_pairs[i::cpus]
+            blobs_chunk = [(blobs1[e1], blobs2[e2]) for e1, e2 in cands_cunk]
+            
+            args.append((blobs_chunk, cam1, cam2, self.max_d_err))
+
+        # args = [(blobs1[e1], blobs2[e2], cam1, cam2, self.max_d_err) 
+        #         for e1, e2 in candidate_pairs]
+        
+        with multiprocessing.Pool() as pool:
+            candidate_points = list(pool.imap_unordered(candidate_match, args))
+        
+        candidate_points = [xi for x in  candidate_points for xi in x]
+        
+        # ====================================================================
+        
+        
+        # cam1, cam2 = self.imsys.cameras[camNum1], self.imsys.cameras[camNum2]
+        # candidate_points = []
+        # for e1, e2 in candidate_pairs:
+        #     params = [blobs1[e1], blobs2[e2], cam1, cam2, self.max_d_err]
+        #     stereoMatch = candidate_match(params)
+        #     if stereoMatch is not None:
+        #         candidate_points.append(stereoMatch)
         
         return candidate_points
         
@@ -541,6 +571,41 @@ class matching_with_marching_particles_algorithm(object):
 
 
 
+def candidate_match(params):
+    '''
+    candidate matching for multiprocessing
+    '''
+    
+    blobs_chunk, cam1, cam2, max_d_err = params
+    
+    results_list = []
+    for b1, b2 in blobs_chunk:
+        eta1, zeta1 = (b1[0], b1[1])
+        O1, r1 = cam1.get_epipolarline(eta1, zeta1)
+        eta2, zeta2 = (b2[0], b2[1])
+        O2, r2 = cam2.get_epipolarline(eta2, zeta2)
+        D, x_ij = line_dist(O1, r1, O2, r2)
+            
+        if D <= max_d_err:
+            results_list.append(x_ij)
+    
+    return results_list
+
+    # b1, b2, cam1, cam2, max_d_err = params
+        
+    # eta1, zeta1 = (b1[0], b1[1])
+    # O1, r1 = cam1.get_epipolarline(eta1, zeta1)
+    
+    # eta2, zeta2 = (b2[0], b2[1])
+    # O2, r2 = cam2.get_epipolarline(eta2, zeta2)
+        
+    # D, x_ij = line_dist(O1, r1, O2, r2)
+        
+    # if D <= max_d_err:
+    #     return x_ij
+    
+    # else:
+    #     return None
 
 
 
