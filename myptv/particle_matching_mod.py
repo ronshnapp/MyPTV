@@ -336,6 +336,8 @@ class matching_with_marching_particles_algorithm(object):
         # ensure the cameras have blobs in this frame
         if frame not in list(self.blobs[camNum1].keys()): return []
         if frame not in list(self.blobs[camNum2].keys()): return []
+        if frame not in self.matchedBlobs.keys():
+            self.matchedBlobs[frame] = set([])
         
         # fetching the cameras and the blobs
         cam1 = self.imsys.cameras[camNum1] ; cam2 = self.imsys.cameras[camNum2]
