@@ -359,77 +359,74 @@ class matching_with_marching_particles_algorithm(object):
         nz = int((self.ROI[5]-self.ROI[4])/self.voxel_size)+1
         
         
-        # a dicionary that holds the blob numbers traversed in each voxel
-        voxel_dic = {}
         
-        # listing the traversed volxels for blobs in camera 2
+        
+        # listing the traversed volxels for blobs in camera 2 in parallel and
+        # getting traversed voxel dicionaries
+        blobs = []
         for e,b in enumerate(blobs2):
-            
-            identifier = (camNum2, frame, e)
-            if identifier in self.matchedBlobs[frame]: # this blob has been used
-                continue
-            
-            O2, r = cam2.get_epipolarline(b[0], b[1])
-            a_center = sum([r[i]*(O_ROI[i]-O2[i]) for i in range(3)]) 
-            a1, a2 = a_center - a_range/2 , a_center + a_range/2 
-            
-            # traversing the blob from O2+a1*r to O2+a2*r to list the voxels
-            blob_voxels = set([])
-            a = a1
-            while a<=a2:
-                x, y, z = O2[0] + r[0]*a, O2[1] + r[1]*a, O2[2] + r[2]*a
+            if (camNum2, frame, e) not in self.matchedBlobs[frame]:
+                blobs.append((e,b))
                 
-                if self.ROI[0] < x < self.ROI[1]:
-                    if self.ROI[2] < y < self.ROI[3]:
-                        if self.ROI[4] < z < self.ROI[5]:
-                            i = int((x-self.ROI[0])/(self.ROI[1]-self.ROI[0])*nx)
-                            j = int((y-self.ROI[2])/(self.ROI[3]-self.ROI[2])*ny)
-                            k = int((z-self.ROI[4])/(self.ROI[5]-self.ROI[4])*nz)
-                            blob_voxels.add((i,j,k))
-                a += da
+        cpus = multiprocessing.cpu_count()
+        args = []
+        for i in range(cpus):
+            blobs_chunks = blobs[i::cpus]
+            cam = camera_wrapper(cam2.fileName, cam2.dir)
+            cam.load()
             
-            for voxel in blob_voxels:
-                try:
-                    voxel_dic[voxel].append(e)
-                except:
-                    voxel_dic[voxel] = [e]
-            
-        candidate_pairs = set([])
+            par = (blobs_chunks, cam, O_ROI, a_range,
+                   self.ROI, nx, ny, nz, da)
+            args.append(par)
+        
+        with multiprocessing.Pool() as pool:
+            # a list of dics with blob nums as key and their voxels as items
+            blobs_voxels_list = list(pool.map(get_blobs_voxels, args)) 
+        
+        voxel_dic = {}
+        for bv in blobs_voxels_list:
+            for blbNum in bv.keys():
+                for vxl in bv[blbNum]:
+                    try: 
+                        voxel_dic[vxl].append(blbNum)
+                    except:
+                        voxel_dic[vxl] = [blbNum]
+        
+        
+        
         # traversing the blobs in camera1 to obtain candidates pairs
+        candidate_pairs = set([])
+        blobs = []
         for e,b in enumerate(blobs1):
+            if (camNum1, frame, e) not in self.matchedBlobs[frame]:
+                blobs.append((e,b))
+        
+        args = []
+        for i in range(cpus):
+            blobs_chunks = blobs[i::cpus]
+            cam = camera_wrapper(cam1.fileName, cam1.dir)
+            cam.load()
             
-            identifier = (camNum1, frame, e)
-            if identifier in self.matchedBlobs[frame]: # this blob has been used
-                continue
-            
-            # r = cam1.get_r(b[0], b[1])
-            O1, r = cam1.get_epipolarline(b[0], b[1])
-            a_center = sum([r[i]*(O_ROI[i]-O1[i]) for i in range(3)]) 
-            a1, a2 = a_center - a_range/2 , a_center + a_range/2 
-            
-            # traversing the blob from O2+a1*r to O2+a2*r to list the candidates
-            a = a1
-            while a<=a2:
-                x, y, z = O1[0] + r[0]*a, O1[1] + r[1]*a, O1[2] + r[2]*a
-                
-                if self.ROI[0] < x < self.ROI[1]:
-                    if self.ROI[2] < y < self.ROI[3]:
-                        if self.ROI[4] < z < self.ROI[5]:
-                            i = int((x-self.ROI[0])/(self.ROI[1]-self.ROI[0])*nx)
-                            j = int((y-self.ROI[2])/(self.ROI[3]-self.ROI[2])*ny)
-                            k = int((z-self.ROI[4])/(self.ROI[5]-self.ROI[4])*nz)
-                            try:
-                                candidates = voxel_dic[(i,j,k)]
-                                for cnd in candidates:
-                                    candidate_pairs.add((e, cnd))
-                            except:
-                                pass
-                a += da
+            par = (blobs_chunks, cam, O_ROI, a_range,
+                   self.ROI, nx, ny, nz, da)
+            args.append(par)
+        
+        with multiprocessing.Pool() as pool:
+            # a list of dics with blob nums as key and their voxels as items
+            blobs_voxels_list = list(pool.map(get_blobs_voxels, args))
+        
+        for bv in blobs_voxels_list:
+            for blbNum in bv.keys():
+                for vxl in bv[blbNum]:
+                    try:
+                        candidates = voxel_dic[vxl]
+                        for cnd in candidates:
+                            candidate_pairs.add((blbNum, cnd))
+                    except:
+                        pass
         
         
-        # ====================================================================
-        # multiprocessing attempt which was much slower
-        
+        # multiprocessing candidate matching:
         candidate_pairs = list(candidate_pairs)
         cpus = multiprocessing.cpu_count()
         args = []
@@ -446,25 +443,11 @@ class matching_with_marching_particles_algorithm(object):
             blobs_chunk = [(blobs1[e1], blobs2[e2]) for e1, e2 in cands_cunk]
             
             args.append((blobs_chunk, cam1, cam2, self.max_d_err))
-
-        # args = [(blobs1[e1], blobs2[e2], cam1, cam2, self.max_d_err) 
-        #         for e1, e2 in candidate_pairs]
         
         with multiprocessing.Pool() as pool:
-            candidate_points = list(pool.imap_unordered(candidate_match, args))
+            candidate_points = list(pool.map(candidate_match, args))
         
         candidate_points = [xi for x in  candidate_points for xi in x]
-        
-        # ====================================================================
-        
-        
-        # cam1, cam2 = self.imsys.cameras[camNum1], self.imsys.cameras[camNum2]
-        # candidate_points = []
-        # for e1, e2 in candidate_pairs:
-        #     params = [blobs1[e1], blobs2[e2], cam1, cam2, self.max_d_err]
-        #     stereoMatch = candidate_match(params)
-        #     if stereoMatch is not None:
-        #         candidate_points.append(stereoMatch)
         
         return candidate_points
         
@@ -591,24 +574,86 @@ def candidate_match(params):
     
     return results_list
 
-    # b1, b2, cam1, cam2, max_d_err = params
-        
-    # eta1, zeta1 = (b1[0], b1[1])
-    # O1, r1 = cam1.get_epipolarline(eta1, zeta1)
+
+
+def get_voxel_dic(params):
+    '''
+    Returns a dictionary of the voxels traversed by blobs in a camera
+    for multiplrocessing
+    '''
     
-    # eta2, zeta2 = (b2[0], b2[1])
-    # O2, r2 = cam2.get_epipolarline(eta2, zeta2)
-        
-    # D, x_ij = line_dist(O1, r1, O2, r2)
-        
-    # if D <= max_d_err:
-    #     return x_ij
+    blobs, cam, O_ROI, a_range, ROI, nx, ny, nz, da = params
     
-    # else:
-    #     return None
+    voxel_dic = {}
+    for e,b in blobs:
+        
+        O2, r = cam.get_epipolarline(b[0], b[1])
+        a_center = sum([r[i]*(O_ROI[i]-O2[i]) for i in range(3)]) 
+        a1, a2 = a_center - a_range/2 , a_center + a_range/2 
+        
+        # traversing the blob from O2+a1*r to O2+a2*r to list the voxels
+        blob_voxels = set([])
+        a = a1
+        while a<=a2:
+            x, y, z = O2[0] + r[0]*a, O2[1] + r[1]*a, O2[2] + r[2]*a
+            
+            if ROI[0] < x < ROI[1]:
+                if ROI[2] < y < ROI[3]:
+                    if ROI[4] < z < ROI[5]:
+                        i = int((x-ROI[0])/(ROI[1]-ROI[0])*nx)
+                        j = int((y-ROI[2])/(ROI[3]-ROI[2])*ny)
+                        k = int((z-ROI[4])/(ROI[5]-ROI[4])*nz)
+                        blob_voxels.add((i,j,k))
+            a += da
+        
+        for voxel in blob_voxels:
+            try:
+                voxel_dic[voxel].append(e)
+            except:
+                voxel_dic[voxel] = [e]
+    
+    return voxel_dic
 
 
 
+
+def get_blobs_voxels(params):
+    '''
+    Returns a dictionary of the voxels traversed by blobs in a camera
+    for multiplrocessing
+    '''
+    
+    blobs, cam, O_ROI, a_range, ROI, nx, ny, nz, da = params
+    
+    results = {}
+    for e,b in blobs:
+        
+        O2, r = cam.get_epipolarline(b[0], b[1])
+        a_center = sum([r[i]*(O_ROI[i]-O2[i]) for i in range(3)]) 
+        a1, a2 = a_center - a_range/2 , a_center + a_range/2 
+        
+        # traversing the blob from O2+a1*r to O2+a2*r to list the voxels
+        blob_voxels = set([])
+        a = a1
+        while a<=a2:
+            x, y, z = O2[0] + r[0]*a, O2[1] + r[1]*a, O2[2] + r[2]*a
+            
+            if ROI[0] < x < ROI[1]:
+                if ROI[2] < y < ROI[3]:
+                    if ROI[4] < z < ROI[5]:
+                        i = int((x-ROI[0])/(ROI[1]-ROI[0])*nx)
+                        j = int((y-ROI[2])/(ROI[3]-ROI[2])*ny)
+                        k = int((z-ROI[4])/(ROI[5]-ROI[4])*nz)
+                        blob_voxels.add((i,j,k))
+            a += da
+            
+        results[e] = blob_voxels
+    
+    return results
+
+
+
+    
 
 
 
