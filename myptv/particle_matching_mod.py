@@ -12,7 +12,7 @@ segmented particles' image coordinates.
 
 
 from myptv.utils import line_dist
-from myptv.imaging_mod import camera_wrapper
+from myptv.imaging_mod import camera_wrapper, img_system
 from math import ceil, floor
 from itertools import combinations, product
 from numpy import savetxt, array, inf
@@ -23,7 +23,7 @@ from math import isinf
 from pandas import read_csv
 
 import multiprocessing
-
+from copy import deepcopy
 
 
 
@@ -147,7 +147,44 @@ class matching_with_marching_particles_algorithm(object):
  
     
  
+    def get_nearest_blobs(self, x, frame):
+        '''
+        Given a point in lab coordinates this returns a dictionary which 
+        holds its nearest unused blobs in all cameras for a given frame; the
+        keys of the dictionary are camera numbers and the items are its 
+        coordinates and its index.
+        '''
+        # (1) if the KDTrees are setup with the wromg frame, we fix this
+        if self.B_ik_trees['frame'] != frame:
+            self.generate_blob_trees(frame)
         
+        # (2) prepare a "coords" dictionary with the items being the NN blobs 
+        matchBlobs = {}
+        for camNum in range(self.Ncams):
+            if frame not in self.blobs[camNum].keys(): continue
+            cam = self.imsys.cameras[camNum]
+            projection = cam.projection(x)
+            kNN = self.B_ik_trees[camNum].query([projection], k=self.max_k)  
+            ind = kNN[1][0]
+            dist = kNN[0][0]
+            for i in range(len(ind)):
+                
+                if dist[i]==inf:
+                    continue
+
+                identifier = (camNum, frame, ind[i])
+                if identifier in self.matchedBlobs[frame]: # this blob has been used
+                    continue
+                
+                else:
+                    blob = self.blobs[camNum][frame][ind[i]]
+                    matchBlobs[camNum] = (blob[:2], ind[i])
+                    break
+        
+        return matchBlobs
+    
+    
+    
     def match_nearest_blobs(self, x, frame):
         '''
         Given a point in lab space, x, and a frame number, this function 
@@ -159,42 +196,12 @@ class matching_with_marching_particles_algorithm(object):
         were successfull.
         '''
         
-        # (1) if the KDTrees are setup with the wromg frame, we fix this
-        if self.B_ik_trees['frame'] != frame:
-            self.generate_blob_trees(frame)
-            #for camNum in range(self.Ncams):
-            #    self.B_ik_trees[camNum] = KDTree(self.blobs[camNum][frame][:,:2])
-        
-        # (2) prepare a "coords" dictionary with the items being the NN blobs 
-        coords = {}
-        matchBlobs = {}
-        for camNum in range(self.Ncams):
-            if frame not in self.blobs[camNum].keys(): continue
-            cam = self.imsys.cameras[camNum]
-            projection = cam.projection(x)
-            kNN = self.B_ik_trees[camNum].query([projection], k=self.max_k)  
-            ind = kNN[1][0]
-            dist = kNN[0][0]
-            for i in range(len(ind)):
-                
-
-                if dist[i]==inf:
-                    continue
-
-                identifier = (camNum, frame, ind[i])
-                if identifier in self.matchedBlobs[frame]: # this blob has been used
-                    continue
-                
-                else:
-                    blob = self.blobs[camNum][frame][ind[i]]
-                    coords[camNum] = blob[:2]
-                    matchBlobs[camNum] = (blob[:2], ind[i])
-                    break
-                
+        # (1) get the blobs
+        matchBlobs = self.get_nearest_blobs(x, frame)
+        coords = dict([(k, matchBlobs[k][0]) for k in matchBlobs])
         
         
-        # (3) perform the stereo matching; If it fails, return None.
-        # res = self.imsys.stereo_match(coords, self.max_d_err*self.Ncams)
+        # (2) perform the stereo matching; If it fails, return None.
         res = self.imsys.stereo_match(coords, self.max_d_err, 
                                       strict_match=True)
         if res is None: return None
@@ -276,8 +283,57 @@ class matching_with_marching_particles_algorithm(object):
         if frame not in self.matchedBlobs.keys():
             self.matchedBlobs[frame] = set([])
             
-        self.generate_blob_trees(frame)
+        if self.B_ik_trees['frame'] != frame:
+            self.generate_blob_trees(frame)
+       
         
+
+# =============================================================================
+#           multiprocessing attempt; was slower...
+#
+#         # (1) generate a list of nearest blob dictionaries
+#         matchBlobs_lst = [self.get_nearest_blobs(x, frame) for x in points]
+#         
+#         
+#         # (2) stereo match them in parallel
+#         cpus = multiprocessing.cpu_count()
+#         args = []
+#         for i in range(cpus):
+#             points_chunk = matchBlobs_lst[i::cpus]
+#             
+#             par = [points_chunk, self.imsys, frame, self.max_k, 
+#                    self.max_d_err, self.min_cam_match]
+#             args.append(par)
+#         
+#         with multiprocessing.Pool(processes=cpus) as pool:
+#             results_list = list(pool.map( match_blob_list, args)) 
+#         
+#         
+#         # (3) collect the resuts into a single list and sort by error 
+#         points_lst = [p for lst in results_list for p in lst]
+#         points_lst = sorted(points_lst, key=lambda x_: x_[2])
+#         
+#         
+#         # (4) feed restuls into self.matches and self.matchedBlobs 
+#         count = 0
+#         for p in points_lst:
+#             matchBlobs = p[1]
+#             blob_identifiers = []
+#             test = 1
+#             for camNum in matchBlobs.keys():
+#                 ident = (camNum, frame, matchBlobs[camNum][1])
+#                 if ident in self.matchedBlobs[frame]:
+#                     test = 0 
+#                     break
+#                 else:
+#                     blob_identifiers.append(ident)
+#             if test==1:
+#                 count += 1
+#                 self.matches.append(p)
+#                 for ident in blob_identifiers:
+#                     self.matchedBlobs[frame].add(ident)
+# =============================================================================
+            
         count = 0
         for x0 in points:
             res = self.match_nearest_blobs(x0, frame)
@@ -287,8 +343,7 @@ class matching_with_marching_particles_algorithm(object):
                 
         if message:
             print('', 'matches using given points: %d'%count)
-        
-        
+            
         
         
     def stereo_match_frame_with_previous_matches(self, frame, message=False,
@@ -494,7 +549,7 @@ class matching_with_marching_particles_algorithm(object):
         
     def plot_disparity_map(self, camNum):
         '''
-        A disparity map is a graph that hels in assessing the uncertainty
+        A disparity map is a graph that helps in assessing the uncertainty
         of the calibration. It is done by taking the results of the stereo
         matching, projecting them back on a cameras' sensor, and plotting the
         difference between the projected point and the blob with which this 
@@ -576,51 +631,13 @@ def candidate_match(params):
 
 
 
-def get_voxel_dic(params):
-    '''
-    Returns a dictionary of the voxels traversed by blobs in a camera
-    for multiplrocessing
-    '''
-    
-    blobs, cam, O_ROI, a_range, ROI, nx, ny, nz, da = params
-    
-    voxel_dic = {}
-    for e,b in blobs:
-        
-        O2, r = cam.get_epipolarline(b[0], b[1])
-        a_center = sum([r[i]*(O_ROI[i]-O2[i]) for i in range(3)]) 
-        a1, a2 = a_center - a_range/2 , a_center + a_range/2 
-        
-        # traversing the blob from O2+a1*r to O2+a2*r to list the voxels
-        blob_voxels = set([])
-        a = a1
-        while a<=a2:
-            x, y, z = O2[0] + r[0]*a, O2[1] + r[1]*a, O2[2] + r[2]*a
-            
-            if ROI[0] < x < ROI[1]:
-                if ROI[2] < y < ROI[3]:
-                    if ROI[4] < z < ROI[5]:
-                        i = int((x-ROI[0])/(ROI[1]-ROI[0])*nx)
-                        j = int((y-ROI[2])/(ROI[3]-ROI[2])*ny)
-                        k = int((z-ROI[4])/(ROI[5]-ROI[4])*nz)
-                        blob_voxels.add((i,j,k))
-            a += da
-        
-        for voxel in blob_voxels:
-            try:
-                voxel_dic[voxel].append(e)
-            except:
-                voxel_dic[voxel] = [e]
-    
-    return voxel_dic
-
 
 
 
 def get_blobs_voxels(params):
     '''
-    Returns a dictionary of the voxels traversed by blobs in a camera
-    for multiplrocessing
+    Returns a dictionary of the voxels traversed by given blobs in a camera;
+    used in candidate search for multiprocessing
     '''
     
     blobs, cam, O_ROI, a_range, ROI, nx, ny, nz, da = params
@@ -652,6 +669,49 @@ def get_blobs_voxels(params):
     return results
 
 
+
+
+
+
+
+def match_blob_list(params):
+    '''
+    Matches a given list of blob dictionaries, we attempt to stereomatch them
+    and return the restuls. results_list is a list of points that were matched
+    and matched_blobs_lst is a list of the blobs used to form these points.
+    '''
+    
+    blob_lst, imsys, frame, max_k, max_d_err, min_cam_match = params
+    
+    results_list = []
+    
+    for matchBlobs in blob_lst:
+        
+        # (1) prepare a "coords" dictionary with the items being the NN blobs 
+        coords = dict([(k, matchBlobs[k][0]) for k in matchBlobs])
+        
+        # (2) perform the stereo matching
+        res = imsys.stereo_match(coords, max_d_err, strict_match=True)
+        if res is None: continue 
+        else: xNew, pairedCams, err = res 
+        
+        # (3) check if the min_cam_match passes
+        if len(pairedCams)<min_cam_match: 
+            continue
+        
+        # (4) check if the error is too big
+        elif err>max_d_err: 
+            continue
+        
+        # (5) test have passed - add the point to the resutls
+        else:
+            for camNum in list(matchBlobs.keys()):
+                if camNum not in pairedCams:
+                    del(matchBlobs[camNum])
+        
+        results_list.append((xNew, matchBlobs, err, frame))
+        
+    return results_list
 
     
 
