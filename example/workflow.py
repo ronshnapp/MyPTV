@@ -51,6 +51,8 @@ class workflow(object):
                                 'calibration_with_particles', 
                                 'matching', 'analyze_disparity',
                                 'segmentation',
+                                'calculate_BG_image',
+                                'calculate_equilization_map',
                                 'smoothing', 'stitching', 'tracking', 
                                 'calibration', 'calibration_point_gui', 
                                 'match_target_file', '2D_tracking', 
@@ -119,6 +121,12 @@ class workflow(object):
             
             elif action == 'run_extention':
                 self.do_run_extention()    
+            
+            elif action == 'calculate_BG_image':
+                self.do_calculate_BG_image()
+                
+            elif action == 'calculate_equilization_map':
+                self.do_calculate_equilization_map()
             
             elif action == 'help':
                 self.help_me()
@@ -539,6 +547,41 @@ class workflow(object):
             
             
         
+    def do_calculate_BG_image(self):
+        '''
+        Calculates and save static BG image, defined as the mean of images
+        '''
+        from myptv.segmentation_mod import calculate_BG_image
+        
+        dirname = self.get_param('calculate_BG_image', 'images_folder')
+        ext = self.get_param('calculate_BG_image', 'image_extension')
+        raw_format = self.get_param('calculate_BG_image', 'raw_format')
+        N_img = self.get_param('calculate_BG_image', 'N_img')
+        savename = self.get_param('calculate_BG_image', 'save_name')
+        
+        
+        calculate_BG_image(dirname, ext, savename, N_img=N_img,
+                       raw_format=raw_format)
+        
+        
+    
+    def do_calculate_equilization_map(self):
+        '''
+        Calculates and saves an image equilization map
+        '''
+        from myptv.segmentation_mod import calculate_equilization_map
+        
+        dirname = self.get_param('calculate_equilization_map', 'images_folder')
+        ext = self.get_param('calculate_equilization_map', 'image_extension')
+        raw_format = self.get_param('calculate_equilization_map', 'raw_format')
+        N_img = self.get_param('calculate_equilization_map', 'N_img')
+        sigma = self.get_param('calculate_equilization_map', 'sigma')
+        BG_image = self.get_param('calculate_equilization_map', 'BG_image')
+        savename = self.get_param('calculate_equilization_map', 'save_name')
+        
+        calculate_equilization_map(dirname, ext, sigma, savename, N_img=N_img,
+                               BG_image=BG_image, raw_format=raw_format)
+    
     
     
     def do_segmentation(self):
@@ -575,6 +618,7 @@ class workflow(object):
         p_size = self.get_param('segmentation', 'particle_size')
         shape = self.get_param('segmentation', 'shape')
         remove_BG = self.get_param('segmentation', 'remove_background')
+        eq_map = self.get_param('segmentation', 'equilization_map')
         raw_format = self.get_param('segmentation', 'raw_format')
         
         
@@ -614,6 +658,23 @@ class workflow(object):
             mask_ROI[ROI[2]:ROI[3]+1, ROI[0]:ROI[1]+1] = 1
             mask = mask * mask_ROI
             mask = (mask / amax(mask)).astype('uint')
+            
+            
+        # getting equilization map
+        if eq_map is None:
+            print('\n','Not equilyzing')
+            
+        elif type(eq_map)==str:
+            if shape=='particles':
+                print('\n','using given equilization map')
+                eq_map = imread(eq_map)
+            
+            elif shape=='fibers':
+                raise TypeError('equilization not implemented yet for fibers')
+        
+        else:
+            raise TypeError('equilization map not None nor path to an eqmap')
+            
             
             
         def calculate_BG_image(dirname, extension):
@@ -668,6 +729,7 @@ class workflow(object):
                                                 image_start=image_start,
                                                 N_img=N_img,
                                                 remove_ststic_BG=BG,
+                                                equalize_image=eq_map,
                                                 sigma=sigma, 
                                                 median=median,
                                                 threshold=threshold, 
@@ -729,6 +791,7 @@ class workflow(object):
                                                         sigma=sigma, 
                                                         median=median,
                                                         BG_image=BG,
+                                                        EQ_map=eq_map,
                                                         threshold=threshold, 
                                                         local_filter=local_filter, 
                                                         max_xsize=max_xsize, 

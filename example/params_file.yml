@@ -9,6 +9,22 @@
     camera_names: cam1, cam2, cam3
     plot_histogram: True
 
+- calculate_BG_image:
+    images_folder: Images_cam3
+    image_extension: '.tif'
+    raw_format: False
+    N_img: 200
+    save_name: BG_cam3.tif
+
+- calculate_equilization_map:
+    images_folder: Images_cam3
+    image_extension: '.tif'
+    raw_format: False
+    BG_image: BG_cam3.tif
+    N_img: 200
+    sigma: 20
+    save_name: EQmap_cam3.tif
+
 - segmentation:
     Number_of_images: None
     image_start: 0
@@ -22,6 +38,7 @@
     plot_result: True
     threshold: 8
     remove_background: True
+    equilization_map: None
     median: None
     blur_sigma: 0.5
     local_filter: None

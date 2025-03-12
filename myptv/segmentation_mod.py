@@ -14,11 +14,11 @@ from myptv.tracking_mod import fill_in_trajectory
 
 from pandas import read_csv
 
-from numpy import ones, savetxt, meshgrid, float32
+from numpy import ones, savetxt, meshgrid, float32, array, divide, zeros_like
 from numpy import sum as npsum
 from numpy import abs as npabs
+from numpy import max as npmax
 from numpy import median as npmedian
-from numpy import array, divide, zeros_like
 from numpy import append as npappend
 
 from skimage.io import imread
@@ -41,6 +41,7 @@ class particle_segmentation(object):
     def __init__(self, image, sigma=None, threshold=10, mask=1.0,
                  median = None, local_filter = None, particle_size=3,
                  BG_image = None,
+                 EQ_map = None,
                  min_xsize=None, max_xsize=None,
                  min_ysize=None, max_ysize=None,
                  min_mass=None, max_mass=None,
@@ -71,7 +72,11 @@ class particle_segmentation(object):
         BG_image - Either a given static image, in which case this image is
                    subtracted from the given image by taking the difference,
                    or this is None, in which case this operation is skipped.
-                       
+        
+        EQ_map - Either a given array, in which case this array is
+                 used to equalize the image intensity, or this is None, in 
+                 which case this operation is skipped.
+        
         min/max_( ) - size and area filters for the discovered blobs. If None
                       then filters are not applied.
                       
@@ -96,6 +101,7 @@ class particle_segmentation(object):
         self.mass_limits = (min_mass, max_mass)
         self.loc_filter = local_filter
         self.BG_image = BG_image
+        self.EQ_map = EQ_map
         
         if method not in ['dilation', 'labeling']:
             raise ValueError('method "%s" unknown.'%method)
@@ -142,12 +148,19 @@ class particle_segmentation(object):
             imNoBG = npabs(self.im - self.BG_image).astype(self.im.dtype)
         else:
             imNoBG = self.im
+            
+        # Equalize intensity
+        if self.EQ_map is not None:
+            imEQ = imNoBG/self.EQ_map / npmax(imNoBG/self.EQ_map) * npmax(imNoBG)
+            imEQ = imEQ.astype(self.im.dtype)
+        else:
+            imEQ = imNoBG
         
         # apply a Gussian blur
         if self.sigma is not None:
-            blured = gaussian_filter(imNoBG, self.sigma)
+            blured = gaussian_filter(imEQ, self.sigma)
         else:
-            blured = imNoBG
+            blured = imEQ
             
         # apply median filter
         if self.median is not None:
@@ -441,6 +454,8 @@ class loop_segmentation(object):
                  N_img = None, sigma=1.0, threshold=10, mask=1.0,
                  local_filter = 15, median = None, particle_size=3,
                  remove_ststic_BG = True,
+                 equalize_image = None,
+                 eq_sigma = 20.0,
                  min_xsize=None, max_xsize=None,
                  min_ysize=None, max_ysize=None,
                  min_mass=None, max_mass=None,
@@ -466,6 +481,10 @@ class loop_segmentation(object):
                            then this operation is skipped. If this is a numpy
                            array, than it is used as the BG image.
                            
+        equalize_image - If this is None, then this operation is skipped. If 
+                         this is a numpy array, than it is used as the 
+                         equilization map.
+                           
         raw_format (default=Flase) - Set to true if the images are in raw 
                                      format (e.g. .dng). Then, we use the
                                      package rawpy to load the images.
@@ -487,6 +506,8 @@ class loop_segmentation(object):
         self.loc_filter = local_filter
         self.method = method
         self.raw_format = raw_format
+        self.eq_sigma = eq_sigma
+        
         
         if self.raw_format == False:
             self.imread_func = lambda x: io.imread(x)
@@ -495,7 +516,8 @@ class loop_segmentation(object):
             import rawpy
             self.imread_func = lambda x: rawpy.imread(x).raw_image
         
-        # optionally using pre-calculated BG image:
+        
+        # settings for background image:
         if type(remove_ststic_BG) == bool:
             self.BG_remove = remove_ststic_BG
             
@@ -504,6 +526,18 @@ class loop_segmentation(object):
             if type(remove_ststic_BG) == ndarray:
                 self.BG = remove_ststic_BG
             self.BG_remove=None
+            
+        
+        # settings for image equilization:
+        if equalize_image is None:
+            self.EQ_map = None
+        
+        else:
+            from numpy import ndarray
+            if type(equalize_image) == ndarray:
+                self.EQ_map = equalize_image
+            else:
+                raise TypeError('equalize_image is not None nor numpy array')
         
         
         
@@ -554,8 +588,6 @@ class loop_segmentation(object):
                 im0 += self.imread_func(BG_images[i])
         
         self.BG = im0 / len(BG_images)
-        #ic = io.ImageCollection(BG_images)
-        #self.BG = npmedian(ic, axis=0)
         
         
         
@@ -580,7 +612,7 @@ class loop_segmentation(object):
         
         
         params = [self.dir_name, self.image_files, self.sigma, self.th, 
-                  self.median, self.loc_filter, self.BG, self.mask, 
+                  self.median, self.loc_filter, self.BG, self.EQ_map, self.mask, 
                   self.bbox_limits, self.mass_limits, self.method, 
                   self.p_size, i0]
         
@@ -625,6 +657,7 @@ class loop_segmentation(object):
         
 
 
+
 def iter_frame(i, im, params):
     '''
     Worker function for the multiprocessing
@@ -636,15 +669,16 @@ def iter_frame(i, im, params):
                                median=params[4],
                                local_filter=params[5],
                                BG_image=params[6],
-                               mask=params[7],
-                               max_xsize=params[8][1],
-                               min_xsize=params[8][0],
-                               max_ysize=params[8][3],
-                               min_ysize=params[8][2],
-                               min_mass=params[9][0],
-                               max_mass=params[9][1],
-                               method = params[10],
-                               particle_size=params[11])
+                               EQ_map=params[7],
+                               mask=params[8],
+                               max_xsize=params[9][1],
+                               min_xsize=params[9][0],
+                               max_ysize=params[9][3],
+                               min_ysize=params[9][2],
+                               min_mass=params[10][0],
+                               max_mass=params[10][1],
+                               method = params[11],
+                               particle_size=params[12])
     ps.get_blobs()
     ps.apply_blobs_size_filter()
     res_i = [[b[0][0], b[0][1], b[1][0], b[1][1], b[2], i+params[12]] for b in ps.blobs]
@@ -656,6 +690,129 @@ def iter_frame(i, im, params):
 
 
 
+
+
+
+
+# ============================================================================
+#                      Some Image Preprocessing Tools
+# ============================================================================
+
+
+
+def calculate_BG_image(dir_name, extension, savename, N_img=200,
+                       raw_format=False):
+    '''
+    Calculates a mean image and saves it on the disk for image processing.
+    '''
+    if raw_format == False:
+        imread_func = lambda x: io.imread(x)
+        
+    else:
+        import rawpy
+        imread_func = lambda x: rawpy.imread(x).raw_image
+        
+    BG_images = get_img_list(dir_name, extension, N_img=N_img)
+    
+    # calculating the BG image
+    for i in tqdm.tqdm(range(len(BG_images)), desc='calculating the BG image'):
+        if i==0:
+            #im0 = io.imread(BG_images[i])*1.0
+            im0 = imread_func(BG_images[i])*1.0
+            typ = im0.dtype
+        else:
+            #im0 += io.imread(BG_images[i])
+            im0 += imread_func(BG_images[i])
+    
+    BG = (im0 / len(BG_images)).astype('int16')
+    
+    # saving
+    io.imsave(savename, BG, check_contrast=False)
+
+
+
+
+def calculate_equilization_map(dir_name, extension, sigma, savename, N_img=200,
+                               BG_image=None, raw_format=False):
+    '''
+    Calculates an equilizatino map and saves it on the disk for image
+    processing. This is done as:
+    
+        EQ_map = gaussian_blur(max(images), sigma)
+    
+    dir_name - path to directory with images
+    extension - extension of image filenames (tif, jpeg...)
+    sigma - Gaussian blur applied to the maximum image 
+    savename - name for saving the equalization map ('xxx.tif')
+    N_img - maximum number of images used for calculation, to save memory
+    BG_image - the name of a background image (needed if the is background 
+               stuff). If None (default) then no BG subtractino is made. 
+    raw_format - mark True is the images are raw format (.dng)
+    
+    '''
+    if raw_format == False:
+        imread_func = lambda x: io.imread(x)
+        
+    else:
+        import rawpy
+        imread_func = lambda x: rawpy.imread(x).raw_image
+    
+    EQ_imnames = get_img_list(dir_name, extension, N_img=N_img)
+    
+    if BG_image is not None:
+        BG = io.imread(BG_image)
+    else:
+        BG = 0.0
+    
+    # Reading the images and calculating the equilization map
+    itr = tqdm.tqdm(range(len(EQ_imnames)), desc='calculating eq map')
+    max_im = npmax([npabs(imread_func(EQ_imnames[i])-BG) for i in itr], axis=0)
+    epsilon = 1e-6  # Prevent division by zero
+    max_im = max_im / npmax(max_im) + epsilon
+    EQ_map = gaussian_filter(max_im, sigma).astype('float32')
+    EQ_map = EQ_map.astype('float32')/npmax(EQ_map)
+    
+    # saving the result of our calculation
+    io.imsave(savename, EQ_map, check_contrast=False)
+
+
+
+
+def get_img_list(dir_name, extension, N_img=200):
+    '''
+    From a given directory, this returns a list of up to N_img filenames
+    '''
+    # 1) Getting the images file names:
+    allfiles = os.listdir(dir_name)
+    n_ext = len(extension)
+    fltr = lambda s: s[-n_ext:]==extension
+    image_files = sorted(list(filter(fltr, allfiles)))
+    if len(image_files)==0:
+        raise ValueError('No images found, check input variables')
+    
+    # 2) subsample the images not to overflow the memory
+    if len(image_files)<=N_img:
+        imnames = image_files
+        
+    else: 
+        imnames=image_files[::int(len(image_files)/N_img)][:N_img]
+    
+    imnames = [os.path.join(dir_name, im) for im in imnames]
+    
+    return imnames
+
+
+
+
+
+
+
+
+
+
+# ============================================================================
+#                      New attempt of segmentation addon
+# ============================================================================
 
 class tracking_augmented_segmentation(track_2D_multiframe):
     
@@ -780,22 +937,41 @@ class tracking_augmented_segmentation(track_2D_multiframe):
         
 
 
+
+
+
+
+
+
+
+#if __name__ == '__main__':
+    # fn = '/home/ron/Desktop/Research/jetArrayTank/20241020_puffs/Rec18/blobs_cam4'
+    # dt_max = 3 
+    # Ns = 9
+    # t2d = tracking_augmented_segmentation(fn, dt_max, Ns, d_max=3, dv_max=3)
+    # t2d.blobs_to_particles()
+    # t2d.augment_blobs()
+    
+    # t2d.save_augmented_blobs('blobs_cam4_augmented')
+    
+    
+    
+    
+    
 # =============================================================================
-# if __name__ == '__main__':
-#     fn = '/home/ron/Desktop/Research/jetArrayTank/20241020_puffs/Rec18/blobs_cam4'
-#     dt_max = 3 
-#     Ns = 9
-#     t2d = tracking_augmented_segmentation(fn, dt_max, Ns, d_max=3, dv_max=3)
-#     t2d.blobs_to_particles()
-#     t2d.augment_blobs()
+#     dir_name = '/home/ron/Desktop/Research/myptv_tests/example_images'
+#     extension = 'dng'
+#     sigma = 20
+#     savename = 'test_EQmap.tif'
+#     raw_format = True
+#     N_img = 100
 #     
-#     t2d.save_augmented_blobs('blobs_cam4_augmented')
+#     calculate_BG_image(dir_name, extension, 'test_BGimg.tif', N_img=N_img,
+#                        raw_format=raw_format)
+#     
+#     calculate_equilization_map(dir_name, extension, sigma, savename, N_img=N_img,
+#                                BG_image='test_BGimg.tif', raw_format=raw_format)
 # =============================================================================
-
-
-
-
-
 
 
 
