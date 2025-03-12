@@ -23,8 +23,10 @@ from math import isinf
 from pandas import read_csv
 
 import multiprocessing
-from copy import deepcopy
 
+from numpy import zeros, meshgrid, exp
+from numpy import sum as npsum
+from scipy.optimize import minimize
 
 
 class matching_with_marching_particles_algorithm(object):
@@ -509,8 +511,6 @@ class matching_with_marching_particles_algorithm(object):
         
         
         
-        
-        
     def match_frame(self, frame, backwards=False):
         '''
         Will stereo match particles in the given frame number.
@@ -576,6 +576,175 @@ class matching_with_marching_particles_algorithm(object):
         ax.set_aspect('equal')
         return fig, ax
         
+    
+    
+    
+    def get_blob_map(self, frame, camNum):
+        '''
+        Returns a numpy array that represents the image of the blobs at a given
+        frame and camera number
+        '''
+        bleed = 5
+        res = (int(max(self.blobs[camNum][frame][:,0])+2*bleed), 
+               int(max(self.blobs[camNum][frame][:,1])+2*bleed))
+        
+        img = zeros(res)
+        x, y = meshgrid([-3,-2,-1,0,1,2,3], [-3,-2,-1,0,1,2,3])
+        for b in self.blobs[camNum][frame][:,:2]:
+            b_ = b.astype(int)
+            g = exp(-(x-b[0]+b_[0])**2 - (y-b[1]+b_[1])**2)
+            locx = slice(bleed+b_[0]-3,bleed+b_[0]+4)
+            locy = slice(bleed+b_[1]-3,bleed+b_[1]+4)
+            img[locx, locy] = img[locx,locy] + g
+        
+        return img
+    
+    
+    
+    
+    def get_matches_map(self, frame, camNum):
+        '''
+        Returns a numpy array that represents the image of the particles matched 
+        in a given frame and camera number
+        '''
+        bleed = 5
+        res = (int(max(self.blobs[camNum][frame][:,0])+2*bleed), 
+               int(max(self.blobs[camNum][frame][:,1])+2*bleed))
+        
+        img = zeros(res)
+        x, y = meshgrid([-3,-2,-1,0,1,2,3], [-3,-2,-1,0,1,2,3])
+        cam = self.imsys.cameras[camNum]
+        
+        for p in self.matches:
+            if p[3]==frame:
+                b = cam.projection(p[0])
+                b_ = [int(b[0]), int(b[1])]
+                g = exp(-(x-b[0]+b_[0])**2 - (y-b[1]+b_[1])**2)
+                locx = slice(bleed+b_[0]-3,bleed+b_[0]+4)
+                locy = slice(bleed+b_[1]-3,bleed+b_[1]+4)
+                try:
+                    img[locx, locy] = img[locx,locy] + g
+                except:
+                    pass
+        
+        return img
+    
+    
+    
+    
+    def show_particle_disparity_image(self, p, p_, frame, camNum):
+        import matplotlib.pyplot as plt
+        bleed = 5
+        b_img = self.get_blob_map(frame, camNum)
+        p_img = self.get_matches_map(frame, camNum)
+        
+        x, y = meshgrid([-5,-4,-3,-2,-1,0,1,2,3,4,5], [-5,-4,-3,-2,-1,0,1,2,3,4,5])
+        cam = self.imsys.cameras[camNum]
+        
+        # subtract p particle
+        b = cam.projection(p)
+        b_ = [int(b[0]), int(b[1])]
+        g = exp(-(x-b[0]+b_[0])**2 - (y-b[1]+b_[1])**2)
+        locx = slice(bleed+b_[0]-5,bleed+b_[0]+6)
+        locy = slice(bleed+b_[1]-5,bleed+b_[1]+6)
+        p_img[locx, locy] = p_img[locx,locy] - g
+        
+        # add p_ particle
+        b = cam.projection(p_)
+        b_ = [int(b[0]), int(b[1])]
+        g = exp(-(x-b[0]+b_[0])**2 - (y-b[1]+b_[1])**2)
+        locx = slice(bleed+b_[0]-5,bleed+b_[0]+6)
+        locy = slice(bleed+b_[1]-5,bleed+b_[1]+6)
+        p_img[locx, locy] = p_img[locx,locy] + g
+        
+        # show
+        fig, ax = plt.subplots()
+        disparity = b_img[locx, locy] - p_img[locx, locy]
+        ax.imshow(disparity, cmap='bwr', vmin=-1, vmax=1)
+        
+        
+    
+    
+    def optimize_particle_position(self, p, frame, blob_imgs, particle_imgs, S):
+        '''
+        Given a paricle at a given frame, this function tries to optimize its
+        position by minimizing its image disparity
+        '''
+        bleed = 5
+        x, y = meshgrid([-3,-2,-1,0,1,2,3], [-3,-2,-1,0,1,2,3])
+        
+        #slices = []
+        # (1) we first subtract the particle from the original particle images
+        #     and prepare slices so we work with smaller ROIs in the images
+        for camNum in range(self.Ncams):
+            cam = self.imsys.cameras[camNum]
+            b = cam.projection(p)
+            b_ = [int(b[0]), int(b[1])]
+            g = exp(-(x-b[0]+b_[0])**2 - (y-b[1]+b_[1])**2)
+            locx = slice(bleed+b_[0]-3,bleed+b_[0]+4)
+            locy = slice(bleed+b_[1]-3,bleed+b_[1]+4)
+            img = particle_imgs[camNum]
+            img[locx, locy] = img[locx,locy] - g
+            #slices.append((slice(bleed+b_[0]-5,bleed+b_[0]+6),
+            #               slice(bleed+b_[1]-5,bleed+b_[1]+6)))
+        
+        #blob_img_slices = [blob_imgs[i][slices[i][0],slices[i][1]] for i in self.Ncams]
+        #particle_img_slices = [particle_imgs[i][slices[i][0],slices[i][1]] for i in self.Ncams] 
+        
+        
+        # (2) define the error function
+        def img_err(p_, particle_imgs, blob_imgs):
+            err = 0
+            for camNum in range(self.Ncams):
+                cam = self.imsys.cameras[camNum]
+                b = cam.projection(p_)
+                b_ = [int(b[0]), int(b[1])]
+                g = exp(-(x-b[0]+b_[0])**2 - (y-b[1]+b_[1])**2)
+                locx = slice(bleed+b_[0]-3,bleed+b_[0]+4)
+                locy = slice(bleed+b_[1]-3,bleed+b_[1]+4)
+                p_img = particle_imgs[camNum]
+                b_img = blob_imgs[camNum]
+                disparity = p_img[locx,locy] + g - b_img[locx,locy]
+                err += npsum((disparity)**2)**0.5
+            return err
+        
+        
+        # (3) minimize the position and return it using scipy.minimize
+        err = img_err(p, particle_imgs, blob_imgs)
+        ind = [0,0,0]
+        print('init err:', err)
+        for i in [-1,0,1]:
+            for j in [-1,0,1]:
+                for k in [-1,0,1]:
+                    p_ = p + [i*S, j*S, k*S]
+                    err_i = img_err(p_, particle_imgs, blob_imgs)
+                    if err_i < err:
+                        err = err_i
+                        ind = [i,j,k]
+        print('fin err:', err)
+        p_ = p + [ind[0]*S, ind[1]*S, ind[2]*S]
+        
+        #res = minimize(img_err, p[0], args=(particle_imgs, blob_imgs),
+        #               method='nelder-mead',
+        #               options={'xatol': 1e-8, 'disp': True})
+        
+        # (4) put the new particle on the image
+        for camNum in range(self.Ncams):
+            cam = self.imsys.cameras[camNum]
+            b = cam.projection(p_)
+            b_ = [int(b[0]), int(b[1])]
+            g = exp(-(x-b[0]+b_[0])**2 - (y-b[1]+b_[1])**2)
+            locx = slice(bleed+b_[0]-3,bleed+b_[0]+4)
+            locy = slice(bleed+b_[1]-3,bleed+b_[1]+4)
+            img = particle_imgs[camNum]
+            img[locx, locy] = img[locx,locy] + g
+        
+        
+        return p_
+        
+            
+            
+    
         
         
         
