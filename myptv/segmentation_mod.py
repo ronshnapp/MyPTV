@@ -42,6 +42,7 @@ class particle_segmentation(object):
                  median = None, local_filter = None, particle_size=3,
                  BG_image = None,
                  EQ_map = None,
+                 DoG_sigma = None,
                  min_xsize=None, max_xsize=None,
                  min_ysize=None, max_ysize=None,
                  min_mass=None, max_mass=None,
@@ -76,6 +77,10 @@ class particle_segmentation(object):
         EQ_map - Either a given array, in which case this array is
                  used to equalize the image intensity, or this is None, in 
                  which case this operation is skipped.
+                 
+        DoG_sigma - Difference of Gaussian parameters. If this is None, then 
+                    the Dog is not used. If this is a list of two numbers then
+                    they represent two standard deviations for Gaussian blurs.
         
         min/max_( ) - size and area filters for the discovered blobs. If None
                       then filters are not applied.
@@ -107,6 +112,14 @@ class particle_segmentation(object):
             raise ValueError('method "%s" unknown.'%method)
         
         self.method = method
+        
+        if DoG_sigma is None:
+            self.DoG_sigma = DoG_sigma
+            
+        elif type(DoG_sigma) in [list, tuple] and len(DoG_sigma)==2:
+            self.DoG_sigma = DoG_sigma
+        
+        else: raise TypeError('DoG sigma can be either list of lenth 2 or None')
         
         
 
@@ -155,12 +168,20 @@ class particle_segmentation(object):
             imEQ = imEQ.astype(self.im.dtype)
         else:
             imEQ = imNoBG
+            
+        # apply DoG filter
+        if self.DoG_sigma is not None:
+            blur1 = gaussian_filter(imEQ, self.DoG_sigma[0])
+            blur2 = gaussian_filter(imEQ, self.DoG_sigma[1])
+            imDoG = blur1 - blur2
+        else:
+            imDoG = imEQ
         
         # apply a Gussian blur
         if self.sigma is not None:
-            blured = gaussian_filter(imEQ, self.sigma)
+            blured = gaussian_filter(imDoG, self.sigma)
         else:
-            blured = imEQ
+            blured = imDoG
             
         # apply median filter
         if self.median is not None:
@@ -455,7 +476,7 @@ class loop_segmentation(object):
                  local_filter = 15, median = None, particle_size=3,
                  remove_ststic_BG = True,
                  equalize_image = None,
-                 eq_sigma = 20.0,
+                 DoG_sigma = None,
                  min_xsize=None, max_xsize=None,
                  min_ysize=None, max_ysize=None,
                  min_mass=None, max_mass=None,
@@ -506,7 +527,7 @@ class loop_segmentation(object):
         self.loc_filter = local_filter
         self.method = method
         self.raw_format = raw_format
-        self.eq_sigma = eq_sigma
+        self.DoG_sigma = DoG_sigma
         
         
         if self.raw_format == False:
@@ -612,11 +633,11 @@ class loop_segmentation(object):
         
         
         params = [self.dir_name, self.image_files, self.sigma, self.th, 
-                  self.median, self.loc_filter, self.BG, self.EQ_map, self.mask, 
+                  self.median, self.loc_filter, self.BG, self.EQ_map, 
+                  self.mask, self.DoG_sigma,
                   self.bbox_limits, self.mass_limits, self.method, 
                   self.p_size, i0]
         
-        print('Starting loop segmentation.\n')
         try:
             import multiprocessing
             # Running with paralelization:
@@ -671,17 +692,18 @@ def iter_frame(i, im, params):
                                BG_image=params[6],
                                EQ_map=params[7],
                                mask=params[8],
-                               max_xsize=params[9][1],
-                               min_xsize=params[9][0],
-                               max_ysize=params[9][3],
-                               min_ysize=params[9][2],
-                               min_mass=params[10][0],
-                               max_mass=params[10][1],
-                               method = params[11],
-                               particle_size=params[12])
+                               DoG_sigma=params[9],
+                               max_xsize=params[10][1],
+                               min_xsize=params[10][0],
+                               max_ysize=params[10][3],
+                               min_ysize=params[10][2],
+                               min_mass=params[11][0],
+                               max_mass=params[11][1],
+                               method = params[12],
+                               particle_size=params[13])
     ps.get_blobs()
     ps.apply_blobs_size_filter()
-    res_i = [[b[0][0], b[0][1], b[1][0], b[1][1], b[2], i+params[12]] for b in ps.blobs]
+    res_i = [[b[0][0], b[0][1], b[1][0], b[1][1], b[2], i+params[14]] for b in ps.blobs]
     print('Frame: %d  ;  Blobs: %d'%(i, len(res_i)))
     return res_i
 

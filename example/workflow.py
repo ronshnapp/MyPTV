@@ -620,6 +620,7 @@ class workflow(object):
         remove_BG = self.get_param('segmentation', 'remove_background')
         eq_map = self.get_param('segmentation', 'equilization_map')
         raw_format = self.get_param('segmentation', 'raw_format')
+        DoG_sigmas = self.get_param('segmentation', 'DoG_sigmas')
         
         
         # reading preprepared mask
@@ -674,7 +675,10 @@ class workflow(object):
         
         else:
             raise TypeError('equilization map not None nor path to an eqmap')
-            
+        
+        
+        if DoG_sigmas is not None and shape=='fibers':
+                raise TypeError('DoG not implemented yet for fibers; use None')
             
             
         def calculate_BG_image(dirname, extension):
@@ -730,6 +734,7 @@ class workflow(object):
                                                 N_img=N_img,
                                                 remove_ststic_BG=BG,
                                                 equalize_image=eq_map,
+                                                DoG_sigma=DoG_sigmas,
                                                 sigma=sigma, 
                                                 median=median,
                                                 threshold=threshold, 
@@ -792,6 +797,7 @@ class workflow(object):
                                                         median=median,
                                                         BG_image=BG,
                                                         EQ_map=eq_map,
+                                                        DoG_sigma=DoG_sigmas,
                                                         threshold=threshold, 
                                                         local_filter=local_filter, 
                                                         max_xsize=max_xsize, 

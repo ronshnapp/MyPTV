@@ -39,6 +39,7 @@
     threshold: 8
     remove_background: True
     equilization_map: None
+    DoG_sigmas: [6, 2]
     median: None
     blur_sigma: 0.5
     local_filter: None
