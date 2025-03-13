@@ -1,6 +1,6 @@
-February 3, 2025
+March 13, 2025
 
-Version: 1.3.1
+Version: 1.3.2
 
 
 <img src="./user_manual/figs/logo.png" style="zoom:20%;" />

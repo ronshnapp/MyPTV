@@ -6,7 +6,7 @@
 \usepackage[english]{babel}
 \usepackage[english]{isodate}
 \usepackage[parfill]{parskip}
-\usepackage[margin=3.cm]{geometry}
+\usepackage[margin=2.cm]{geometry}
 \usepackage{graphicx}
 \graphicspath{{./figs/}}
 \usepackage{amsmath}
@@ -66,7 +66,7 @@
 
 \begin{minipage}{14cm}
 	{\small \sffamily
-	Version: 1.3.1 \\
+	Version: 1.3.2 \\
 	Last updated: \today \\
 	Github repository: \url{https://github.com/ronshnapp/MyPTV} \\
 	Get help \& interact with our community: \url{https://github.com/ronshnapp/MyPTV/discussions}\\
@@ -415,11 +415,14 @@ where \texttt{"command"} should be replaced with one of the following options, d
 	"final_calibration"
 	"analyze_calibration_error"
 	"calibration_with_particles"
-	"matching"
+	"calculate_equilization_map"
+	"calculate_BG_image"
 	"segmentation"
+	"matching"
+	"analyze_disparity"
+	"tracking"
 	"smoothing"
 	"stitching"
-	"tracking"
 	"2D_tracking"
 	"manual_matching"
 	"fiber_orientations"
@@ -767,7 +770,6 @@ However, in some PTV systems another solution is taken such that the calibration
 		
 		\texttt{shape} & Can be either 'particles' or 'fibers'. The 'particles' option is used for isotropic particles to follow traditional PTV, and the 'fibers' option is used for analyzing the orientations in 3D of anisotropic particles (elongated fibers or rods), see Sec.~\ref{sec:fibers}. \\[.3em]
 		
-		
 		\texttt{pca\_limit} & This parameter applies only when \texttt{shape} is set to 'fibers'. It specifies the maximum allowable ratio of eigenvalues from the PCA decomposition of fibers in image space. For values greater than 1, only fibers with an aspect ratio below this threshold will be segmented, and particles in the same frame will be ignored.  \\[.3em]
 		
 		\texttt{plot\_result} & if \texttt{False} will not plot the results; if \texttt{True} the results will be plotted but only if number of images is 1 \\[.3em]
@@ -778,7 +780,11 @@ However, in some PTV systems another solution is taken such that the calibration
 		
 		\texttt{threshold} & the brightness value for which a point is considered a particle after a local mean subtraction is performed \\[.5em]
 		
-		\texttt{remove\_background} & If True, then before segmentation a static background image is calculated (defined as the median of pixel values), and then the difference is taken between each image and the background; if string, then it is the path to a pre-calculated background image; this is useful in images with inhomogeneous lighting conditions. \\[.5em]
+		\texttt{remove\_background} & If string, then it is the path to a pre-calculated background image (see sec.~\ref{sec:preprocessing}). If False, background subtraction is not used.\\[.5em]
+		
+		\texttt{equilization\_map} & If string, then it is the path to a pre-calculated equalization map (see sec.~\ref{sec:preprocessing}). If None, equalization is not applied.\\[.5em]
+		
+		\texttt{DoG\_sigmas} & Either a list of two numbers [$\sigma_1$, $\sigma_2$] that represent the widths of two blurring operations, or None, in which case the filter is not applied.\\[.5em]
 		
 		\texttt{median} & the intger window size of a median noise removal filter; set to \texttt{None} in order to not apply the filter \\[.3em]
 		
@@ -786,21 +792,17 @@ However, in some PTV systems another solution is taken such that the calibration
 		
 		\texttt{local\_filter} & the scale of Gaussian filter used to normalized brightness intensity (see~\ref{sec:segment_filters}); set to \texttt{None} in order to not apply the filter \\[.3em]
 		
-		\texttt{min\_xsize} & minimum particle size (pixels) in $x$ direction \\[.3em]
-		
-		\texttt{min\_ysize} & minimum particle size (pixels) in $y$ direction \\[.3em]
+		\texttt{min\_xsize} or \texttt{min\_ysize} & minimum particle size (pixels) in $x$ or $y$ direction \\[.3em]
 		
 		\texttt{min\_mass} & minimum particle mass (mass is the sum of pixel grey values)\\[.3em]
 		
-		\texttt{max\_xsize} & maximum particle size (pixels) in $x$ direction \\[.3em]
-		
-		\texttt{max\_ysize} & maximum particle size (pixels) in $y$ direction \\[.3em]
+		\texttt{max\_xsize} or \texttt{max\_ysize} & maximum particle size (pixels) in $x$ or $y$ direction \\[.3em]
 		
 		\texttt{max\_mass} & maximum particle area (mass is the sum of pixel grey values) \\[.3em]
 		
 		\texttt{plot\_result} & if \texttt{True} the segmented particles will be plotted over the processed image (after applying blur, local mean subtraction and masking); if \texttt{False} will not plot the results \\[.3em]
 		
-		\texttt{method} & ihe name of the method used for segmenting the blobs; can be either 'labeling' or 'dilation' \\
+		\texttt{method} & The name of the segmenting method; can be either 'labeling' or 'dilation' \\
 		
 		\texttt{particle\_size} & in the 'dilation' method, this gives the diameter of blobs in the image (an integer number of pixels); this parameter is not used when method is set to 'labeling' \\
 		
@@ -831,6 +833,44 @@ The basics of the segmentation step are done via the \texttt{workflow.py} script
 
 
 
+\subsubsection{Image pre-processing}\label{sec:preprocessing}
+Image analysis is a key step in PTV and therefore, there are many algorithms used to improve the results of this step. Some of these methods require preparations that need to be made before the segmentation, and these preparations can be called pre-processing. There are two possible pre-processing steps currently available in MyPTV: 
+\begin{enumerate}
+	\item \textbf{\textit{Background images}}: In some cases where the imaging conditions are not perfect, background objects will appear in the images and obstruct the segmentation. To negate these effects we calculate a "static background image" (defined as the mean of the images) and during the segmentation this background image is subtracted from each image. This is done using the  workflow command \texttt{calculate\_BG\_image}, which is used to calculate the mean image and save it on the disk for later use during segmentation.
+	
+	The background image is defined here as the arithmetic mean of images from the image folder: 
+	\begin{equation}
+	\mathrm{BG} = \frac{1}{N_{im}}\Sigma \mathrm{Im}_i \,\, ;
+	\end{equation}
+	After that, the images are processed by taking the difference with the background
+	\begin{equation}
+	\mathrm{Im}' = |\mathrm{BG} - \mathrm{Im}|
+	\end{equation}
+	
+	\item \textbf{\textit{Intensity equalization}}: In some cases where illumination is not uniform, some particles will have different intensities in different regions of the images and thus will make segmentation more challenging. To negate this, we can create an equalization map", which attempts to equalize the brightness intensity of the particles at different locations in the images. We prepare this equalization map with the workflow command \texttt{calculate\_equilization\_map}. The map is then saved as a tif image on the disk and is used during the segmentation step to improve the segmentation results. 
+	
+	The equalization map is defined here be calculating the pixel-wise maximum intensity across all the images, and then applying a gaussian blur with a given standard deviation
+	\begin{equation}
+	\mathrm{EQmap} = \frac{\mathrm{GaussianBlur}(Max(\mathrm{Im}_i), \sigma)}{Max\left[ \mathrm{GaussianBlur}(Max(\mathrm{Im}_i), \sigma) \right]} + \epsilon
+	\end{equation}
+	After that, the images are processed by dividing each image with the equalization map
+	\begin{equation}
+	\mathrm{Im}' = \mathrm{Im} / \mathrm{EQmap} 
+	\end{equation}
+\end{enumerate}
+%
+An example for the result of these two steps is shown in Fig.~\ref{fig:image_preprocessing}. To actually apply these methods during segmentation, the background image and the equalization map are given as inputs during the segmentation process as detailed below. 
+
+
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=\textwidth]{image_preprocessing.pdf}
+	\caption{Examples of background image, equalization map, original experimental image and the same image after background subtraction and intensity equalization.}
+	\label{fig:image_preprocessing}  
+\end{figure}
+
+
 
 
 \subsubsection{Two methods of segmentation} In the segmentation step, the program extracts the location of particles in the image. Segmentation in MyPTV is performed in one of two methods: \textbf{\textit{labeling}}, or \textbf{\textit{dilation}}, and includes several optional image processing steps. 
@@ -856,12 +896,15 @@ While the dilation method can take more computational time, it can sometimes be 
 \subsubsection{Segmentation filters}\label{sec:segment_filters}
 
 To improve the results of particle segmentation in non-ideal images, MyPTV can be set to apply image processing before the blob extraction. The filters that can be used are: 
+%
 \begin{enumerate}
-	\item \textbf{Gaussian blur} - blurring the image with a given scale, used to remove salt and pepper kind of noise; 
-	\item \textbf{Median filter} - subtraction of the local median in over a pixels local neighborhood 
+	\item \textbf{Gaussian blur} - blurring the image with a given scale, used to remove salt and pepper kind of noise.
+	\item \textbf{Median filter} - subtraction of the local median in over a pixels local neighborhood. 
 	\item \textbf{Local filter} - used to filter out low intensity regions relative to their neighborhood; each pixel brightness is normalized with the local mean and variance at a given scale (blur standard deviation), and the image is then conditioned to pass only local high brightness pixels.
-	\item \textbf{Mask} - masking out of regions not needed for the analysis;  
+	\item \textbf{Mask} - masking out of regions not needed for the analysis.
+	\item \textbf{DoG filter} - "Difference of Gaussian", the image is blurred with a gaussian filter once with one standard deviation and another time with another standard deviation and the two blurred images are then subtracted from one another.
 \end{enumerate}
+%
 These filters are often necessary to properly segment the particles in an image depending on the experimental conditions, such as uneven illumination or noisy images. Examples of the results of using several combinations of the filters on a calibration image is shown in Fig.~\ref{fig:image_filters}. 
 
 
