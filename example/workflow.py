@@ -1148,8 +1148,6 @@ class workflow(object):
         
         if method not in ['multiframe', 'fourframe']:
             raise ValueError("method can only be 'multiframe' or 'four_frame'.")
-
-        
         
         
         if method=='fourframe':
@@ -1251,7 +1249,11 @@ class workflow(object):
             
             
             # doing the tracking
-            if type(Ns)==list: frame_skips = max([int(min(Ns)/3), 1])
+            if type(Ns)==list: 
+                frame_skips = max([int(min(Ns)/3), 1])
+                if any([ns%2==0 for ns in Ns]):
+                    raise ValueError('Ns needs to have only odd integers')
+                
             else: frame_skips = max([int(Ns/3), 1])
             tmf.track_frames(f0=ts, fe=te, frame_skips=frame_skips, Ns=Ns)
             
