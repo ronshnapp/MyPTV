@@ -307,5 +307,13 @@ class camera_wrapper(object):
         elif self.modelName == 'extendedZolof':
             return self.camera.O
         
+        
+    @property
+    def name(self):
+        '''
+        Returns the camera name
+        '''
+        return self.camera.name
+        
 
 

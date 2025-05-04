@@ -8,7 +8,7 @@ Created on Fri May 31 15:01:48 2024
 """
 
 from pandas import read_csv
-from numpy import ptp, array, arange, amin, amax, percentile
+from numpy import ptp, array, arange, amin, amax, percentile, gradient
 import matplotlib.pyplot as plt
 
 from moviepy.video.io.bindings import mplfig_to_npimage
@@ -62,7 +62,10 @@ def plot_trajectories(fname, min_length, write_trajID=False, t0=0, te=-1):
     
     trajIDs = list(trajectories.keys())
     
-    count = 0
+    
+    # estimate maximum velocity
+    v_lst = [[],[],[]]
+    used_ids = []
     for id_ in trajIDs:
         if len(trajectories[id_][:,1])<min_length: continue
         time = trajectories[id_][:,-1]
@@ -85,9 +88,45 @@ def plot_trajectories(fname, min_length, write_trajID=False, t0=0, te=-1):
         xs = trajectories[id_][i0:ie,1]
         ys = trajectories[id_][i0:ie,2]
         zs = trajectories[id_][i0:ie,3]
-        c = (1-(xs[0]-xmin)/(xmax-xmin)*0.97, 
-             (ys[0]-ymin)/(ymax-ymin)*0.97, 
-             (zs[0]-zmin)/(zmax-zmin)*0.97)
+        if len(xs)<2: continue
+        v_lst[0].append(abs(sum(gradient(xs))/len(xs)))
+        v_lst[1].append(abs(sum(gradient(ys))/len(ys)))
+        v_lst[2].append(abs(sum(gradient(zs))/len(zs)))
+        used_ids.append(id_)
+    
+    V = amax(v_lst)
+    
+    count = 0
+    for id_ in used_ids:
+        time = trajectories[id_][:,-1]
+        inds = arange(len(trajectories[id_]))
+        
+        if time[0]>=te or time[-1]<=t0: 
+            continue
+    
+        if time[0]>=t0: 
+            i0 = 0
+        else:
+            i0 = inds[time==t0][0]
+        
+        if time[-1]<=te: 
+            ie = -1
+        else:
+            ie = inds[time==te][0]    
+            
+        
+        xs = trajectories[id_][i0:ie,1]
+        ys = trajectories[id_][i0:ie,2]
+        zs = trajectories[id_][i0:ie,3]
+        vx = sum(gradient(xs))/len(xs) / V
+        vy = sum(gradient(ys))/len(ys) / V
+        vz = sum(gradient(zs))/len(zs) / V
+        #c = (1-(xs[0]-xmin)/(xmax-xmin)*0.97, 
+        #     (ys[0]-ymin)/(ymax-ymin)*0.97, 
+        #     (zs[0]-zmin)/(zmax-zmin)*0.97)
+        c = [0.5-vx, 0.5+vy, 0.5+vz]
+        c = [1*(ci>1) + ci*(ci<=1) for ci in c]
+        c = [0*(ci<0) + ci*(ci>=0) for ci in c]
         l = ax.plot(xs, zs, ys, 'o-', ms=1, lw=0.5, color=c)
         
         xm.append(amin(xs)) ; xm.append(amax(xs))
