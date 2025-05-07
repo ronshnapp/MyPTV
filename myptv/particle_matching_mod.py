@@ -726,27 +726,8 @@ class match_blob_files_Ray_Traversal(object):
                 
                 # update the particles dictionary
                 pd = mut.return_updated_particle_dict()
-                
-                
-# =============================================================================
-#            The initiation of matching with time has a bug. For now
-#            We comment it out, and will fix this in the future.
-#
-#             # for the first iteration, initiate search using the neighbouring
-#             # blobs paradigm
-#             if e==0 and len(frames)>1:
-#                 pd1 = self.get_particles_dic(frames[e+1])
-#                 itm = initiate_time_matching_Ray_Traversal(self.imsys, pd, pd1, 
-#                                              self.max_blob_dist, self.RIO, 
-#                                              self.voxel_size, 
-#                                              max_err = self.max_err)
-#                 itm.choose_blobs_with_neighbours()
-#                 itm.match_blobs_with_neighbours()
-#                 for p in itm.matched_particles:
-#                     self.particles.append(p + [tm])
-#                 pd = itm.return_updated_particle_dict()
-# =============================================================================
-                                
+
+
             # (2) match particles using the voxel method
             M = matching_Ray_Traversal(self.imsys, pd, self.RIO, self.voxel_size,
                          max_err = self.max_err)
