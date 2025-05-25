@@ -227,9 +227,9 @@ class animate_trajectories(object):
         self.ax.set_zlabel('y')
 
         
-        self.ax.w_xaxis.set_pane_color((0.6,0.6,1,0.03))
-        self.ax.w_yaxis.set_pane_color((0.6,0.6,1,0.06))
-        self.ax.w_zaxis.set_pane_color((0.7,0.6,1,0.12))
+        #self.ax.w_xaxis.set_pane_color((0.6,0.6,1,0.03))
+        #self.ax.w_yaxis.set_pane_color((0.6,0.6,1,0.06))
+        #self.ax.w_zaxis.set_pane_color((0.7,0.6,1,0.12))
         
         self.ax.grid(False)
         
