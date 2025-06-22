@@ -22,7 +22,7 @@
     raw_format: False
     BG_image: BG_cam3.tif
     N_img: 200
-    sigma: 20
+    sigma: 100
     save_name: EQmap_cam3.tif
 
 - segmentation:

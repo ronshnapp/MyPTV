@@ -164,7 +164,10 @@ class particle_segmentation(object):
             
         # Equalize intensity
         if self.EQ_map is not None:
-            imEQ = imNoBG/self.EQ_map / npmax(imNoBG/self.EQ_map) * npmax(imNoBG)
+            # imEQ = imNoBG/self.EQ_map / npmax(imNoBG/self.EQ_map) * npmax(imNoBG)
+            mx = npmax(imNoBG)
+            imEQ = imNoBG/self.EQ_map
+            imEQ[imEQ>mx]
             imEQ = imEQ.astype(self.im.dtype)
         else:
             imEQ = imNoBG
