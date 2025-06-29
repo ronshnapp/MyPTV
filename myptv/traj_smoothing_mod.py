@@ -12,7 +12,7 @@ The method uses polynomial fitting after Luethi et al 2005.
 
 from myptv.utils import fit_polynomial
 from numpy import dot, array, savetxt
-
+from tqdm import tqdm
 
 
 
@@ -77,11 +77,12 @@ class smooth_trajectories(object):
                           0.0, 0.0, 0.0, 0.0, 0.0, 0.0, tr[-1]]
                 zero_length_trajs.append(new_tr)
             
-            # from the samples, make a trajectory dictionary
-            if tr[0] in traj_dic.keys():
-                traj_dic[tr[0]].append(tr)
+            # from the connected samples, make a trajectory dictionary
             else:
-                traj_dic[tr[0]] = [tr]
+                if tr[0] in traj_dic.keys():
+                    traj_dic[tr[0]].append(tr)
+                else:
+                    traj_dic[tr[0]] = [tr]
         
         
         short_trajs = []
@@ -89,20 +90,9 @@ class smooth_trajectories(object):
         N = len(traj_dic.keys())
         count = 0
         total = 0
-        for tr_num in traj_dic.keys():
-            print('', end='\r')
-            print(' progress: %.1f%%'%(total/N*100), end='\r') 
+        for tr_num in tqdm(traj_dic.keys()):
+            
             total += 1
-            
-            # for too short trajectories mark zero velocity and acceleration:
-            
-                # if len(traj_dic[tr_num]) < self.window:
-            #     for i in range(len(traj_dic[tr_num])):
-            #         tr = traj_dic[tr_num][i]
-            #         new_tr = [tr[0], tr[1], tr[2], tr[3], 
-            #                   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, tr[-1]]
-            #         short_trajs.append(new_tr)
-            #     continue
             
             tr_len = len(traj_dic[tr_num])
             
