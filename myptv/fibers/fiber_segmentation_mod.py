@@ -18,14 +18,14 @@ from numpy import abs as npabs
 from numpy import median as npmedian
 
 from scipy.signal import convolve2d
-from scipy.ndimage import gaussian_filter, median_filter
-from scipy.ndimage.measurements import label, find_objects
-from scipy.spatial import KDTree
+from scipy.ndimage import gaussian_filter, median_filter, label
+from scipy.ndimage.measurements import find_objects
+# from scipy.spatial import KDTree
 
 #agambino
 import math
-import pandas as pd
-from skimage.measure import regionprops, regionprops_table, centroid
+# import pandas as pd
+from skimage.measure import regionprops #, regionprops_table, centroid
 from skimage.measure import label as labelski
 
 class fiber_segmentation(object):
@@ -271,7 +271,8 @@ class fiber_segmentation(object):
 
         self.bin_im = self.get_binary_image() 
         blobs = []
-        label_img = labelski(self.bin_im)
+        # label_img = labelski(self.bin_im)
+        label_img = label(self.bin_im)[0]
         regions = regionprops(label_img)
         for props in regions:
             x, y = props.centroid
@@ -279,8 +280,12 @@ class fiber_segmentation(object):
             box_size = [maxr - minr, maxc - minc]
             orientation = props.orientation
             center = [round(x, ndigits=2), round(y, ndigits=2)] 
-            a = props.axis_major_length
-            b = props.axis_minor_length
+            if hasattr(props, 'axis_major_length'):
+                a = props.axis_major_length
+                b = props.axis_minor_length
+            else:
+                a = props.major_axis_length
+                b = props.minor_axis_length
             pca_lim = a / b if b > 0 else -1
             mass = a * b
             if pca_lim >= self.pca_limit:

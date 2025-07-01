@@ -9,24 +9,24 @@ contains a class for segmentation of circular particles
 """
 
 from myptv.tracking_2D_mod import track_2D_multiframe
-from myptv.TsaiModel.camera import camera_Tsai
+# from myptv.TsaiModel.camera import camera_Tsai
 from myptv.tracking_mod import fill_in_trajectory
 
 from pandas import read_csv
 
-from numpy import ones, savetxt, meshgrid, float32, array, divide, zeros_like
+from numpy import savetxt, meshgrid, float32, array, divide, zeros_like #, ones
 from numpy import sum as npsum
 from numpy import abs as npabs
 from numpy import max as npmax
-from numpy import median as npmedian
+# from numpy import median as npmedian
 from numpy import append as npappend
 
-from skimage.io import imread
+# from skimage.io import imread
 from skimage import io
 
-from scipy.signal import convolve2d
-from scipy.ndimage import gaussian_filter, median_filter
-from scipy.ndimage.measurements import label, find_objects
+# from scipy.signal import convolve2d
+from scipy.ndimage import gaussian_filter, median_filter, label
+from scipy.ndimage.measurements import find_objects
 from scipy.spatial import KDTree
 
 import tqdm
