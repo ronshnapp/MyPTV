@@ -11,7 +11,7 @@ easily extract the 3D location of certain features
 in images.  
 """
 
-from myptv.imaging_mod import camera, img_system
+from myptv.imaging_mod import camera_wrapper, img_system
 from myptv.segmentation_mod import particle_segmentation
 from myptv.calibrate_mod import calibrate
 from myptv.utils import match_calibration_blobs_and_points
@@ -62,8 +62,8 @@ class man_match_gui(object):
         self.cam_list = []
         
         for e,cn in enumerate(self.cam_names):
-            cam = camera(cn, self.cam_res[e])
-            cam.load(cameras_folder)
+            cam = camera_wrapper(cn, './')
+            cam.load()
             self.cam_list.append(cam)
             
         self.imsys = img_system(self.cam_list)
