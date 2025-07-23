@@ -480,10 +480,15 @@ class loop_fiber_segmentation(object):
         else:
             N = self.N_img
         
-        if self.BG_remove==True:
+        if self.BG_remove is True:
             self.calculate_BG()
-        else:
+        
+        elif self.BG_remove is None: 
             self.BG = None
+        
+        else:
+            self.BG = self.BG_remove
+            
         
         i0 = (self.image_start is not None) * self.image_start
         

@@ -762,13 +762,23 @@ class workflow(object):
             
             # segmenting the image if there are more than 1 frames
             if N_img is None or N_img>1:
+                
+                if type(remove_BG)==str:
+                    print('\n','using given background image')
+                    BG = imread(remove_BG)*1.0
+                elif remove_BG==True:
+                    print('\n','calculating background image')
+                    BG = calculate_BG_image(dirname, ext)
+                else:
+                    BG=False
+                    
                 loopSegment = loop_fiber_segmentation(dirname, 
                                                 particle_size=p_size,
                                                 extension=ext,
                                                 image_start=image_start,
                                                 N_img=N_img, 
                                                 sigma=sigma,
-                                                remove_ststic_BG=remove_BG,
+                                                remove_ststic_BG=BG,
                                                 median=median,
                                                 threshold=threshold, 
                                                 local_filter=local_filter, 
