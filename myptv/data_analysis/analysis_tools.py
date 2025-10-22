@@ -65,6 +65,102 @@ def is_inside_a_box(tr, xmin, xmax, ymin, ymax, zmin, zmax):
 
 
 
+# ============================================================================
+#    Lagrangian Velocity Statistics:
+
+
+def get_velocity_mean_std(traj_list, kind='x'):
+    '''
+    For a list of trajectories, this returns the mean and standard deviation 
+    of a velocity component. The "kind" parameter defines which component to 
+    use: 'x', 'y', 'z' or 'KE' standing for x, y, or z velocity component and 
+    KE is the kinetic energy.
+    '''
+    
+    if kind=='x':
+        get_component = lambda tr: tr[:,4]
+    
+    elif kind=='y':
+        get_component = lambda tr: tr[:,5]
+        
+    elif kind=='z':
+        get_component = lambda tr: tr[:,6]
+        
+    elif kind=='KE':
+        get_component = lambda tr: 0.5*(np.sum(tr[:,4:7]**2, axis=1))
+    
+    A = []
+    
+    for tr in traj_list:
+        A += list(get_component(tr))
+        
+    return np.mean(A), np.std(A)
+
+
+
+def get_trajectory_velocity_increments(traj, kind='x'):
+    '''
+    Given a trajectory, this function returns lists of the temporal increments
+    of its velocity. The "kind" parameter defines which component to use:
+    'x', 'y', 'z' or 'KE' standing for x, y, or z velocity component and KE is 
+    the kinetic energy.
+    
+    We return a nested list where the second sublist
+    contains samples of KE(t+1) - KE(t), and the last sublist contains
+    KE(t+T) - KE(t) where KE is the kinetic energy and T is the tracking time
+    of the trajectory.
+    '''
+    if kind=='x':
+        A = traj[:,4]
+    
+    elif kind=='y':
+        A = traj[:,5]
+        
+    elif kind=='z':
+        A = traj[:,6]
+        
+    elif kind=='KE':
+        A = 0.5*(np.sum(traj[:,4:7]**2, axis=1))
+        
+    else:
+        raise ValueError('undefined kind "%s"'%kind)
+        
+    increments = [[0]]
+    for i in range(1,len(A)):
+        increments.append(list(A[i:] - A[:-i]))
+    
+    return increments
+
+
+
+def get_velocity_increments(traj_list, kind='x'):
+    '''
+    For a list of trajectories, this returns a nested list of all kinetic energy
+    increments samples.
+    '''
+    increments = []
+    
+    for tr in traj_list:
+        inc = get_trajectory_velocity_increments(tr, kind=kind)
+        for i in range(len(inc)):
+            if len(increments)==i:
+                increments.append(inc[i])
+            else:
+                increments[i] += inc[i]
+    return increments
+
+
+
+
+
+
+
+# ============================================================================
+#    Relative data (different trajectories)
+
+
+
+
 
 def get_relative_samples(data):
     '''
