@@ -293,6 +293,67 @@ def get_mean_velocity_profiles(traj_list, start, stop, nbins, direction, kind):
 
 
 
+def get_std_velocity_profiles(traj_list, start, stop, nbins, direction, kind):
+    '''
+    Returns a time averaged velocity profile of a given component along a given 
+    direction.
+    
+    inputs:
+    
+    traj_list - a list of trajectories
+    start - the coordiante value at which the profile begins
+    stop - the coordinate at which the profile ends
+    nbins - the number of points along the profile
+    direction - string ('x', 'y' or 'z') for the axis along which the 
+                profile is calculated
+    kind - string giving the velocity component ('x', 'y', 'z', or 'KE' for 
+           kinetic energy)
+    '''
+    
+    if kind=='x':
+        get_component = lambda tr: tr[:,4]
+    
+    elif kind=='y':
+        get_component = lambda tr: tr[:,5]
+        
+    elif kind=='z':
+        get_component = lambda tr: tr[:,6]
+        
+    elif kind=='KE':
+        get_component = lambda tr: 0.5*(np.sum(tr[:,4:7]**2, axis=1))
+    
+    
+    if direction=='x':
+        get_cordinate = lambda tr: tr[:,1]
+    
+    elif direction=='y':
+        get_cordinate = lambda tr: tr[:,2]
+        
+    elif direction=='z':
+        get_cordinate = lambda tr: tr[:,3]
+    
+    
+    cord_lst = []
+    v_lst = []
+    
+    for tr in traj_list:
+        cord_lst += list(get_cordinate(tr))
+        v_lst += list(get_component(tr))
+    
+    bins = ((np.array(cord_lst) - start)/(stop-start)*nbins).astype('int')
+    
+    vals = pd.DataFrame({'bins': bins, 'v': v_lst})
+    std_V = [np.std(g['v']) for k,g in vals.groupby('bins') if k<nbins and k>=0]
+    db = (stop-start)/nbins
+    axis = [start+db*(i+0.5) for i in range(nbins)]
+    
+    return np.array([axis, std_V])
+
+
+
+
+
+
 def list_corelation(arr_list):
     '''
     returns the array of correlation for a list of arrays as a function of

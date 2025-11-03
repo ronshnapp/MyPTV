@@ -37,13 +37,14 @@ class calibrate_extendedZolof(camera_extendedZolof):
         
         x = A0 + A1*X + A2*Y + A3*Z +
             A4*X^2 + A5*Y^2 + A6*Z^2 + A7*XY + A8*YZ + A9*ZX + A108XYZ
-            A11*XY^2 + A12*XZ^2 + A13*YX^2 + A14*YZ^2 + A15*ZX^2 + A16*ZY^2  
+            A11*XY^2 + A12*XZ^2 + A13*YX^2 + A14*YZ^2 + A15*ZX^2 + A16*ZY^2 +
+            A17*X^3 + A18*Y^3
             
         if quadratic==True, then only the quadratic terms are used. This is 
         used in the initial calibration.
         '''
         self.cam = camera
-        self.A = [[0.0 for i in range(17)] for j in [0,1]]
+        self.A = [[0.0 for i in range(19)] for j in [0,1]]
         self.B = [[0.0 for i in range(10)] for j in [0, 1, 2]]
         self.x_list = x_list
         self.X_list = X_list
@@ -65,8 +66,8 @@ class calibrate_extendedZolof(camera_extendedZolof):
             XColumns = []
             for Xi in self.X_list:
                 Xcol_i = self.cam.get_XCol(Xi)
-                # (Here, -7 is for quadratic, and -13 is linear)
-                for i in range(-7,0): Xcol_i[i] = 0  
+                # (Here, -9 is for quadratic, and -15 is linear)
+                for i in range(-9,0): Xcol_i[i] = 0  
                 XColumns.append(Xcol_i)
         
         res = lstsq(XColumns, self.x_list, rcond=None)
