@@ -9,7 +9,7 @@ from setuptools import find_packages, setup
 setup(
     name='myptv',
     packages=find_packages(include=['myptv', 'myptv.fibers', 'myptv.TsaiModel', 'myptv.extendedZolof', 'myptv.makePlots', 'myptv.sheets', 'myptv.data_analysis']),
-    version='1.3.5',
+    version='1.3.6',
     description='A 3D Particle Tracking Velocimetry library',
     install_requires=['numpy', 'scipy', 'scikit-image==0.17.2','pandas','matplotlib','pyyaml', 'tk', 'Pillow>=9.5.0', 'moviepy==1.0.1'],
     author='Ron Shnapp',
