@@ -32,6 +32,7 @@
     single_image_name: 01.tif
     image_extension: '.tif'
     raw_format: False
+    multiprocessing: True
     shape: particles
     mask: 1.0
     ROI: 227, 1050, 120, 920

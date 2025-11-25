@@ -621,6 +621,7 @@ class workflow(object):
         eq_map = self.get_param('segmentation', 'equilization_map')
         raw_format = self.get_param('segmentation', 'raw_format')
         DoG_sigmas = self.get_param('segmentation', 'DoG_sigmas')
+        multiprocessing = self.get_param('segmentation', 'multiprocessing')
         
         
         # reading preprepared mask
@@ -747,7 +748,8 @@ class workflow(object):
                                                 min_mass=min_mass,
                                                 mask=mask,
                                                 method=method,
-                                                raw_format=raw_format)
+                                                raw_format=raw_format,
+                                                multiprocessing=multiprocessing)
             
                 loopSegment.segment_folder_images()
                 
