@@ -100,7 +100,7 @@ class matching_with_marching_particles_algorithm(object):
                         etc...
         '''
         
-        print('\ninitializin matcher:\n')
+        print('\ninitializing matcher:\n')
         
         self.imsys = imsys
         self.blob_files = blob_files
@@ -506,12 +506,13 @@ class matching_with_marching_particles_algorithm(object):
         
         
         
-    def match_frame(self, frame, backwards=False):
+    def match_frame(self, frame, backwards=False, print_stat=True):
         '''
         Will stereo match particles in the given frame number.
         '''
-        print('\n')
-        print('frame: %d'%frame)
+        if print_stat:
+            print('\n')
+            print('frame: %d'%frame)
         
         if frame not in self.matchedBlobs.keys():
             self.matchedBlobs[frame] = set([])
@@ -535,8 +536,10 @@ class matching_with_marching_particles_algorithm(object):
         newEpipolarCands = len(self.matches) - m0 - newPrevFrame
         
         newTot = newEpipolarCands + newPrevFrame
-        prnt = (newTot, newPrevFrame, newEpipolarCands)
-        print('Found %d matches: %d from prev. frame + %d new'%prnt)
+        
+        if print_stat:
+            prnt = (newTot, newPrevFrame, newEpipolarCands)
+            print('Found %d matches: %d from prev. frame + %d new'%prnt)
         
         
         

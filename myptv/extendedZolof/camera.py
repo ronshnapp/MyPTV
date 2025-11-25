@@ -27,7 +27,8 @@ transformation from X to x is:
 In MyPTV, P(X) is the following third order polynomial with 17 terms:
     
     P(X) = 1 + X1 + X2 + X3 + X1^2 + X2^2 + X3^2 + X1*X2 + X2*X3 + X3*X1 + 
-           X1*X2^2 + X1*X3^2 + X2*X1^2 + X2*X3^2 + X3*X1^2 + X3*X2^2 + X1*X2*X3
+           X1*X2^2 + X1*X3^2 + X2*X1^2 + X2*X3^2 + X3*X1^2 + X3*X2^2 + 
+           X1*X2*X3 + X1^3 + X2^3
     
 and [A] is a vector of 17 coefficients:
     
@@ -132,7 +133,8 @@ class camera_extendedZolof(object):
         
         self.name = name
         self.O = zeros(3) + 1.     # camera location
-        self.A = array([[0.0 for i in range(17)] for j in [0,1]]).T
+        #self.A = array([[0.0 for i in range(17)] for j in [0,1]]).T
+        self.A = array([[0.0 for i in range(19)] for j in [0,1]]).T
         self.B = array([[0.0 for i in range(10)] for j in [0, 1, 2]]).T
         
         if cal_points_fname is not None:
@@ -156,9 +158,16 @@ class camera_extendedZolof(object):
         polynomial terms.
         '''
         X1,X2,X3 = X[0],X[1],X[2]
-        XColumn = [1.0, X1, X2, X3,
-                   X1**2, X2**2, X3**2, X1*X2, X2*X3, X3*X1, X1*X2*X3,
-                   X1*X2**2, X1*X3**2, X2*X1**2, X2*X3**2, X3*X1**2, X3*X2**2]
+        mx = max(array(self.A).shape)
+        if mx==17: # compatibility with v1.3.5 and lower
+            XColumn = [1.0, X1, X2, X3,
+                       X1**2, X2**2, X3**2, X1*X2, X2*X3, X3*X1, X1*X2*X3,
+                       X1*X2**2, X1*X3**2, X2*X1**2, X2*X3**2, X3*X1**2, X3*X2**2]
+        elif mx==19: # for v1.3.6 and above
+            XColumn = [1.0, X1, X2, X3,
+                       X1**2, X2**2, X3**2, X1*X2, X2*X3, X3*X1, X1*X2*X3,
+                       X1*X2**2, X1*X3**2, X2*X1**2, X2*X3**2, X3*X1**2, X3*X2**2,
+                       X1**3, X2**3]
         return XColumn
     
 

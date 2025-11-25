@@ -140,7 +140,6 @@ class particle_segmentation(object):
         
         blur = gaussian_filter(num*num, S)
         den = blur**0.5        
-        # normed = num / den
         # to ensure no accidental zero division 
         normed = divide(num, den, out = zeros_like(num), where = (den != 0.0))
 
