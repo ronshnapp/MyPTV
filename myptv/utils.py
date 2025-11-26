@@ -312,9 +312,64 @@ class match_calibration_blobs_and_points(object):
     
 
 
+import pandas as pd
+import numpy as np
 
-
-
+class get_residual_blobs(object):
+    '''
+    A class to retriev blobs that have not been used up in the matching step.
+    '''
+    
+    def __init__(self, blob_filess, particles_file):
+        
+        self.particles = dict([(k, g.values.tolist()) for k,g in 
+                               pd.read_csv(particles_file, 
+                                           sep='\t', 
+                                           header=None).groupby(7)])
+        self.blobfiles = blob_filess
+        
+    
+    def get_residual_blobs(self, frame_lst=None):
+        
+        self.residual_blobs = []
+        
+        for i in range(len(self.blobfiles)):
+            blob_column = i+3
+            blobs_i = dict([(k, g.values.tolist()) for k,g in 
+                               pd.read_csv(self.blobfiles[i], 
+                                           sep='\t', header=None).groupby(5)])
+            
+            unused_blobs_i = []
+            
+            if frame_lst is None:
+                lst = blobs_i.keys()
+            
+            else:
+                lst = frame_lst
+            
+            for k in lst:
+                
+                if k not in list(self.particles.keys()):
+                    unused_blobs_i += blobs_i[k]
+                
+                else:
+                    used_blob_inds = [blb[blob_column] for blb in self.particles[k]]
+                    all_ind = list(range(len(blobs_i[k])))
+                    unused_inds = list(set(all_ind).difference(set(used_blob_inds)))
+                    unused_blobs_i += [blobs_i[k][j] for j in unused_inds]
+                
+            self.residual_blobs.append(unused_blobs_i)
+    
+    
+    
+    def save_residual_blobs(self):
+        
+        fmt = ['%.3f', '%.3f', '%d', '%d', '%d', '%d']
+        
+        for i in range(len(self.residual_blobs)):
+            fname = 'residual_blobs_%d'%i
+            np.savetxt(fname, self.residual_blobs[i],delimiter='\t', fmt=fmt)
+         
 
 
 
