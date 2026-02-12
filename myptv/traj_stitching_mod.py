@@ -334,9 +334,10 @@ class traj_stitching(object):
                 for smp in traj:
                     self.new_traj_list.append(smp)
         
-        single_samples = self.get_traj(-1)
-        for smp in single_samples:
-            self.new_traj_list.append(smp)
+        if -1 in self.index_id_hash.keys():
+            single_samples = self.get_traj(-1)
+            for smp in single_samples:
+                self.new_traj_list.append(smp)
             
         self.new_traj_list = array(self.new_traj_list)
         
