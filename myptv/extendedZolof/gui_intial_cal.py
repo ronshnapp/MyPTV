@@ -839,19 +839,65 @@ class initial_cal_gui(object):
             self.plotSegmented()
         
         
-    def location_handler(self, event):
-        '''handling the location of the mouse pointer'''
-        #x,y = int(event.x/z), int(event.y/z)
+# =============================================================================
+#     def location_handler(self, event):
+#         '''handling the location of the mouse pointer'''
+#         #x,y = int(event.x/z), int(event.y/z)
+#         
+#         x = int(self.canvas.canvasx(event.x)/self.z) + int(self.hbar.get()[1])
+#         y = int(self.canvas.canvasy(event.y)/self.z) + int(self.vbar.get()[1])
+#         
+#         self.Xloc.configure(text = x) 
+#         self.Yloc.configure(text = y)
+#         self.xy_marked = (x, y)
+#         #tracking_dic[i%len(imagelist)]=(x,y)
+#         self.mark_points()
+#         print( x,y )
+# =============================================================================
         
+    
+    def location_handler(self, event):
+        '''Handles mouse clicks with automatic snapping to the nearest segmented blob centroid.'''
+        
+        # Translate click coordinates to canvas coordinates, accounting for zoom (self.z) and scrolling
         x = int(self.canvas.canvasx(event.x)/self.z) + int(self.hbar.get()[1])
         y = int(self.canvas.canvasy(event.y)/self.z) + int(self.vbar.get()[1])
         
+        # Snapping logic: find the nearest segmented blob within a threshold
+        if len(self.segmented) > 0:
+            from numpy.linalg import norm
+            from numpy import array
+            
+            p_click = array([x, y])     # Current click point
+            d_min = 30.0                # Snapping radius (threshold) in pixels
+            snapped_p = None            # Placeholder for nearest blob coordinates
+            
+            # Iterate through detected blobs to find the closest one
+            for b in self.segmented:
+                p_blob = array([b[0], b[1]])
+                d = norm(p_click - p_blob)
+                if d < d_min:
+                    d_min = d
+                    snapped_p = p_blob
+            
+            # If a blob is found within the threshold, snap the coordinates to its centroid
+            if snapped_p is not None:
+                x, y = snapped_p
+        
+        # Update the UI labels with the (potentially snapped) coordinates
         self.Xloc.configure(text = x) 
         self.Yloc.configure(text = y)
         self.xy_marked = (x, y)
-        #tracking_dic[i%len(imagelist)]=(x,y)
+        
+        # Optional: Update the pixel value display for the clicked location
+        #try:
+        #    val = self.image.getpixel((int(x), int(y)))
+        #    self.Valloc.configure(text = "%.1f" % val)
+        #except Exception:
+        #    self.Valloc.configure(text = "-")
+        
+        # Redraw the selection markers on the canvas
         self.mark_points()
-        print( x,y )
         
     
     def motion(self, event):
@@ -903,6 +949,12 @@ class initial_cal_gui(object):
     def Quit(self):
         '''quit the app'''
         self.root.destroy()
+
+
+
+
+
+
 
 
 
