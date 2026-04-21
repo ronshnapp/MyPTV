@@ -1,0 +1,26 @@
+cycler
+fonttools
+imageio
+ipykernel
+kiwisolver
+matplotlib
+networkx
+numpy
+opencv-python
+packaging
+pandas
+Pillow >=9.5.0
+pyparsing
+python-dateutil
+pytest
+pytz
+PyWavelets
+scikit-image==0.17.2
+scipy
+six
+tk
+tifffile
+pyyaml
+imagecodecs
+rawpy
+moviepy

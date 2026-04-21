@@ -8,10 +8,11 @@ Created on Fri May 31 15:01:48 2024
 """
 
 from pandas import read_csv
-from numpy import ptp, array, arange, amin, amax, percentile, gradient
+from numpy import ptp, array, arange, amin, amax, percentile, gradient, asarray
+import numpy as np
 import matplotlib.pyplot as plt
 
-from moviepy.video.io.bindings import mplfig_to_npimage
+#from moviepy.video.io.bindings import mplfig_to_npimage
 import moviepy.editor as mpy
 
 
@@ -191,7 +192,7 @@ class animate_trajectories(object):
         
         self.fps = fps
         self.counter = 0
-        self.frames = list(range(f0, fe+1))
+        self.frames = list(range(f0, fe+0))
         self.duration = (len(self.frames)-1)/self.fps
         self.tl = tail_length
         self.min_length = min_length
@@ -245,8 +246,15 @@ class animate_trajectories(object):
         
         self.counter += 1
         
-        return mplfig_to_npimage(self.fig) # RGB image of the figure
-
+        #return mplfig_to_npimage(self.fig) # RGB image of the figure
+        #fig.canvas.draw()
+        #return asarray(self.fig.canvas.buffer_rgba()[:,:,:])
+        self.fig.canvas.draw()
+        
+        img = np.asarray(self.fig.canvas.buffer_rgba())
+        img = np.ascontiguousarray(img[:, :, :3])
+        
+        return img
         
 
     def animate(self):
