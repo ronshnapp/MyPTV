@@ -1,63 +1,63 @@
-\BOOKMARK [1][-]{section.1}{Introduction}{}% 1
-\BOOKMARK [2][-]{subsection.1.1}{3D-PTV principles}{section.1}% 2
-\BOOKMARK [2][-]{subsection.1.2}{MyPTV usage and structure}{section.1}% 3
-\BOOKMARK [1][-]{section.2}{MyPTVs 3D models}{}% 4
-\BOOKMARK [2][-]{subsection.2.1}{The Tsai model with non-linear polynomial correction}{section.2}% 5
-\BOOKMARK [2][-]{subsection.2.2}{The extended Zolof model}{section.2}% 6
-\BOOKMARK [2][-]{subsection.2.3}{Advantage and disadvantage of each model}{section.2}% 7
-\BOOKMARK [1][-]{section.3}{The Workflow: guidelines for a 3D-PTV experiment}{}% 8
-\BOOKMARK [2][-]{subsection.3.1}{Preparation of an experiment folder}{section.3}% 9
-\BOOKMARK [3][-]{subsubsection.3.1.1}{The workflow.py script}{subsection.3.1}% 10
-\BOOKMARK [3][-]{subsubsection.3.1.2}{The params\137file.yml file}{subsection.3.1}% 11
-\BOOKMARK [2][-]{subsection.3.2}{Calibration guide}{section.3}% 12
-\BOOKMARK [3][-]{subsubsection.3.2.1}{Preparing a target\137file}{subsection.3.2}% 13
-\BOOKMARK [3][-]{subsubsection.3.2.2}{Preparing the parameters in the params\137file}{subsection.3.2}% 14
-\BOOKMARK [3][-]{subsubsection.3.2.3}{Initial calibration}{subsection.3.2}% 15
-\BOOKMARK [3][-]{subsubsection.3.2.4}{Tsai model: Understanding camera external parameters}{subsection.3.2}% 16
-\BOOKMARK [3][-]{subsubsection.3.2.5}{Final calibration}{subsection.3.2}% 17
-\BOOKMARK [3][-]{subsubsection.3.2.6}{Calibration error analysis, validation and uncertainty}{subsection.3.2}% 18
-\BOOKMARK [3][-]{subsubsection.3.2.7}{How to perform calibration with several images \(sometimes called multiplane calibration\)}{subsection.3.2}% 19
-\BOOKMARK [2][-]{subsection.3.3}{Segmentation}{section.3}% 20
-\BOOKMARK [3][-]{subsubsection.3.3.1}{How to segment in MyPTV}{subsection.3.3}% 21
-\BOOKMARK [3][-]{subsubsection.3.3.2}{Image pre-processing}{subsection.3.3}% 22
-\BOOKMARK [3][-]{subsubsection.3.3.3}{Two methods of segmentation}{subsection.3.3}% 23
-\BOOKMARK [3][-]{subsubsection.3.3.4}{Segmentation filters}{subsection.3.3}% 24
-\BOOKMARK [3][-]{subsubsection.3.3.5}{Fiber segmentation}{subsection.3.3}% 25
-\BOOKMARK [2][-]{subsection.3.4}{Matching}{section.3}% 26
-\BOOKMARK [2][-]{subsection.3.5}{Analyze disparity}{section.3}% 27
-\BOOKMARK [2][-]{subsection.3.6}{Tracking}{section.3}% 28
-\BOOKMARK [2][-]{subsection.3.7}{Calibration with particles}{section.3}% 29
-\BOOKMARK [2][-]{subsection.3.8}{Smoothing}{section.3}% 30
-\BOOKMARK [2][-]{subsection.3.9}{Stitching}{section.3}% 31
-\BOOKMARK [2][-]{subsection.3.10}{2D tracking guide}{section.3}% 32
-\BOOKMARK [2][-]{subsection.3.11}{Manual Matching GUI}{section.3}% 33
-\BOOKMARK [2][-]{subsection.3.12}{Fiber tracking}{section.3}% 34
-\BOOKMARK [2][-]{subsection.3.13}{Fiber smoothing}{section.3}% 35
-\BOOKMARK [2][-]{subsection.3.14}{Fiber stitching}{section.3}% 36
-\BOOKMARK [2][-]{subsection.3.15}{Plotting the results}{section.3}% 37
-\BOOKMARK [1][-]{section.4}{Imaging module - imaging\137mod.py}{}% 38
-\BOOKMARK [2][-]{subsection.4.1}{The camera object}{section.4}% 39
-\BOOKMARK [2][-]{subsection.4.2}{The imsys object}{section.4}% 40
-\BOOKMARK [2][-]{subsection.4.3}{The Cal\137image\137coord object}{section.4}% 41
-\BOOKMARK [1][-]{section.5}{Camera calibration - calibrate\137mod.py}{}% 42
-\BOOKMARK [2][-]{subsection.5.1}{The calibrate object}{section.5}% 43
-\BOOKMARK [2][-]{subsection.5.2}{The calibrate\137with\137particles object}{section.5}% 44
-\BOOKMARK [2][-]{subsection.5.3}{The gui\137final\137cal.py file}{section.5}% 45
-\BOOKMARK [2][-]{subsection.5.4}{The gui\137initial\137cal.py file}{section.5}% 46
-\BOOKMARK [1][-]{section.6}{Particle segmentation - segmentation\137mod.py}{}% 47
-\BOOKMARK [2][-]{subsection.6.1}{The particle\137segmentation object}{section.6}% 48
-\BOOKMARK [2][-]{subsection.6.2}{The loop\137segmentation object}{section.6}% 49
-\BOOKMARK [1][-]{section.7}{Particle matching - particle\137matching\137mod.py}{}% 50
-\BOOKMARK [2][-]{subsection.7.1}{The matching\137with\137marching\137particles\137algorithm object}{section.7}% 51
-\BOOKMARK [2][-]{subsection.7.2}{The match\137blob\137files object \(Legacy\)}{section.7}% 52
-\BOOKMARK [2][-]{subsection.7.3}{The matching object \(Legacy\)}{section.7}% 53
-\BOOKMARK [2][-]{subsection.7.4}{The matching\137using\137time object \(Legacy\)}{section.7}% 54
-\BOOKMARK [2][-]{subsection.7.5}{The initiate\137time\137matching object \(Legacy\)}{section.7}% 55
-\BOOKMARK [1][-]{section.8}{Tracking in 3D - tracking\137mod.py}{}% 56
-\BOOKMARK [2][-]{subsection.8.1}{The tracker\137four\137frames object}{section.8}% 57
-\BOOKMARK [2][-]{subsection.8.2}{The tracker\137two\137frames object}{section.8}% 58
-\BOOKMARK [2][-]{subsection.8.3}{The tracker\137nearest\137neighbour object}{section.8}% 59
-\BOOKMARK [1][-]{section.9}{Trajectory smoothing - traj\137smoothing\137mod.py}{}% 60
-\BOOKMARK [2][-]{subsection.9.1}{The smooth\137trajectories object}{section.9}% 61
-\BOOKMARK [1][-]{section.10}{Trajectory stitching - traj\137stitching\137mod.py}{}% 62
-\BOOKMARK [2][-]{subsection.10.1}{The traj\137stitching object}{section.10}% 63
+\BOOKMARK [1][-]{section.1}{\376\377\000I\000n\000t\000r\000o\000d\000u\000c\000t\000i\000o\000n}{}% 1
+\BOOKMARK [2][-]{subsection.1.1}{\376\377\0003\000D\000-\000P\000T\000V\000\040\000p\000r\000i\000n\000c\000i\000p\000l\000e\000s}{section.1}% 2
+\BOOKMARK [2][-]{subsection.1.2}{\376\377\000M\000y\000P\000T\000V\000\040\000u\000s\000a\000g\000e\000\040\000a\000n\000d\000\040\000s\000t\000r\000u\000c\000t\000u\000r\000e}{section.1}% 3
+\BOOKMARK [1][-]{section.2}{\376\377\000M\000y\000P\000T\000V\000s\000\040\0003\000D\000\040\000m\000o\000d\000e\000l\000s}{}% 4
+\BOOKMARK [2][-]{subsection.2.1}{\376\377\000T\000h\000e\000\040\000T\000s\000a\000i\000\040\000m\000o\000d\000e\000l\000\040\000w\000i\000t\000h\000\040\000n\000o\000n\000-\000l\000i\000n\000e\000a\000r\000\040\000p\000o\000l\000y\000n\000o\000m\000i\000a\000l\000\040\000c\000o\000r\000r\000e\000c\000t\000i\000o\000n}{section.2}% 5
+\BOOKMARK [2][-]{subsection.2.2}{\376\377\000T\000h\000e\000\040\000e\000x\000t\000e\000n\000d\000e\000d\000\040\000Z\000o\000l\000o\000f\000\040\000m\000o\000d\000e\000l}{section.2}% 6
+\BOOKMARK [2][-]{subsection.2.3}{\376\377\000A\000d\000v\000a\000n\000t\000a\000g\000e\000\040\000a\000n\000d\000\040\000d\000i\000s\000a\000d\000v\000a\000n\000t\000a\000g\000e\000\040\000o\000f\000\040\000e\000a\000c\000h\000\040\000m\000o\000d\000e\000l}{section.2}% 7
+\BOOKMARK [1][-]{section.3}{\376\377\000T\000h\000e\000\040\000W\000o\000r\000k\000f\000l\000o\000w\000:\000\040\000g\000u\000i\000d\000e\000l\000i\000n\000e\000s\000\040\000f\000o\000r\000\040\000a\000\040\0003\000D\000-\000P\000T\000V\000\040\000e\000x\000p\000e\000r\000i\000m\000e\000n\000t}{}% 8
+\BOOKMARK [2][-]{subsection.3.1}{\376\377\000P\000r\000e\000p\000a\000r\000a\000t\000i\000o\000n\000\040\000o\000f\000\040\000a\000n\000\040\000e\000x\000p\000e\000r\000i\000m\000e\000n\000t\000\040\000f\000o\000l\000d\000e\000r}{section.3}% 9
+\BOOKMARK [3][-]{subsubsection.3.1.1}{\376\377\000T\000h\000e\000\040\000w\000o\000r\000k\000f\000l\000o\000w\000.\000p\000y\000\040\000s\000c\000r\000i\000p\000t}{subsection.3.1}% 10
+\BOOKMARK [3][-]{subsubsection.3.1.2}{\376\377\000T\000h\000e\000\040\000p\000a\000r\000a\000m\000s\000\137\000f\000i\000l\000e\000.\000y\000m\000l\000\040\000f\000i\000l\000e}{subsection.3.1}% 11
+\BOOKMARK [2][-]{subsection.3.2}{\376\377\000C\000a\000l\000i\000b\000r\000a\000t\000i\000o\000n\000\040\000g\000u\000i\000d\000e}{section.3}% 12
+\BOOKMARK [3][-]{subsubsection.3.2.1}{\376\377\000P\000r\000e\000p\000a\000r\000i\000n\000g\000\040\000a\000\040\000t\000a\000r\000g\000e\000t\000\137\000f\000i\000l\000e}{subsection.3.2}% 13
+\BOOKMARK [3][-]{subsubsection.3.2.2}{\376\377\000P\000r\000e\000p\000a\000r\000i\000n\000g\000\040\000t\000h\000e\000\040\000p\000a\000r\000a\000m\000e\000t\000e\000r\000s\000\040\000i\000n\000\040\000t\000h\000e\000\040\000p\000a\000r\000a\000m\000s\000\137\000f\000i\000l\000e}{subsection.3.2}% 14
+\BOOKMARK [3][-]{subsubsection.3.2.3}{\376\377\000I\000n\000i\000t\000i\000a\000l\000\040\000c\000a\000l\000i\000b\000r\000a\000t\000i\000o\000n}{subsection.3.2}% 15
+\BOOKMARK [3][-]{subsubsection.3.2.4}{\376\377\000T\000s\000a\000i\000\040\000m\000o\000d\000e\000l\000:\000\040\000U\000n\000d\000e\000r\000s\000t\000a\000n\000d\000i\000n\000g\000\040\000c\000a\000m\000e\000r\000a\000\040\000e\000x\000t\000e\000r\000n\000a\000l\000\040\000p\000a\000r\000a\000m\000e\000t\000e\000r\000s}{subsection.3.2}% 16
+\BOOKMARK [3][-]{subsubsection.3.2.5}{\376\377\000F\000i\000n\000a\000l\000\040\000c\000a\000l\000i\000b\000r\000a\000t\000i\000o\000n}{subsection.3.2}% 17
+\BOOKMARK [3][-]{subsubsection.3.2.6}{\376\377\000C\000a\000l\000i\000b\000r\000a\000t\000i\000o\000n\000\040\000e\000r\000r\000o\000r\000\040\000a\000n\000a\000l\000y\000s\000i\000s\000,\000\040\000v\000a\000l\000i\000d\000a\000t\000i\000o\000n\000\040\000a\000n\000d\000\040\000u\000n\000c\000e\000r\000t\000a\000i\000n\000t\000y}{subsection.3.2}% 18
+\BOOKMARK [3][-]{subsubsection.3.2.7}{\376\377\000H\000o\000w\000\040\000t\000o\000\040\000p\000e\000r\000f\000o\000r\000m\000\040\000c\000a\000l\000i\000b\000r\000a\000t\000i\000o\000n\000\040\000w\000i\000t\000h\000\040\000s\000e\000v\000e\000r\000a\000l\000\040\000i\000m\000a\000g\000e\000s\000\040\000\050\000s\000o\000m\000e\000t\000i\000m\000e\000s\000\040\000c\000a\000l\000l\000e\000d\000\040\000m\000u\000l\000t\000i\000p\000l\000a\000n\000e\000\040\000c\000a\000l\000i\000b\000r\000a\000t\000i\000o\000n\000\051}{subsection.3.2}% 19
+\BOOKMARK [2][-]{subsection.3.3}{\376\377\000S\000e\000g\000m\000e\000n\000t\000a\000t\000i\000o\000n}{section.3}% 20
+\BOOKMARK [3][-]{subsubsection.3.3.1}{\376\377\000H\000o\000w\000\040\000t\000o\000\040\000s\000e\000g\000m\000e\000n\000t\000\040\000i\000n\000\040\000M\000y\000P\000T\000V}{subsection.3.3}% 21
+\BOOKMARK [3][-]{subsubsection.3.3.2}{\376\377\000I\000m\000a\000g\000e\000\040\000p\000r\000e\000-\000p\000r\000o\000c\000e\000s\000s\000i\000n\000g}{subsection.3.3}% 22
+\BOOKMARK [3][-]{subsubsection.3.3.3}{\376\377\000T\000w\000o\000\040\000m\000e\000t\000h\000o\000d\000s\000\040\000o\000f\000\040\000s\000e\000g\000m\000e\000n\000t\000a\000t\000i\000o\000n}{subsection.3.3}% 23
+\BOOKMARK [3][-]{subsubsection.3.3.4}{\376\377\000S\000e\000g\000m\000e\000n\000t\000a\000t\000i\000o\000n\000\040\000f\000i\000l\000t\000e\000r\000s}{subsection.3.3}% 24
+\BOOKMARK [3][-]{subsubsection.3.3.5}{\376\377\000F\000i\000b\000e\000r\000\040\000s\000e\000g\000m\000e\000n\000t\000a\000t\000i\000o\000n}{subsection.3.3}% 25
+\BOOKMARK [2][-]{subsection.3.4}{\376\377\000M\000a\000t\000c\000h\000i\000n\000g}{section.3}% 26
+\BOOKMARK [2][-]{subsection.3.5}{\376\377\000A\000n\000a\000l\000y\000z\000e\000\040\000d\000i\000s\000p\000a\000r\000i\000t\000y}{section.3}% 27
+\BOOKMARK [2][-]{subsection.3.6}{\376\377\000T\000r\000a\000c\000k\000i\000n\000g}{section.3}% 28
+\BOOKMARK [2][-]{subsection.3.7}{\376\377\000C\000a\000l\000i\000b\000r\000a\000t\000i\000o\000n\000\040\000w\000i\000t\000h\000\040\000p\000a\000r\000t\000i\000c\000l\000e\000s}{section.3}% 29
+\BOOKMARK [2][-]{subsection.3.8}{\376\377\000S\000m\000o\000o\000t\000h\000i\000n\000g}{section.3}% 30
+\BOOKMARK [2][-]{subsection.3.9}{\376\377\000S\000t\000i\000t\000c\000h\000i\000n\000g}{section.3}% 31
+\BOOKMARK [2][-]{subsection.3.10}{\376\377\0002\000D\000\040\000t\000r\000a\000c\000k\000i\000n\000g\000\040\000g\000u\000i\000d\000e}{section.3}% 32
+\BOOKMARK [2][-]{subsection.3.11}{\376\377\000M\000a\000n\000u\000a\000l\000\040\000M\000a\000t\000c\000h\000i\000n\000g\000\040\000G\000U\000I}{section.3}% 33
+\BOOKMARK [2][-]{subsection.3.12}{\376\377\000F\000i\000b\000e\000r\000\040\000t\000r\000a\000c\000k\000i\000n\000g}{section.3}% 34
+\BOOKMARK [2][-]{subsection.3.13}{\376\377\000F\000i\000b\000e\000r\000\040\000s\000m\000o\000o\000t\000h\000i\000n\000g}{section.3}% 35
+\BOOKMARK [2][-]{subsection.3.14}{\376\377\000F\000i\000b\000e\000r\000\040\000s\000t\000i\000t\000c\000h\000i\000n\000g}{section.3}% 36
+\BOOKMARK [2][-]{subsection.3.15}{\376\377\000P\000l\000o\000t\000t\000i\000n\000g\000\040\000t\000h\000e\000\040\000r\000e\000s\000u\000l\000t\000s}{section.3}% 37
+\BOOKMARK [1][-]{section.4}{\376\377\000I\000m\000a\000g\000i\000n\000g\000\040\000m\000o\000d\000u\000l\000e\000\040\000-\000\040\000i\000m\000a\000g\000i\000n\000g\000\137\000m\000o\000d\000.\000p\000y}{}% 38
+\BOOKMARK [2][-]{subsection.4.1}{\376\377\000T\000h\000e\000\040\000c\000a\000m\000e\000r\000a\000\040\000o\000b\000j\000e\000c\000t}{section.4}% 39
+\BOOKMARK [2][-]{subsection.4.2}{\376\377\000T\000h\000e\000\040\000i\000m\000s\000y\000s\000\040\000o\000b\000j\000e\000c\000t}{section.4}% 40
+\BOOKMARK [2][-]{subsection.4.3}{\376\377\000T\000h\000e\000\040\000C\000a\000l\000\137\000i\000m\000a\000g\000e\000\137\000c\000o\000o\000r\000d\000\040\000o\000b\000j\000e\000c\000t}{section.4}% 41
+\BOOKMARK [1][-]{section.5}{\376\377\000C\000a\000m\000e\000r\000a\000\040\000c\000a\000l\000i\000b\000r\000a\000t\000i\000o\000n\000\040\000-\000\040\000c\000a\000l\000i\000b\000r\000a\000t\000e\000\137\000m\000o\000d\000.\000p\000y}{}% 42
+\BOOKMARK [2][-]{subsection.5.1}{\376\377\000T\000h\000e\000\040\000c\000a\000l\000i\000b\000r\000a\000t\000e\000\040\000o\000b\000j\000e\000c\000t}{section.5}% 43
+\BOOKMARK [2][-]{subsection.5.2}{\376\377\000T\000h\000e\000\040\000c\000a\000l\000i\000b\000r\000a\000t\000e\000\137\000w\000i\000t\000h\000\137\000p\000a\000r\000t\000i\000c\000l\000e\000s\000\040\000o\000b\000j\000e\000c\000t}{section.5}% 44
+\BOOKMARK [2][-]{subsection.5.3}{\376\377\000T\000h\000e\000\040\000g\000u\000i\000\137\000f\000i\000n\000a\000l\000\137\000c\000a\000l\000.\000p\000y\000\040\000f\000i\000l\000e}{section.5}% 45
+\BOOKMARK [2][-]{subsection.5.4}{\376\377\000T\000h\000e\000\040\000g\000u\000i\000\137\000i\000n\000i\000t\000i\000a\000l\000\137\000c\000a\000l\000.\000p\000y\000\040\000f\000i\000l\000e}{section.5}% 46
+\BOOKMARK [1][-]{section.6}{\376\377\000P\000a\000r\000t\000i\000c\000l\000e\000\040\000s\000e\000g\000m\000e\000n\000t\000a\000t\000i\000o\000n\000\040\000-\000\040\000s\000e\000g\000m\000e\000n\000t\000a\000t\000i\000o\000n\000\137\000m\000o\000d\000.\000p\000y}{}% 47
+\BOOKMARK [2][-]{subsection.6.1}{\376\377\000T\000h\000e\000\040\000p\000a\000r\000t\000i\000c\000l\000e\000\137\000s\000e\000g\000m\000e\000n\000t\000a\000t\000i\000o\000n\000\040\000o\000b\000j\000e\000c\000t}{section.6}% 48
+\BOOKMARK [2][-]{subsection.6.2}{\376\377\000T\000h\000e\000\040\000l\000o\000o\000p\000\137\000s\000e\000g\000m\000e\000n\000t\000a\000t\000i\000o\000n\000\040\000o\000b\000j\000e\000c\000t}{section.6}% 49
+\BOOKMARK [1][-]{section.7}{\376\377\000P\000a\000r\000t\000i\000c\000l\000e\000\040\000m\000a\000t\000c\000h\000i\000n\000g\000\040\000-\000\040\000p\000a\000r\000t\000i\000c\000l\000e\000\137\000m\000a\000t\000c\000h\000i\000n\000g\000\137\000m\000o\000d\000.\000p\000y}{}% 50
+\BOOKMARK [2][-]{subsection.7.1}{\376\377\000T\000h\000e\000\040\000m\000a\000t\000c\000h\000i\000n\000g\000\137\000w\000i\000t\000h\000\137\000m\000a\000r\000c\000h\000i\000n\000g\000\137\000p\000a\000r\000t\000i\000c\000l\000e\000s\000\137\000a\000l\000g\000o\000r\000i\000t\000h\000m\000\040\000o\000b\000j\000e\000c\000t}{section.7}% 51
+\BOOKMARK [2][-]{subsection.7.2}{\376\377\000T\000h\000e\000\040\000m\000a\000t\000c\000h\000\137\000b\000l\000o\000b\000\137\000f\000i\000l\000e\000s\000\040\000o\000b\000j\000e\000c\000t\000\040\000\050\000L\000e\000g\000a\000c\000y\000\051}{section.7}% 52
+\BOOKMARK [2][-]{subsection.7.3}{\376\377\000T\000h\000e\000\040\000m\000a\000t\000c\000h\000i\000n\000g\000\040\000o\000b\000j\000e\000c\000t\000\040\000\050\000L\000e\000g\000a\000c\000y\000\051}{section.7}% 53
+\BOOKMARK [2][-]{subsection.7.4}{\376\377\000T\000h\000e\000\040\000m\000a\000t\000c\000h\000i\000n\000g\000\137\000u\000s\000i\000n\000g\000\137\000t\000i\000m\000e\000\040\000o\000b\000j\000e\000c\000t\000\040\000\050\000L\000e\000g\000a\000c\000y\000\051}{section.7}% 54
+\BOOKMARK [2][-]{subsection.7.5}{\376\377\000T\000h\000e\000\040\000i\000n\000i\000t\000i\000a\000t\000e\000\137\000t\000i\000m\000e\000\137\000m\000a\000t\000c\000h\000i\000n\000g\000\040\000o\000b\000j\000e\000c\000t\000\040\000\050\000L\000e\000g\000a\000c\000y\000\051}{section.7}% 55
+\BOOKMARK [1][-]{section.8}{\376\377\000T\000r\000a\000c\000k\000i\000n\000g\000\040\000i\000n\000\040\0003\000D\000\040\000-\000\040\000t\000r\000a\000c\000k\000i\000n\000g\000\137\000m\000o\000d\000.\000p\000y}{}% 56
+\BOOKMARK [2][-]{subsection.8.1}{\376\377\000T\000h\000e\000\040\000t\000r\000a\000c\000k\000e\000r\000\137\000f\000o\000u\000r\000\137\000f\000r\000a\000m\000e\000s\000\040\000o\000b\000j\000e\000c\000t}{section.8}% 57
+\BOOKMARK [2][-]{subsection.8.2}{\376\377\000T\000h\000e\000\040\000t\000r\000a\000c\000k\000e\000r\000\137\000t\000w\000o\000\137\000f\000r\000a\000m\000e\000s\000\040\000o\000b\000j\000e\000c\000t}{section.8}% 58
+\BOOKMARK [2][-]{subsection.8.3}{\376\377\000T\000h\000e\000\040\000t\000r\000a\000c\000k\000e\000r\000\137\000n\000e\000a\000r\000e\000s\000t\000\137\000n\000e\000i\000g\000h\000b\000o\000u\000r\000\040\000o\000b\000j\000e\000c\000t}{section.8}% 59
+\BOOKMARK [1][-]{section.9}{\376\377\000T\000r\000a\000j\000e\000c\000t\000o\000r\000y\000\040\000s\000m\000o\000o\000t\000h\000i\000n\000g\000\040\000-\000\040\000t\000r\000a\000j\000\137\000s\000m\000o\000o\000t\000h\000i\000n\000g\000\137\000m\000o\000d\000.\000p\000y}{}% 60
+\BOOKMARK [2][-]{subsection.9.1}{\376\377\000T\000h\000e\000\040\000s\000m\000o\000o\000t\000h\000\137\000t\000r\000a\000j\000e\000c\000t\000o\000r\000i\000e\000s\000\040\000o\000b\000j\000e\000c\000t}{section.9}% 61
+\BOOKMARK [1][-]{section.10}{\376\377\000T\000r\000a\000j\000e\000c\000t\000o\000r\000y\000\040\000s\000t\000i\000t\000c\000h\000i\000n\000g\000\040\000-\000\040\000t\000r\000a\000j\000\137\000s\000t\000i\000t\000c\000h\000i\000n\000g\000\137\000m\000o\000d\000.\000p\000y}{}% 62
+\BOOKMARK [2][-]{subsection.10.1}{\376\377\000T\000h\000e\000\040\000t\000r\000a\000j\000\137\000s\000t\000i\000t\000c\000h\000i\000n\000g\000\040\000o\000b\000j\000e\000c\000t}{section.10}% 63
