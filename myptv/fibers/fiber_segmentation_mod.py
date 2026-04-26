@@ -449,7 +449,7 @@ class loop_fiber_segmentation(object):
         import os
         allfiles = os.listdir(self.dir_name)
         n_ext = len(self.extension)
-        fltr = lambda s: s[-n_ext:]==self.extension
+        fltr = lambda s: s[-n_ext:]==self.extension and not s.startswith('._')
         image_files = sorted(list(filter(fltr, allfiles)))
         
         if self.image_start is not None:

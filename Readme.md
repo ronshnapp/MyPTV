@@ -1,6 +1,6 @@
 April, 2026
 
-Version: 1.3.8
+Version: 1.3.9
 
 
 <img src="./user_manual/figs/logo.png" style="zoom:20%;" />

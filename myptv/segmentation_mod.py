@@ -573,7 +573,7 @@ class loop_segmentation(object):
     def get_file_names(self):
         allfiles = os.listdir(self.dir_name)
         n_ext = len(self.extension)
-        fltr = lambda s: s[-n_ext:]==self.extension
+        fltr = lambda s: s[-n_ext:]==self.extension and not s.startswith('._')
         image_files = sorted(list(filter(fltr, allfiles)))
         
         if self.image_start is not None:
@@ -824,7 +824,7 @@ def get_img_list(dir_name, extension, N_img=200):
     # 1) Getting the images file names:
     allfiles = os.listdir(dir_name)
     n_ext = len(extension)
-    fltr = lambda s: s[-n_ext:]==extension
+    fltr = lambda s: s[-n_ext:]==extension and not s.startswith('._')
     image_files = sorted(list(filter(fltr, allfiles)))
     if len(image_files)==0:
         raise ValueError('No images found, check input variables')

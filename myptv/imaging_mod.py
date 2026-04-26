@@ -313,7 +313,11 @@ class camera_wrapper(object):
         '''
         Returns the camera name
         '''
-        return self.camera.name
+        if self.camera is not None:
+            return self.camera.name
+        else:
+            print('no loaded camera; returning fileName instead.')
+            return self.fileName
         
 
 
