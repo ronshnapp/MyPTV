@@ -54,9 +54,9 @@ def get_u(x):
 # ===========================================
 
 
-nx = 20
-ny = 20
-nz = 20
+nx = 10
+ny = 10
+nz = 10
 n_particles = nx * ny * nz
 x0, xn = 5, 95
 y0, yn = 5, 95
@@ -84,8 +84,8 @@ for i in range(nx):
 # ==========================
 
 
-dt = 0.8
-steps = 50
+dt = 0.1
+steps = 20
 ntraj = len(x_lst)
 
 for j in range(ntraj):
@@ -124,10 +124,10 @@ for cam in cams:
 # ======================
 
 resolution = 2048, 2048     # image pixel resolution
-n_blobsPerParticle = 3      # number of blobs making up a particle
-disparity = 0.03            # random noise of the blobs making up the particles [mm]
+n_blobsPerParticle = 1      # number of blobs making up a particle
+disparity = 0.00            # random noise of the blobs making up the particles [mm]
 s = 0.8                     # sigma of a gaussian intensity point
-I = 15.0                    # intensity of a fiber making point
+I = 100.0                    # intensity of a fiber making point
 
 
 radius = int(3*s)
@@ -165,7 +165,7 @@ for k in tqdm(range(steps)):
         img = img.astype('int8')
 
         pil_im = Image.fromarray(img, mode='L')
-        pil_im.save('./cam%d_images/im%03d.jpg'%(e+1,k+1))
+        pil_im.save('./cam%d_images/im%03d.tif'%(e+1,k+1))
     
     
     np.savetxt('./ground_truth/ground_truth_pos_im_%02d'%(k+1), pos_lst, delimiter='\t', fmt='%.3f')
