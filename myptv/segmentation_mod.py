@@ -11,6 +11,7 @@ contains a class for segmentation of circular particles
 from myptv.tracking_2D_mod import track_2D_multiframe
 # from myptv.TsaiModel.camera import camera_Tsai
 from myptv.tracking_mod import fill_in_trajectory
+from myptv.io_mod import write_to_file
 
 from pandas import read_csv
 
@@ -452,15 +453,14 @@ class particle_segmentation(object):
         This is used to save the blobs found in a text file with 
         the given name fname.
         '''
-        blob_list = []
-        for blb in self.blobs:
-            blob_list.append([blb[0][0], blb[0][1], blb[1][0], blb[1][1],
-                              blb[2], 0])
+        blob_list = [[b[0][0], b[0][1], b[1][0], b[1][1], b[2], 0]
+                     for b in self.blobs]
             
-        savetxt(fname, blob_list, 
-                fmt=['%.02f','%.02f','%d','%d','%d','%d'], delimiter='\t')
+        #savetxt(fname, blob_list, 
+        #        fmt=['%.02f','%.02f','%d','%d','%d','%d'], delimiter='\t')
         
-        
+        # == New format ==
+        write_to_file(fname, array(blob_list), 'blobs', append=False)
         
         
 
@@ -472,7 +472,9 @@ class loop_segmentation(object):
     '''A class for looping over images in a directory to segment particles
     and save the results in a file.'''
     
-    def __init__(self, dir_name, extension='.tif',
+    def __init__(self, dir_name, 
+                 savename,
+                 extension='.tif',
                  image_start = 0,
                  N_img = None, sigma=1.0, threshold=10, mask=1.0,
                  local_filter = 15, median = None, particle_size=3,
@@ -483,12 +485,16 @@ class loop_segmentation(object):
                  min_ysize=None, max_ysize=None,
                  min_mass=None, max_mass=None,
                  method='labeling',
-                 raw_format=False,
-                 multiprocessing=True):
+                 raw_format=False): 
+                 #multiprocessing=True):
         '''
         dir_name - string with the name of the directory that holds the 
                    images. Images should have a sequential numbers in their
                    file names. 
+                   
+        savename - string with the file name to save the results (as hdf5);
+                   If it is None, we dont save the results.
+                   
         extension - the extension of the images
         
         image_start - The number of image from which the loop begins. If None, 
@@ -513,7 +519,8 @@ class loop_segmentation(object):
                                      format (e.g. .dng). Then, we use the
                                      package rawpy to load the images.
                                      
-        multiprocessing - if True will use multiprocessing, if False will not.
+        multiprocessing - (not available in the new file format) 
+                          if True will use multiprocessing, if False will not.
         
                     
         The rest are parameters for the segmentation class. 
@@ -533,7 +540,7 @@ class loop_segmentation(object):
         self.method = method
         self.raw_format = raw_format
         self.DoG_sigma = DoG_sigma
-        self.multiprocess = multiprocessing
+        self.multiprocess = False #multiprocessing
         
         
         if self.raw_format == False:
@@ -566,8 +573,22 @@ class loop_segmentation(object):
             else:
                 raise TypeError('equalize_image is not None nor numpy array')
         
+        if type(savename)==str:
+            if not(savename.endswith('.hdf5')):
+                savename = savename + '.hdf5'
+            cwd_ls = os.listdir(os.getcwd())
+            if savename in cwd_ls or os.path.exists(savename):
+                print('\n File name "%s" already exists in'%savename)
+                print(' the working directory.')
+                usr = input("(1=Continue and overwrite, else=Don't save')")
         
-        
+                if usr=='1': self.savename = savename
+                
+                else: self.savename = None
+            
+            else: self.savename = savename
+                
+        else: self.savename = None
     
     
     def get_file_names(self):
@@ -644,53 +665,76 @@ class loop_segmentation(object):
                   self.bbox_limits, self.mass_limits, self.method, 
                   self.p_size, i0]
         
-        if self.multiprocess:
-            try:
-                import multiprocessing
-                # Running with paralelization:
-                print('Running with multiplrocessing...')
-                t0 = time()
-                args = [(X, 
-                         self.imread_func(os.path.join(params[0], 
-                                                       params[1][X])),
-                         params) for X in range(N)]
-                with multiprocessing.Pool() as pool:
-                    results_list = list(pool.starmap(iter_frame, args))
-                print('finished segmentation loop (%.1f sec)'%(time() - t0))
-        
-            except ImportError as e:
-                # Running without paralelization:
-                print('Cant import multiprocessing - running on a single core')
-                results_list = [iter_frame(i, 
-                                           self.imread_func(
-                                               os.path.join(params[0], 
-                                                            params[1][i])),
-                                           params) 
-                                for i in tqdm.tqdm(range(N))] 
-                
-        else:
-            # Running without paralelization:
-            print('Cant import multiprocessing - running on a single core')
-            results_list = [iter_frame(i, 
-                                       self.imread_func(
-                                           os.path.join(params[0], 
-                                                        params[1][i])),
-                                       params) 
-                            for i in tqdm.tqdm(range(N))] 
+        # new format
+        for i in tqdm.tqdm(range(N)):
+            img = self.imread_func(os.path.join(params[0], params[1][i]))
             
-        self.blobs = [b for res_i in results_list for b in res_i]
+            if i==0: append=False
+            else: append=True
+            
+            if self.savename is not None:
+                write_to_file(self.savename, 
+                              array(iter_frame(i,img,params)),
+                              'blobs', append=append)
+            
+            else:
+                iter_frame(i, img, params)
         
-                                       
-    def save_results(self, fname):
-        '''
-        Will save the extracted blobs. 
+        # =============================
+        # inactive with the new format
+        # if self.multiprocess: 
+        #     try:
+        #         import multiprocessing
+        #         # Running with paralelization:
+        #         print('Running with multiplrocessing...')
+        #         t0 = time()
+        #         args = [(X, 
+        #                  self.imread_func(os.path.join(params[0], 
+        #                                                params[1][X])),
+        #                  params) for X in range(N)]
+        #         with multiprocessing.Pool() as pool:
+        #             results_list = list(pool.starmap(iter_frame, args))
+        #         print('finished segmentation loop (%.1f sec)'%(time() - t0))
         
-        The format of the results is
-        center_x, center_y, size_x, size_y, area, frame_number
-        '''
-        savetxt(fname, self.blobs, 
-                fmt=['%.02f','%.02f','%d','%d','%d','%d'], delimiter='\t')
+        #     except ImportError as e:
+        #         # Running without paralelization:
+        #         print('Cant import multiprocessing - running on a single core')
+        #         results_list = [iter_frame(i, 
+        #                                    self.imread_func(
+        #                                        os.path.join(params[0], 
+        #                                                     params[1][i])),
+        #                                    params) 
+        #                         for i in tqdm.tqdm(range(N))] 
         
+        
+        # else:
+        #     # Running without paralelization:
+        #     print('Cant import multiprocessing - running on a single core')
+        #     results_list = [iter_frame(i, 
+        #                                self.imread_func(
+        #                                    os.path.join(params[0], 
+        #                                                 params[1][i])),
+        #                                params) 
+        #                     for i in tqdm.tqdm(range(N))] 
+            
+        # self.blobs = [b for res_i in results_list for b in res_i]
+        # =============================
+        
+        
+            
+                               
+    # =============================
+    # inactive with the new format     
+    # def save_results(self, fname):
+    #     '''
+    #     Will save the extracted blobs. 
+        
+    #     The format of the results is
+    #     center_x, center_y, size_x, size_y, area, frame_number
+    #     '''
+    #     savetxt(fname, self.blobs, 
+    #             fmt=['%.02f','%.02f','%d','%d','%d','%d'], delimiter='\t')
+    # =============================
         
         
 

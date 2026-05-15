@@ -8,6 +8,9 @@ Created on Fri Dec  7 18:02:07 2018
 Contains a class for segmentation of elongates particles
 """
 
+from myptv.io_mod import write_to_file
+import os
+
 from numpy import ones, savetxt, meshgrid,array,square,stack,sqrt,mean,append,transpose,matmul
 from numpy import sum as npsum
 import numpy as np
@@ -349,26 +352,30 @@ class fiber_segmentation(object):
         This is used to save the blobs found in a text file with 
         the given name fname.
         '''
-        blob_list = []
-        for blb in self.blobs:
-            blob_list.append([blb[0][0], blb[0][1], blb[1][0], blb[1][1],
-                              blb[2], 0])
+        
+        blob_list = [[b[0][0], b[0][1], b[1][0], b[1][1], b[2], 0]
+                     for b in self.blobs]
             
-        savetxt(fname, blob_list, 
-                fmt=['%.02f','%.02f','%d','%d','%d','%d'], delimiter='\t')
+        #savetxt(fname, blob_list, 
+        #        fmt=['%.02f','%.02f','%d','%d','%d','%d'], delimiter='\t')
+        
+        # == New format ==
+        write_to_file(fname, array(blob_list), 'blobs', append=False)
+        
         
     def save_results_direction(self, fname):
         '''
         This is used to save the blobs found in a text file with 
         the given name fname.
         '''
-        blob_list = []
-        for blb in self.blobs:
-            blob_list.append([blb[0][0], blb[0][1], blb[1][0], blb[1][1],
-                              blb[2], 0, blb[3][0],blb[3][1]])
+        blob_list = [[blb[0][0], blb[0][1], blb[1][0], blb[1][1], blb[2],
+                      0, blb[3][0],blb[3][1]] for blb in self.blobs]
             
-        savetxt(fname, blob_list, 
-                fmt=['%.02f','%.02f','%d','%d','%d','%d','%.05f','%.05f'], delimiter='\t')
+        #savetxt(fname, blob_list, 
+        #        fmt=['%.02f','%.02f','%d','%d','%d','%d','%.05f','%.05f'], delimiter='\t')
+        
+        # == New format ==
+        write_to_file(fname, array(blob_list), 'blobs', append=False)
         
         
     def save_results_endpoints(self, fname):
@@ -376,14 +383,14 @@ class fiber_segmentation(object):
         This is used to save the blobs found in a text file with 
         the given name fname.
         '''
-        blob_list = []
-        for blb in self.blobs:
-            blob_list.append([blb[0][0], blb[0][1], 0, 
-                              blb[4][0], blb[4][1], blb[4][2], blb[4][3]])
+        blob_list = [[blb[0][0], blb[0][1], 0, blb[4][0], blb[4][1], blb[4][2], 
+                      blb[4][3]]for blb in self.blobs]
             
-        savetxt(fname, blob_list, 
-                fmt=['%.03f','%.03f','%d','%.03f','%.03f','%.03f','%.03f'], delimiter='\t')
+        #savetxt(fname, blob_list, 
+        #        fmt=['%.03f','%.03f','%d','%.03f','%.03f','%.03f','%.03f'], delimiter='\t')
         
+        # == New format ==
+        write_to_file(fname, array(blob_list), 'blobs', append=False)
         
 
         
@@ -394,7 +401,9 @@ class loop_fiber_segmentation(object):
     '''A class for looping over images in a library to segment particles
     and save the results in a file.'''
     
-    def __init__(self, dir_name, extension='.tif',
+    def __init__(self, dir_name,
+                 savename,
+                 extension='.tif',
                  image_start = None,
                  N_img = None, sigma=1.0, threshold=10, mask=1.0,
                  local_filter = 15, median = None, particle_size=3,
@@ -443,10 +452,26 @@ class loop_fiber_segmentation(object):
         else:
             import rawpy
             self.imread_func = lambda x: rawpy.imread(x).raw_image
+            
+        if type(savename)==str:
+            if not(savename.endswith('.hdf5')):
+                savename = savename + '.hdf5'
+            cwd_ls = os.listdir(os.getcwd())
+            if savename in cwd_ls or os.path.exists(savename):
+                print('\n File name "%s" already exists in'%savename)
+                print(' the working directory.')
+                usr = input("(1=Continue and overwrite, else=Don't save')")
+        
+                if usr=='1': self.savename = savename
+                
+                else: self.savename = None
+            
+            else: self.savename = savename
+                
+        else: self.savename = None
     
     
     def get_file_names(self):
-        import os
         allfiles = os.listdir(self.dir_name)
         n_ext = len(self.extension)
         fltr = lambda s: s[-n_ext:]==self.extension and not s.startswith('._')
@@ -532,47 +557,63 @@ class loop_fiber_segmentation(object):
                                     particle_size=self.p_size)
             ps.get_blobs()
             ps.apply_blobs_size_filter()
-            for blb in ps.blobs:
-                blob_list.append([blb[0][0], blb[0][1], blb[1][0], blb[1][1],
-                                  blb[2], i+i0, blb[3][0], blb[3][1]])
-        self.blobs = blob_list
+            
+            # =============
+            # New format
+            res_i = [[blb[0][0], blb[0][1], blb[1][0], blb[1][1], blb[2], i+i0,
+                      blb[3][0], blb[3][1]] for blb in ps.blobs]
+            
+            if self.savename is not None:
+                if i==0: append=False
+                else: append=True
+                
+                write_to_file(self.fname, array(res_i)[:,:-2], 
+                              'fiber blobs', append=append) # save blobs
+                write_to_file(self.fname[:-5]+'_directions.hdf5', 
+                              array(res_i), 'fiber directions', append=append) # save directions
+            
+            
+            #for blb in ps.blobs:
+            #    blob_list.append([blb[0][0], blb[0][1], blb[1][0], blb[1][1],
+            #                      blb[2], i+i0, blb[3][0], blb[3][1]])
+        #self.blobs = blob_list
         
                                        
-    def save_results(self, fname):
-        '''
-        Will save the extracted blobs. 
+    # def save_results(self, fname):
+    #     '''
+    #     Will save the extracted blobs. 
         
-        The format of the results is
-        center_x, center_y, size_x, size_y, area, frame_number
-        '''
-        blob_list = []
-        for blb in self.blobs:
-            blob_list.append(blb[0:-2])
+    #     The format of the results is
+    #     center_x, center_y, size_x, size_y, area, frame_number
+    #     '''
+    #     blob_list = []
+    #     for blb in self.blobs:
+    #         blob_list.append(blb[0:-2])
             
-        savetxt(fname, blob_list, 
-                fmt=['%.02f','%.02f','%d','%d','%d','%d'], delimiter='\t')
+    #     savetxt(fname, blob_list, 
+    #             fmt=['%.02f','%.02f','%d','%d','%d','%d'], delimiter='\t')
         
         
-    def save_results_direction(self, fname):
-        '''
-        Will save the extracted blobs. 
+    # def save_results_direction(self, fname):
+    #     '''
+    #     Will save the extracted blobs. 
         
-        The format of the results is
-        center_x, center_y, size_x, size_y, area, frame_number, x,y
-        '''
-        savetxt(fname, self.blobs, 
-                fmt=['%.02f','%.02f','%d','%d','%d','%d','%.05f','%.05f'], delimiter='\t')
+    #     The format of the results is
+    #     center_x, center_y, size_x, size_y, area, frame_number, x,y
+    #     '''
+    #     savetxt(fname, self.blobs, 
+    #             fmt=['%.02f','%.02f','%d','%d','%d','%d','%.05f','%.05f'], delimiter='\t')
         
         
-    def save_results_endpoints(self, fname):
-        '''
-        Will save the extracted blobs. 
+    # def save_results_endpoints(self, fname):
+    #     '''
+    #     Will save the extracted blobs. 
         
-        The format of the results is
-        center_x, center_y, size_x, size_y, area, frame_number, x,y
-        '''
-        savetxt(fname, self.blobs, 
-                fmt=['%.03f','%.03f','%d','%.03f','%.03f','%.03f','%.03f'], delimiter='\t')
+    #     The format of the results is
+    #     center_x, center_y, size_x, size_y, area, frame_number, x,y
+    #     '''
+    #     savetxt(fname, self.blobs, 
+    #             fmt=['%.03f','%.03f','%d','%.03f','%.03f','%.03f','%.03f'], delimiter='\t')
         
     
     

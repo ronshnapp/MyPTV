@@ -683,7 +683,14 @@ class workflow(object):
         if DoG_sigmas is not None and shape=='fibers':
                 raise TypeError('DoG not implemented yet for fibers; use None')
             
-            
+        if multiprocessing:
+            print('multiprocessing unavailable with current hdf5 format')
+        
+        # new format
+        if type(save_name)==str:
+            if not(save_name.endswith('.hdf5')):
+                save_name = save_name + '.hdf5'
+        
         def calculate_BG_image(dirname, extension):
             '''
             Calculates the background of images, defined as the median over a
@@ -731,6 +738,7 @@ class workflow(object):
                     BG=False
                 
                 loopSegment = loop_segmentation(dirname, 
+                                                save_name,
                                                 particle_size=p_size,
                                                 extension=ext,
                                                 image_start=image_start,
@@ -750,29 +758,33 @@ class workflow(object):
                                                 min_mass=min_mass,
                                                 mask=mask,
                                                 method=method,
-                                                raw_format=raw_format,
-                                                multiprocessing=multiprocessing)
+                                                raw_format=raw_format) #,
+                                                #multiprocessing=multiprocessing)
             
                 loopSegment.segment_folder_images()
                 
-                print('\n','blobs found:', len(loopSegment.blobs))
-                
+                # ==========================
+                # inactive with new format
+                # print('\n','blobs found:', len(loopSegment.blobs))
+                #
                 # saving the semented blobs:
-                if save_name is not None and type(save_name)==str:
-                    cwd_ls = os.listdir(os.getcwd())
-                    if save_name in cwd_ls or os.path.exists(save_name):
-                        print('\n The file name "%s" already exists in'%save_name)
-                        print(' the working directory. Should I save anyways?')
-                        usr = input('(1=yes, else=no)')
-                        if usr == '1':
-                            loopSegment.save_results(save_name)
-                            print('\nfile saved.')
-                        else:
-                            print('\nskipped saving')
+                # if save_name is not None and type(save_name)==str:
+                #     cwd_ls = os.listdir(os.getcwd())
+                #     if save_name in cwd_ls or os.path.exists(save_name):
+                #         print('\n The file name "%s" already exists in'%save_name)
+                #         print(' the working directory. Should I save anyways?')
+                #         usr = input('(1=yes, else=no)')
+                #         if usr == '1':
+                #             loopSegment.save_results(save_name)
+                #             print('\nfile saved.')
+                #         else:
+                #             print('\nskipped saving')
                         
-                    else:
-                        loopSegment.save_results(save_name)
-                        print('\nfile saved.')    
+                #     else:
+                #         loopSegment.save_results(save_name)
+                #         print('\nfile saved.')    
+                # ==========================
+                
                 print('\nDone.\n')
                 
             
@@ -821,8 +833,8 @@ class workflow(object):
                     from matplotlib.pyplot import show
                     particleSegment.plot_blobs()
                     show()
-                    
-                    
+                
+                
                 # Saving the segmented blobs:
                 if save_name is not None and type(save_name)==str:
                     cwd_ls = os.listdir(os.getcwd())
@@ -838,7 +850,7 @@ class workflow(object):
                     else:
                         particleSegment.save_results(save_name)
                         print('\nfile saved.')
-                    
+                
                 print('\nDone.\n')
                 
             
@@ -859,7 +871,8 @@ class workflow(object):
                 else:
                     BG=False
                     
-                loopSegment = loop_fiber_segmentation(dirname, 
+                loopSegment = loop_fiber_segmentation(dirname,
+                                                save_name,
                                                 particle_size=p_size,
                                                 extension=ext,
                                                 image_start=image_start,
@@ -881,30 +894,31 @@ class workflow(object):
                                                 pca_limit=1.0)
                 
                 loopSegment.segment_folder_images()
-                
-                print('\n','blobs found:', len(loopSegment.blobs))
-                
-                # saving the semented blobs:
-                if save_name is not None and type(save_name)==str:
-                    cwd_ls = os.listdir(os.getcwd())
-                    if save_name in cwd_ls or os.path.exists(save_name):
-                        print('\n The file name "%s" already exists in'%save_name)
-                        print(' the working directory. Should I save anyways?')
-                        usr = input('(1=yes, else=no)')
-                        if usr == '1':
-                            loopSegment.save_results(save_name)
-                            loopSegment.save_results_direction(save_name+'_directions')
-                            print('\nfile saved.')
-                        else:
-                            print('\nskipped saving')
-                        
-                    else:
-                        loopSegment.save_results(save_name)
-                        loopSegment.save_results_direction(save_name+'_directions')
-                        print('\nfile saved.')    
                 print('\nDone.\n')
+# =============================================================================
+#                 print('\n','blobs found:', len(loopSegment.blobs))
+#                 
+#                 # saving the semented blobs:
+#                 if save_name is not None and type(save_name)==str:
+#                     cwd_ls = os.listdir(os.getcwd())
+#                     if save_name in cwd_ls or os.path.exists(save_name):
+#                         print('\n The file name "%s" already exists in'%save_name)
+#                         print(' the working directory. Should I save anyways?')
+#                         usr = input('(1=yes, else=no)')
+#                         if usr == '1':
+#                             loopSegment.save_results(save_name)
+#                             loopSegment.save_results_direction(save_name+'_directions')
+#                             print('\nfile saved.')
+#                         else:
+#                             print('\nskipped saving')
+#                         
+#                     else:
+#                         loopSegment.save_results(save_name)
+#                         loopSegment.save_results_direction(save_name+'_directions')
+#                         print('\nfile saved.')    
+# =============================================================================
                 
-            
+                
             
             # segmenting the image if there is only 1 frames
             if N_img == 1:
@@ -961,13 +975,13 @@ class workflow(object):
                         usr = input('(1=yes, else=no)')
                         if usr == '1':
                             particleSegment.save_results(save_name)
-                            particleSegment.save_results_direction(save_name+'_directions')
+                            particleSegment.save_results_direction(save_name[:-5]+'_directions.hdf5')
                             print('\nfile saved.')
                         else:
                             print('\nskipped saving')
                     else:
                         particleSegment.save_results(save_name)
-                        particleSegment.save_results_direction(save_name+'_directions')
+                        particleSegment.save_results_direction(save_name[:-5]+'_directions.hdf5')
                         print('\nfile saved.')
                     
                 print('\nDone.\n')

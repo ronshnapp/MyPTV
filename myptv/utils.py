@@ -15,6 +15,9 @@ from numpy import dot, array, loadtxt, savetxt
 from numpy import append as NPappend
 from numpy.linalg import inv, norm
 
+import pandas as pd
+import numpy as np
+
 
 
 
@@ -311,9 +314,6 @@ class match_calibration_blobs_and_points(object):
     
     
 
-
-import pandas as pd
-import numpy as np
 
 class get_residual_blobs(object):
     '''
