@@ -27,6 +27,7 @@ import h5py
 from myptv.io_mod import write_to_file
 
 
+
 class matching_with_marching_particles_algorithm(object):
     '''
     This is a class used to perform stereo matching with the 
@@ -149,21 +150,16 @@ class matching_with_marching_particles_algorithm(object):
 # =============================================================================
         
         # ======= new format
-        print(blob_files)
         self.frames = set([])
         for fn in blob_files:
-            fn_frms = read_file_frame_range(fn)
-            self.frames = self.frames.union(fn_frms)
-        
-        self.get_blobs()
-        
-        # self.blobs = []          # blobs to be taken from hdf5 file datasets
-        # self.active_frames = []  # frames currenlty held in self.blobs
-        # ================================
+            self.frames = self.frames.union(read_file_frame_range)
+            
+        self.blobs = []          # blobs to be taken from hdf5 file datasets
+        self.active_frames = []  # frames currenlty held in self.blobs
         
         # a dicionary that is used to hold kd trees of blob coordinates
         self.B_ik_trees = {'frame': None}
-
+ 
     
     def get_blobs(self, f0=None, fn=None):
         '''
@@ -173,7 +169,6 @@ class matching_with_marching_particles_algorithm(object):
         self.blobs = []
         for fname in self.blob_files:
             bd = read_from_file(fname, frame_start=f0, frame_end=fn) #read_csv(fn, sep='\t', header=None)
-            
             if self.reverse_eta_zeta:
                 ncols = bd.shape[1]
                 ind = list(range(ncols))
@@ -623,14 +618,14 @@ class matching_with_marching_particles_algorithm(object):
         if print_stat:
             prnt = (newTot, newPrevFrame, newEpipolarCands)
             print('Found %d matches: %d from prev. frame + %d new'%prnt)
-        
+
         # ========== New format
         # save te results found in this frame
         if savename is not None:
             frm_res = res_pm + res_ip + res_pc
             write_to_file(savename, frm_res, 'particles', append=append)
         # =============================
-                
+
        
         
     def plot_disparity_map(self, camNum):
