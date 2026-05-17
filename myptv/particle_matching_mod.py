@@ -12,6 +12,7 @@ segmented particles' image coordinates.
 
 
 from myptv.utils import line_dist
+from myptv.io_mod import read_file_frame_range, read_from_file
 from math import ceil, floor
 from itertools import combinations, product
 from numpy import savetxt, array, inf
@@ -21,7 +22,7 @@ from math import isinf
 
 from pandas import read_csv
 
-
+import h5py
 
 
 
@@ -69,8 +70,8 @@ class matching_with_marching_particles_algorithm(object):
     '''
     
     
-    def __init__(self, imsys, blob_files, max_d_err, ROI, N0, voxel_size,
-                 min_cam_match=3, reverse_eta_zeta=False):
+    def __init__(self, imsys, blob_files, max_d_err, ROI, N0, 
+                 voxel_size, min_cam_match=3, reverse_eta_zeta=False):
         '''
         inputs 
         
@@ -110,6 +111,7 @@ class matching_with_marching_particles_algorithm(object):
         self.N0 = N0
         self.matches = []
         self.Ncams = len(self.imsys.cameras)
+        self.reverse_eta_zeta = reverse_eta_zeta
         
         self.voxel_size= voxel_size
         
@@ -124,26 +126,59 @@ class matching_with_marching_particles_algorithm(object):
         print('loading blob data...')
         # extract the blob data - each blobfile is a dictionay in a list, where 
         # keys are frame numbers and values are the blob data as arrays. 
+        
+# =============================================================================
+#         # inactive in new format.
+#         self.frames = set([])
+#         self.blobs = []
+#         for fn in blob_files:
+#             bd = read_csv(fn, sep='\t', header=None)
+#             
+#             if reverse_eta_zeta:
+#                 ncols = bd.shape[1]
+#                 ind = list(range(ncols))
+#                 ind[0]=1 ; ind[1]=0
+#                 bd = bd[ind]
+#             
+#             self.blobs.append(dict([(k,array(g)) for k,g in bd.groupby(5)]))
+#             
+#             #self.frames.update(self.blobs[-1].keys())
+#             
+#         #self.frames = sorted(list(self.frames))
+# =============================================================================
+        
+        # ======= new format
         self.frames = set([])
-        self.blobs = []
         for fn in blob_files:
-            bd = read_csv(fn, sep='\t', header=None)
+            self.frames = self.frames.union(read_file_frame_range)
             
-            if reverse_eta_zeta:
+        self.blobs = []          # blobs to be taken from hdf5 file datasets
+        self.active_frames = []  # frames currenlty held in self.blobs
+        
+        # a dicionary that is used to hold kd trees of blob coordinates
+        self.B_ik_trees = {'frame': None}
+ 
+    
+    def get_blobs(self, f0=None, fn=None):
+        '''
+        Read blobs from an hdf5 file and unload them into self.blobs list
+        of dictionaries.
+        '''
+        self.blobs = []
+        for fname in self.blob_files:
+            bd = read_from_file(fname, frame_start=f0, frame_end=fn) #read_csv(fn, sep='\t', header=None)
+            
+            if self.reverse_eta_zeta:
                 ncols = bd.shape[1]
                 ind = list(range(ncols))
                 ind[0]=1 ; ind[1]=0
                 bd = bd[ind]
             
             self.blobs.append(dict([(k,array(g)) for k,g in bd.groupby(5)]))
-            self.frames.update(self.blobs[-1].keys())
             
-        self.frames = sorted(list(self.frames))
-        
-        # a dicionary that is used to hold kd trees of blob coordinates
-        self.B_ik_trees = {'frame': None}
- 
-    
+            #self.frames.update(self.blobs[-1].keys())
+            
+        #self.frames = sorted(list(self.frames))
  
         
     def match_nearest_blobs(self, x, frame):
@@ -285,9 +320,6 @@ class matching_with_marching_particles_algorithm(object):
         '''
             
         for camNum in range(self.Ncams):
-            # whr = [i for i in range(self.blobs[camNum][frame].shape[0]) 
-            #                              if i not in used_blob_indexes[camNum]]
-            # self.B_ik_trees[camNum] = KDTree(self.blobs[camNum][frame][whr,:2])
 
             if frame not in self.blobs[camNum].keys():
                 self.B_ik_trees[camNum] = None
@@ -313,6 +345,7 @@ class matching_with_marching_particles_algorithm(object):
         self.generate_blob_trees(frame)
         
         count = 0
+        results = []
         for i in range(self.N0):
             x0 = [uniform(self.ROI[0], self.ROI[1]),
                   uniform(self.ROI[2], self.ROI[3]),
@@ -320,11 +353,13 @@ class matching_with_marching_particles_algorithm(object):
             res = self.match_nearest_blobs(x0, frame)
             if res is not None:
                 self.matches.append(res)
+                results.append(res)
                 count += 1
                 
         if message:
             print('', 'matches using random guesses: %d'%count)
-            
+        
+        return results
         
         
         
@@ -376,15 +411,18 @@ class matching_with_marching_particles_algorithm(object):
             pointToMatchOn = [m[0] for m in self.matches if m[3]==frame+1]
         
         count = 0
+        results = []
         for x0 in pointToMatchOn:
             res = self.match_nearest_blobs(x0, frame)
             if res is not None:
                 self.matches.append(res)
+                results.append(results)
                 count += 1
                 
         if message:
             print('matches using prvious results: %d'%count)
         
+        return results
         
         
         
@@ -506,9 +544,27 @@ class matching_with_marching_particles_algorithm(object):
         
         
         
-    def match_frame(self, frame, backwards=False, print_stat=True):
+    def match_frame(self, frame, savename,  append, backwards=False, 
+                    print_stat=True):
         '''
         Will stereo match particles in the given frame number.
+        
+        Input:
+        ======
+        
+        frame - frame number to stereo match
+        
+        savename - name of a file to save the results in
+        
+        append - If True, results are appended to an existing file. If False, 
+                 then  a new file with name savename is generated.
+                 
+        backwards - If True then matching with time is performed towards the 
+                    past frame. If False (default) matching is towards future
+                    frames.
+        
+        print_stat - If True will print a message with the number of matched 
+                     particles.
         '''
         if print_stat:
             print('\n')
@@ -518,20 +574,21 @@ class matching_with_marching_particles_algorithm(object):
             self.matchedBlobs[frame] = set([])
         
         m0 = len(self.matches)
-        self.stereo_match_frame_with_previous_matches(frame, backwards=backwards)
+        res_pm = self.stereo_match_frame_with_previous_matches(frame, backwards=backwards)
         newPrevFrame = len(self.matches) - m0
         
         # Matching with random points
-        self.stereo_match_frame_with_random_initial_points(frame)
+        res_ip = self.stereo_match_frame_with_random_initial_points(frame)
         
         # matching with pair candidates
+        res_pc = []
         if self.voxel_size is not None:
             for i in range(self.Ncams-1):
                 camNum1=i ; camNum2=i+1
                 cands = self.find_candidates_with_two_cameras(camNum1, 
                                                               camNum2, 
                                                               frame)
-                self.stereo_match_frame_with_given_points(cands, frame)
+                res_pc = res_pc + list(self.stereo_match_frame_with_given_points(cands, frame))
         
         newEpipolarCands = len(self.matches) - m0 - newPrevFrame
         
@@ -541,6 +598,8 @@ class matching_with_marching_particles_algorithm(object):
             prnt = (newTot, newPrevFrame, newEpipolarCands)
             print('Found %d matches: %d from prev. frame + %d new'%prnt)
         
+        frm_res = res_pm + res_ip + res_pc
+        XXXXXXXXXXXXXXXXXXXXXX
         
         
        

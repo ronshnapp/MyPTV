@@ -192,8 +192,22 @@ def read_from_file(fname, frame_start=None, frame_end=None):
             
         return pd.DataFrame(dset[f0:fn])
             
+    
 
 
+def read_file_frame_range(fname):
+    '''
+    Returns a set of the frame numbers within a given .hdf5 file.
+    
+    input:
+        
+    fname (string) - name of the file to read. 
+    '''
+    
+    with h5py.File(fname, 'r') as f:
+        frames = set(f['dataset'][:,-1].astype('int'))
+    
+    return frames
 
 
 # if __name__ == '__main__':
