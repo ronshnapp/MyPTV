@@ -1035,6 +1035,25 @@ class workflow(object):
                 raise ValueError('camera file %s not found'%cam.name)
         imsys = img_system(cams)
         
+        # ================= new format
+        # check if save name will overwrite existing data
+        if save_name is not None:
+            cwd_ls = listdir(getcwd())
+            if save_name in cwd_ls or pathExists(save_name):
+                print('\n The file name "%s" already exists in'%save_name)
+                print(' the working directory. Should I save anyways?')
+                usr = input('(1=Continue and overwrite, else=Dont save new data)')
+                if usr == '1':
+                    print('\n','Overwriting the existing file.')
+                    
+                else:
+                    print('\n','Will not save new data.')
+                    save_name = None
+                    
+        # ensure blob filenames have .hdf5 ending
+        for i in range(len(blob_fn)):
+            if not(blob_fn[i].endswith('.hdf5')): blob_fn[i] += '.hdf5'
+        # =================
         
         mps = matching_with_marching_particles_algorithm(imsys, 
                                                blob_fn, 
@@ -1067,21 +1086,25 @@ class workflow(object):
                 tp = type(frames)
                 msg = 'N_frames must be an integer or None (given %s).'%tp
                 raise TypeError(msg)
-                
-                
+        
         # mathing
         print('Starting stereo-matching at: ', strftime("%H:%M:%S", localtime()))
         
+        # ========== new forat
         if march_forwards==True:
             print('Matching forwards. Frames: %d -> %d'%(frames[0], frames[-1]))
             for f in frames:
-                mps.match_frame(f)
+                if f==frames[0]: append=False
+                else: append=True
+                mps.match_frame(f, save_name,  append)
                 
         if march_backwards==True:
             print('\n','Matching backwards. Frames: %d -> %d'%(frames[-1], frames[0]))
             for f in frames[::-1]:
-                mps.match_frame(f)
-        
+                if f==frames[0]: append=False
+                else: append=True
+                mps.match_frame(f, save_name,  append, backwards=True)
+        # =================
         
         
         # print matching statistics
@@ -1098,22 +1121,24 @@ class workflow(object):
         print('pairs: %.1f per frame \n'%c2)
         
         
-        # save the results
-        if save_name is not None:
-            cwd_ls = listdir(getcwd())
-            if save_name in cwd_ls or pathExists(save_name):
-                print('\n The file name "%s" already exists in'%save_name)
-                print(' the working directory. Should I save anyways?')
-                usr = input('(1=yes, else=no)')
-                if usr == '1':
-                    print('\n','saving file.')
-                    mps.save_particles(save_name)
-                else:
-                    print('\n','skiped saving.')
+        # inactive in new format
+        #
+        # # save the results
+        # if save_name is not None:
+        #     cwd_ls = listdir(getcwd())
+        #     if save_name in cwd_ls or pathExists(save_name):
+        #         print('\n The file name "%s" already exists in'%save_name)
+        #         print(' the working directory. Should I save anyways?')
+        #         usr = input('(1=yes, else=no)')
+        #         if usr == '1':
+        #             print('\n','saving file.')
+        #             mps.save_particles(save_name)
+        #         else:
+        #             print('\n','skiped saving.')
                 
-            else:
-                print('\n','saving file.')
-                mps.save_particles(save_name)
+        #     else:
+        #         print('\n','saving file.')
+        #         mps.save_particles(save_name)
         
         print('\n', 'Finished Matching.\n')
             

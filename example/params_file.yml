@@ -28,7 +28,7 @@
 - segmentation:
     Number_of_images: None
     image_start: 0
-    images_folder: Images_cam3
+    images_folder: Images_cam1
     single_image_name: 01.tif
     image_extension: '.tif'
     raw_format: False
@@ -52,7 +52,7 @@
     max_mass: None
     method: labeling
     particle_size: 8  
-    save_name: blobs_cam3.hdf5
+    save_name: blobs_cam1
 
 - matching:
     blob_files: blobs_cam1, blobs_cam2, blobs_cam3

@@ -24,6 +24,7 @@ from pandas import read_csv
 
 import h5py
 
+from myptv.io_mod import write_to_file
 
 
 class matching_with_marching_particles_algorithm(object):
@@ -148,16 +149,21 @@ class matching_with_marching_particles_algorithm(object):
 # =============================================================================
         
         # ======= new format
+        print(blob_files)
         self.frames = set([])
         for fn in blob_files:
-            self.frames = self.frames.union(read_file_frame_range)
-            
-        self.blobs = []          # blobs to be taken from hdf5 file datasets
-        self.active_frames = []  # frames currenlty held in self.blobs
+            fn_frms = read_file_frame_range(fn)
+            self.frames = self.frames.union(fn_frms)
+        
+        self.get_blobs()
+        
+        # self.blobs = []          # blobs to be taken from hdf5 file datasets
+        # self.active_frames = []  # frames currenlty held in self.blobs
+        # ================================
         
         # a dicionary that is used to hold kd trees of blob coordinates
         self.B_ik_trees = {'frame': None}
- 
+
     
     def get_blobs(self, f0=None, fn=None):
         '''
@@ -570,6 +576,16 @@ class matching_with_marching_particles_algorithm(object):
             print('\n')
             print('frame: %d'%frame)
         
+        # ======== new format
+        # clear self.matches from not needed results
+        for bd in self.blobs:
+            for k in list(bd.keys()):
+                if backwards==False:
+                    if k!=frame-1: del bd[k]
+                elif backwards==False:
+                    if k!=frame+1: del bd[k]
+        # =====================
+        
         if frame not in self.matchedBlobs.keys():
             self.matchedBlobs[frame] = set([])
         
@@ -598,10 +614,13 @@ class matching_with_marching_particles_algorithm(object):
             prnt = (newTot, newPrevFrame, newEpipolarCands)
             print('Found %d matches: %d from prev. frame + %d new'%prnt)
         
-        frm_res = res_pm + res_ip + res_pc
-        XXXXXXXXXXXXXXXXXXXXXX
-        
-        
+        # ========== New format
+        # save te results found in this frame
+        if savename is not None:
+            frm_res = res_pm + res_ip + res_pc
+            write_to_file(savename, frm_res, 'particles', append=append)
+        # =============================
+                
        
         
     def plot_disparity_map(self, camNum):
@@ -635,30 +654,31 @@ class matching_with_marching_particles_algorithm(object):
         
         
         
+    # ====== inactive with the new format
+    #
+    # def save_particles(self, saveName):
+    #     '''
+    #     Will save the matched particles on the disk with the given
+    #     file name.
+    #     '''
         
-    def save_particles(self, saveName):
-        '''
-        Will save the matched particles on the disk with the given
-        file name.
-        '''
+    #     toSave = []
+    #     for m in self.matches:
+    #         p = [m[0][0], m[0][1], m[0][2]]
+    #         for cn in range(self.Ncams):
+    #             try: 
+    #                 p.append(m[1][cn][1])
+    #             except:
+    #                 p.append(-1)
+    #         p.append(m[2])
+    #         p.append(m[3])
+    #         toSave.append(p)
         
-        toSave = []
-        for m in self.matches:
-            p = [m[0][0], m[0][1], m[0][2]]
-            for cn in range(self.Ncams):
-                try: 
-                    p.append(m[1][cn][1])
-                except:
-                    p.append(-1)
-            p.append(m[2])
-            p.append(m[3])
-            toSave.append(p)
-        
-        fmt = ['%.3f', '%.3f', '%.3f']
-        for i in range(self.Ncams):
-            fmt.append('%d')
-        fmt = fmt + ['%.3f', '%.3f']
-        savetxt(saveName, toSave, fmt=fmt, delimiter='\t')
+    #     fmt = ['%.3f', '%.3f', '%.3f']
+    #     for i in range(self.Ncams):
+    #         fmt.append('%d')
+    #     fmt = fmt + ['%.3f', '%.3f']
+    #     savetxt(saveName, toSave, fmt=fmt, delimiter='\t')
         
         
         
