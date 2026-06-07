@@ -70,7 +70,7 @@ def get_pairs(traj_list, Np=100):
         
     pairs = []
     
-    count = 1
+    count = 0
     for k in range(len(traj_list)//Np+1):
         group = traj_list[k*Np:(k+1)*Np]
         
@@ -87,15 +87,15 @@ def get_pairs(traj_list, Np=100):
                     ind_j = where(in_list(group[j][:,-1], common_times))[0]
                     p_ij = group[i][ind_i, 1:10] - group[j][ind_j, 1:10] 
                     
-                    idcol = np.ones((len(p_ij),1))*count
+                    idcol = np.ones((len(p_ij),1))*(count+1)
                     
                     p_ij = hstack([idcol,
                                    group[i][ind_i, :1], 
                                    group[j][ind_j, :1],
                                    p_ij, group[i][ind_i, -1:]])
-                    pairs += p_ij.tolist()
+                    pairs.append(p_ij.tolist())
                     count+=1
-    print('\n', 'finighed pairing: %d pairs\n'%count)
+    print('\n', 'finished pairing: %d pairs\n'%count)
     return pairs
 
 
@@ -105,20 +105,20 @@ def get_pairs(traj_list, Np=100):
 
 
 
-if __name__ == "__main__":
-    
-    fname = '/home/ron/Desktop/Research/PTV cases/Mani_Benny_Vortex/smoothed_traj_Run26'
-    
-    # read trajectories sorted by their initial frame number 
-    trajs = sorted(load_trajs_as_arrays(fname), key=lambda tr: tr[0,-1])
-    
-    # pair trajectories in groups
-    pairs = get_pairs(trajs[:1000], Np = 50)
-        
-    # # save the pairs
-    saveName = 'pairs'
-    fmt = ['%d', '%d', '%d'] + ['%.03f' for i in range(len(pairs[0])-3)]
-    np.savetxt(saveName, pairs, delimiter='\t', fmt=fmt)
+#if __name__ == "__main__":
+#    
+#    fname = '/home/ron/Desktop/Research/PTV cases/Mani_Benny_Vortex/smoothed_traj_Run26'
+#    
+#    # read trajectories sorted by their initial frame number 
+#    trajs = sorted(load_trajs_as_arrays(fname), key=lambda tr: tr[0,-1])
+#    
+#    # pair trajectories in groups
+#    pairs = get_pairs(trajs[:1000], Np = 50)
+#        
+#    # # save the pairs
+#    saveName = 'pairs'
+#    fmt = ['%d', '%d', '%d'] + ['%.03f' for i in range(len(pairs[0])-3)]
+#    np.savetxt(saveName, pairs, delimiter='\t', fmt=fmt)
 
 
 
