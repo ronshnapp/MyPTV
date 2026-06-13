@@ -187,7 +187,7 @@ class matching_with_marching_particles_algorithm(object):
         #self.frames = sorted(list(self.frames))
  
         
-    def match_nearest_blobs(self, x, frame):
+    def match_nearest_blobs(self, x, frame, reuse=False):
         '''
         Given a point in lab space, x, and a frame number, this function 
         finds in each camera the blobs nearest to this point's projection, 
@@ -221,24 +221,34 @@ class matching_with_marching_particles_algorithm(object):
                     continue
 
                 identifier = (camNum, frame, ind[i])
-                if identifier in self.matchedBlobs[frame]: # this blob has been used
-                    continue
+                if reuse==False:
+                    if identifier in self.matchedBlobs[frame]: # this blob has been used
+                        continue
                 
-                else:
-                    blob = self.blobs[camNum][frame][ind[i]]
-                    # Test with multiple KNN, didn't work well.
+                # RON
+                blob = self.blobs[camNum][frame][ind[i]]
+                coords[camNum] = blob[:2]
+                matchBlobs[camNum] = (blob[:2], ind[i])
+                break
+                
+                
 # =============================================================================
-#                     try:
-#                         coords[camNum].append(blob[:2])
-#                         matchBlobs[camNum].append((blob[:2], ind[i]))
-#                     except:
-#                         coords[camNum] = [blob[:2]]
-#                         matchBlobs[camNum] = [(blob[:2], ind[i])]
+#                 else:
+#                     blob = self.blobs[camNum][frame][ind[i]]
+#                     # Test with multiple KNN, didn't work well.
+# # =============================================================================
+# #                     try:
+# #                         coords[camNum].append(blob[:2])
+# #                         matchBlobs[camNum].append((blob[:2], ind[i]))
+# #                     except:
+# #                         coords[camNum] = [blob[:2]]
+# #                         matchBlobs[camNum] = [(blob[:2], ind[i])]
+# # =============================================================================
+# 
+#                     coords[camNum] = blob[:2]
+#                     matchBlobs[camNum] = (blob[:2], ind[i])
+#                     break
 # =============================================================================
-
-                    coords[camNum] = blob[:2]
-                    matchBlobs[camNum] = (blob[:2], ind[i])
-                    break
 
                 
         
@@ -419,7 +429,7 @@ class matching_with_marching_particles_algorithm(object):
         count = 0
         results = []
         for x0 in pointToMatchOn:
-            res = self.match_nearest_blobs(x0, frame)
+            res = self.match_nearest_blobs(x0, frame, reuse=True) #RON
             if res is not None:
                 self.matches.append(res)
                 results.append(results)
