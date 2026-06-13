@@ -52,7 +52,11 @@
     max_mass: None
     method: labeling
     particle_size: 8  
+<<<<<<< HEAD
     save_name: blobs_cam1
+=======
+    save_name: blobs_cam3.hdf5
+>>>>>>> 6b2d4f2 (changes from master)
 
 - matching:
     blob_files: blobs_cam1, blobs_cam2, blobs_cam3

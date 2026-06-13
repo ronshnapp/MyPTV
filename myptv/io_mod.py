@@ -192,6 +192,7 @@ def read_from_file(fname, frame_start=None, frame_end=None):
             
         return pd.DataFrame(dset[f0:fn])
             
+<<<<<<< HEAD
     
 
 
@@ -208,6 +209,10 @@ def read_file_frame_range(fname):
         frames = set(f['dataset'][:,-1].astype('int'))
     
     return frames
+=======
+
+
+>>>>>>> 6b2d4f2 (changes from master)
 
 
 # if __name__ == '__main__':
