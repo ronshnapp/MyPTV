@@ -152,7 +152,7 @@ class matching_with_marching_particles_algorithm(object):
         # ======= new format
         self.frames = set([])
         for fn in blob_files:
-            self.frames = self.frames.union(read_file_frame_range)
+            self.frames = self.frames.union(read_file_frame_range(fn))
             
         self.blobs = []          # blobs to be taken from hdf5 file datasets
         self.active_frames = []  # frames currenlty held in self.blobs
@@ -220,7 +220,6 @@ class matching_with_marching_particles_algorithm(object):
                     if identifier in self.matchedBlobs[frame]: # this blob has been used
                         continue
                 
-                # RON
                 blob = self.blobs[camNum][frame][ind[i]]
                 coords[camNum] = blob[:2]
                 matchBlobs[camNum] = (blob[:2], ind[i])
@@ -289,7 +288,6 @@ class matching_with_marching_particles_algorithm(object):
 # =============================================================================
     
     
-        
         # (3) perform the stereo matching; If it fails, return None.
         # res = self.imsys.stereo_match(coords, self.max_d_err*self.Ncams)
         res = self.imsys.stereo_match(coords, self.max_d_err, 
@@ -387,15 +385,18 @@ class matching_with_marching_particles_algorithm(object):
         self.generate_blob_trees(frame)
         
         count = 0
+        results = []
         for x0 in points:
             res = self.match_nearest_blobs(x0, frame)
             if res is not None:
                 self.matches.append(res)
+                results.append(res)
                 count += 1
                 
         if message:
             print('', 'matches using given points: %d'%count)
         
+        return results
         
         
         
@@ -424,10 +425,10 @@ class matching_with_marching_particles_algorithm(object):
         count = 0
         results = []
         for x0 in pointToMatchOn:
-            res = self.match_nearest_blobs(x0, frame, reuse=True) #RON
+            res = self.match_nearest_blobs(x0, frame, reuse=True)
             if res is not None:
                 self.matches.append(res)
-                results.append(results)
+                results.append(res)
                 count += 1
                 
         if message:
@@ -555,7 +556,7 @@ class matching_with_marching_particles_algorithm(object):
         
         
         
-    def match_frame(self, frame, savename,  append, backwards=False, 
+    def match_frame(self, frame, savename, append, backwards=False, 
                     print_stat=True):
         '''
         Will stereo match particles in the given frame number.
@@ -568,7 +569,7 @@ class matching_with_marching_particles_algorithm(object):
         savename - name of a file to save the results in
         
         append - If True, results are appended to an existing file. If False, 
-                 then  a new file with name savename is generated.
+                 then a new file with name savename is generated.
                  
         backwards - If True then matching with time is performed towards the 
                     past frame. If False (default) matching is towards future
@@ -583,12 +584,12 @@ class matching_with_marching_particles_algorithm(object):
         
         # ======== new format
         # clear self.matches from not needed results
-        for bd in self.blobs:
-            for k in list(bd.keys()):
-                if backwards==False:
-                    if k!=frame-1: del bd[k]
-                elif backwards==False:
-                    if k!=frame+1: del bd[k]
+        #for bd in self.blobs:
+        #    for k in list(bd.keys()):
+        #        if backwards==False:
+        #            if k!=frame-1: del bd[k]
+        #        elif backwards==False:
+        #            if k!=frame+1: del bd[k]
         # =====================
         
         if frame not in self.matchedBlobs.keys():
@@ -621,9 +622,22 @@ class matching_with_marching_particles_algorithm(object):
 
         # ========== New format
         # save te results found in this frame
+        frm_res = res_pm + res_ip + res_pc
         if savename is not None:
-            frm_res = res_pm + res_ip + res_pc
-            write_to_file(savename, frm_res, 'particles', append=append)
+            toSave = []
+            for m in frm_res:
+                p = [m[0][0], m[0][1], m[0][2]]
+                for cn in range(self.Ncams):
+                    try: 
+                        p.append(m[1][cn][1])
+                    except:
+                        p.append(-1)
+                p.append(m[2])
+                p.append(m[3])
+                toSave.append(p)
+            write_to_file(savename, array(toSave), 'particles', append=append)
+            
+        return frm_res
         # =============================
 
        

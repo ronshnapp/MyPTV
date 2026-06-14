@@ -150,8 +150,7 @@ def write_to_file(fname, data, dset_type, append=True):
 
 def read_from_file(fname, frame_start=None, frame_end=None):
     '''
-    Reads data from a MyPTV hdf5 file of processed and returns it as a pandas
-    Dataframe.
+    Reads data from a MyPTV hdf5 file and returns it as a pandas Dataframe.
     
     Note: if frame_start = x and frame_end = y, then this returns data 
     belonging to frames with indexes from x to y
