@@ -196,8 +196,6 @@ class matching_with_marching_particles_algorithm(object):
         # (1) if the KDTrees are setup with the wromg frame, we fix this
         if self.B_ik_trees['frame'] != frame:
             self.generate_blob_trees(frame)
-            #for camNum in range(self.Ncams):
-            #    self.B_ik_trees[camNum] = KDTree(self.blobs[camNum][frame][:,:2])
         
         # (2) prepare a "coords" dictionary with the items being the NN blobs 
         coords = {}
@@ -334,8 +332,15 @@ class matching_with_marching_particles_algorithm(object):
                 self.B_ik_trees[camNum] = None
                 
             else:
-                self.B_ik_trees[camNum] = KDTree(self.blobs[camNum][frame][:,:2])
-            
+                camBlobs = self.blobs[camNum][frame][:,:2].copy()
+                if len(self.matchedBlobs[frame])>0:
+                    used = array(list(self.matchedBlobs[frame]))
+                    whereUsed = used[used[:,0]==camNum, 2]
+                    camBlobs[whereUsed] = array([1e12, 1e12])
+                self.B_ik_trees[camNum] = KDTree(camBlobs)
+                
+                # self.B_ik_trees[camNum] = KDTree(self.blobs[camNum][frame][:,:2])
+                
         self.B_ik_trees['frame'] = frame
     
     
@@ -623,7 +628,7 @@ class matching_with_marching_particles_algorithm(object):
         # ========== New format
         # save te results found in this frame
         frm_res = res_pm + res_ip + res_pc
-        if savename is not None:
+        if savename is not None and len(frm_res)>0:
             toSave = []
             for m in frm_res:
                 p = [m[0][0], m[0][1], m[0][2]]
