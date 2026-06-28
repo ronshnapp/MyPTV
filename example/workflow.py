@@ -147,8 +147,6 @@ class workflow(object):
             
             elif action == 'match_target_file':
                 print('Note: you are running an outdated action!')
-                print('consider using the initial_calibration and')
-                print('final_calibration actions instead.')
                 self.match_target_file()
             
             
@@ -1024,7 +1022,7 @@ class workflow(object):
             raise ValueError('No initial guess method given (N0=0, voxel_size=None)')
         
         if min_cam_match<2:
-            raise ValueError('min_cam_match needs to be at least 2.')
+            raise ValueError('min_cam_match must be at least 2.')
         
         # setting up the img_system 
         cams = [camera_wrapper(cn,'./') for cn in cam_names]
@@ -1038,6 +1036,10 @@ class workflow(object):
         # ================= new format
         # check if save name will overwrite existing data
         if save_name is not None:
+            
+            if not(save_name.endswith('.hdf5')):
+                save_name = save_name + '.hdf5'
+                
             cwd_ls = listdir(getcwd())
             if save_name in cwd_ls or pathExists(save_name):
                 print('\n The file name "%s" already exists in'%save_name)
@@ -1063,12 +1065,10 @@ class workflow(object):
                                                voxel_size,
                                                min_cam_match=min_cam_match,
                                                reverse_eta_zeta=True)
-
-        
         
         # setting the frame range to match
-        ts = int(mps.frames[0])
-        te = int(mps.frames[-1])
+        ts = int(min(mps.frames))
+        te = int(max(mps.frames))
         print('segmented particles time range: %d -> %d'%(ts,te),'\n')
         
         if frame_start is not None:
@@ -1091,19 +1091,31 @@ class workflow(object):
         print('Starting stereo-matching at: ', strftime("%H:%M:%S", localtime()))
         
         # ========== new forat
+        frame_count = 0
         if march_forwards==True:
             print('Matching forwards. Frames: %d -> %d'%(frames[0], frames[-1]))
             for f in frames:
-                if f==frames[0]: append=False
+                if frame_count==0: append=False
                 else: append=True
+               
+                # reading blobs
+                if f==frames[0]: mps.get_blobs(f0=f, fn=f+1) 
+                else: mps.get_blobs(f0=f-1, fn=f+1)
+                    
                 mps.match_frame(f, save_name,  append)
+                frame_count += 1
                 
         if march_backwards==True:
             print('\n','Matching backwards. Frames: %d -> %d'%(frames[-1], frames[0]))
             for f in frames[::-1]:
-                if f==frames[0]: append=False
+                if frame_count==0: append=False
                 else: append=True
+               
+                # reading blobs
+                if f==frames[0]: mps.get_blobs(f0=f, fn=f+1) 
+                else: mps.get_blobs(f0=f-1, fn=f+1)
                 mps.match_frame(f, save_name,  append, backwards=True)
+                frame_count += 1
         # =================
         
         

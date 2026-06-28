@@ -154,7 +154,8 @@ class matching_with_marching_particles_algorithm(object):
         for fn in blob_files:
             self.frames = self.frames.union(read_file_frame_range(fn))
             
-        self.blobs = []          # blobs to be taken from hdf5 file datasets
+         # blobs to be taken from hdf5 file datasets
+        self.blobs = [{} for i in range(self.Ncams)] 
         self.active_frames = []  # frames currenlty held in self.blobs
         
         # a dicionary that is used to hold kd trees of blob coordinates
