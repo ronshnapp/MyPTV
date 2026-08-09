@@ -146,7 +146,7 @@ class check_matching():
     
     
     
-    def get_disparity_list(self, frames=None):
+    def get_disparity_list(self, frames=None, return_coords=False):
         '''
         Returns a list of the disparity between particle projection and blobs
         for all particles in the file or for a given list of frames.
@@ -159,7 +159,12 @@ class check_matching():
             desc = 'frame: %d'%frame
             for p_ind in tqdm.tqdm(range(len(self.particles[frame])), 
                                    desc=desc):
-                disparity_lst.append(self.get_particle_disparity(frame, p_ind))
+                if return_coords:
+                    c = self.particles[frame][p_ind][:3]
+                    d = self.get_particle_disparity(frame, p_ind)
+                    disparity_lst.append(list(c)+[d])
+                else:
+                    disparity_lst.append(self.get_particle_disparity(frame, p_ind))
         return disparity_lst
     
     
@@ -206,7 +211,21 @@ class check_matching():
         h = ax.hist(disp, bins='auto')
         ax.set_xlabel('disparity [pixel]')
         ax.set_ylabel('counts')
-            
+        
+        
+    def plot_vs_position(self, frames=None):
+        coord_disp_list = self.get_disparity_list(frames=frames, 
+                                                  return_coords=True)
+        coord_disp_list = array(coord_disp_list)
+        fig, ax = plt.subplots(1,3, sharey=True)
+        ax[0].scatter(coord_disp_list[:,0], coord_disp_list[:,3], s=3)
+        ax[1].scatter(coord_disp_list[:,1], coord_disp_list[:,3], s=3)
+        ax[2].scatter(coord_disp_list[:,2], coord_disp_list[:,3], s=3)
+        ax[0].set_xlabel('x [mm]')
+        ax[1].set_xlabel('y [mm]')
+        ax[2].set_xlabel('z [mm]')
+        ax[0].set_ylabel('disparity [px]')
+        
             
     def plot_disparity_vs_stereo_matching_err(self, frames=None):
         '''
@@ -299,7 +318,7 @@ class matching_quality_GUI(check_matching):
         
         root = tk.Tk()
         root.title("Tkinter GUI Example")
-        root.geometry("350x250")
+        root.geometry("350x350")
         
         frame_label = tk.Label(root, 
                                text="Available frame range: %d-%d"%(f0,fn), 
@@ -326,6 +345,12 @@ class matching_quality_GUI(check_matching):
                          width=button_width)
         btn4.pack(pady=10)
         
+        
+        btn5 = tk.Button(root, text="Show Disparity vs. position", 
+                         command=self.btn_plot_vs_position,
+                         width=button_width)
+        btn5.pack(pady=10)
+        
         root.mainloop()
         
     
@@ -350,6 +375,11 @@ class matching_quality_GUI(check_matching):
     def btn_plot_disparity_histogram(self):
         self.plot_disparity_histogram(self.f_range)
         plt.show()
+        
+    def btn_plot_vs_position(self):
+        self.plot_vs_position(self.f_range)
+        plt.show()
+
 
 
 

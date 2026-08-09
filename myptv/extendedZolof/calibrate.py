@@ -74,11 +74,19 @@ class calibrate_extendedZolof(camera_extendedZolof):
         self.A = res[0]
         
         # 2) finding the best camera center -
-        line_list = []
-        for i in range(0, len(self.X_list)):
-            O, e = self.get_ray_from_x(self.x_list[i], X0=self.X_list[i])
-            line_list.append(line(O, e)) 
-        self.O = get_nearest_line_crossing(line_list)
+        #line_list = []
+        #for i in range(0, len(self.X_list)):
+        #    O, e = self.get_ray_from_x(self.x_list[i], X0=self.X_list[i])
+        #    line_list.append(line(O, e)) 
+        #self.O = get_nearest_line_crossing(line_list)
+        
+        from myptv.extendedZolof.calibrate_step2_improved import step2_estimate_camera_center
+        self.O = step2_estimate_camera_center(
+            self.cam.projection, self.x_list, self.X_list,
+            thresh_pix=5.0,   # tune to your setup's expected pixel noise
+            refine=True
+        )
+        
         
         # 3) finding the unit vector for each X -
         r_list = []
