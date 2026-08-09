@@ -1,6 +1,6 @@
-April, 2026
+Aug, 2026
 
-Version: 1.3.10
+Version: 1.3.11
 
 
 <img src="./user_manual/figs/logo.png" style="zoom:20%;" />
