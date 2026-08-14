@@ -387,7 +387,7 @@ class matching_with_marching_particles_algorithm(object):
         
         count = 0
         for x0 in pointToMatchOn:
-            res = self.match_nearest_blobs(x0, frame, reuse=True) #RON
+            res = self.match_nearest_blobs(x0, frame, reuse=False) #RON
             if res is not None:
                 self.matches.append(res)
                 count += 1

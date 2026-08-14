@@ -322,10 +322,10 @@ class get_residual_blobs(object):
     
     def __init__(self, blob_filess, particles_file):
         
+        data = pd.read_csv(particles_file, sep='\t', header=None)
+        colNum = data.shape[-1]-1
         self.particles = dict([(k, g.values.tolist()) for k,g in 
-                               pd.read_csv(particles_file, 
-                                           sep='\t', 
-                                           header=None).groupby(7)])
+                               data.groupby(colNum)])
         self.blobfiles = blob_filess
         
     

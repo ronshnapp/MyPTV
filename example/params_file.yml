@@ -151,6 +151,13 @@
     elevation: 15
     azimoth: 70
     rotation_rate: 0.2
+    
+- plot_unmatched_blobs:
+    blob_files: blobs_cam1, blobs_cam2, blobs_cam3  
+    particle_file: particles
+    frameStart: 0
+    frameEnd: -1
+    camInd: 1
 
 - run_extension:
     path_to_extention: the_absolute_path_to_the_script_containing_the_code 

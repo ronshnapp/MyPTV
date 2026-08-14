@@ -60,6 +60,7 @@ class workflow(object):
                                 'fiber_orientations',
                                 'plot_trajectories',
                                 'animate_trajectories',
+                                'plot_unmatched_blobs',
                                 'run_extention']
         
         
@@ -127,6 +128,9 @@ class workflow(object):
                 
             elif action == 'calculate_equilization_map':
                 self.do_calculate_equilization_map()
+                
+            elif action == 'plot_unmatched_blobs':
+                self.do_plot_unmatched_blobs()
             
             elif action == 'help':
                 self.help_me()
@@ -1610,6 +1614,44 @@ class workflow(object):
         
         print('')
         print('animation saved. Done!')
+        
+        
+        
+        
+        
+    def do_plot_unmatched_blobs(self):
+        '''
+        This is a diagnostic tool that helps understand the quality of the 
+        matching. It generates a plot that vizualized the blobs that havent
+        been used to form particles in the matching step.
+        '''
+        
+        blobFiles = self.get_param('plot_unmatched_blobs', 'blob_files')
+        particleFile = self.get_param('plot_unmatched_blobs', 'particle_file')
+        frameStart = self.get_param('plot_unmatched_blobs', 'frameStart')
+        frameEnd = self.get_param('plot_unmatched_blobs', 'frameEnd')
+        camInd = self.get_param('plot_unmatched_blobs', 'camInd')
+        
+        blobFiles = [val.strip() for val in blobFiles.split(',')]
+        
+        from myptv.utils import get_residual_blobs
+        import numpy as np
+        import matplotlib.pyplot as plt
+
+        grb = get_residual_blobs(blobFiles, particleFile)
+        grb.get_residual_blobs()
+
+
+        frames = sorted(list(grb.particles.keys()))
+        f0, fn = frames[frameStart], frames[frameEnd]
+        camBlobs = np.array(grb.residual_blobs[camInd])
+        mask = (camBlobs[:,-1] >= f0) & (camBlobs[:,-1] <= fn) 
+
+        fig, ax = plt.subplots()
+        ax.scatter(camBlobs[mask,0], camBlobs[mask,1], c=camBlobs[mask,-2]**0.5, s=3)
+        ax.set_aspect('equal')
+        ax.set_title('blobs that were not matched; color indicates blob mass')
+        plt.show()
     
     
     

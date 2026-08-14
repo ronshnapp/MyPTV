@@ -11,9 +11,10 @@ obtain the [A], [B], and O Extended Zolof model parameters.
 """
 
 from numpy import array, dot
-from numpy import sum as npsum
 from numpy.linalg import lstsq, norm
 from scipy.optimize import minimize
+from numpy import median, abs as npabs
+import warnings
 
 from myptv.extendedZolof.camera import camera_extendedZolof
 from myptv.utils import line, get_nearest_line_crossing
@@ -59,19 +60,29 @@ class calibrate_extendedZolof(camera_extendedZolof):
         the A coefficients. 
         '''
         # 1) finding the A coefficients - 
-        if self.quadratic==False:
-            XColumns = [self.cam.get_XCol(Xi) for Xi in self.X_list]
+        #if self.quadratic==False:
+        #    XColumns = [self.cam.get_XCol(Xi) for Xi in self.X_list]
         
-        elif self.quadratic==True:
-            XColumns = []
-            for Xi in self.X_list:
-                Xcol_i = self.cam.get_XCol(Xi)
+        #elif self.quadratic==True:
+        #    XColumns = []
+        #    for Xi in self.X_list:
+        #        Xcol_i = self.cam.get_XCol(Xi)
                 # (Here, -9 is for quadratic, and -15 is linear)
-                for i in range(-9,0): Xcol_i[i] = 0  
-                XColumns.append(Xcol_i)
+        #        for i in range(-9,0): Xcol_i[i] = 0  
+        #        XColumns.append(Xcol_i)
         
-        res = lstsq(XColumns, self.x_list, rcond=None)
-        self.A = res[0]
+        #res = lstsq(XColumns, self.x_list, rcond=None)
+        #self.A = res[0]
+        
+        self.A, A_mask = fit_A_robust(
+            self.cam, self.X_list, self.x_list,
+            quadratic=self.quadratic,
+            sigma_thresh=3.5
+            )
+        
+        self.A_mask = A_mask  # keep for diagnostics/plotting
+        self.x_inlayers = array(self.x_list)[A_mask]
+        self.X_inlayers = array(self.X_list)[A_mask]
         
         # 2) finding the best camera center -
         #line_list = []
@@ -82,7 +93,8 @@ class calibrate_extendedZolof(camera_extendedZolof):
         
         from myptv.extendedZolof.calibrate_step2_improved import step2_estimate_camera_center
         self.O = step2_estimate_camera_center(
-            self.cam.projection, self.x_list, self.X_list,
+            self.cam.projection, #self.x_list, self.X_list,
+            self.x_inlayers, self.X_inlayers,
             thresh_pix=5.0,   # tune to your setup's expected pixel noise
             refine=True
         )
@@ -90,12 +102,12 @@ class calibrate_extendedZolof(camera_extendedZolof):
         
         # 3) finding the unit vector for each X -
         r_list = []
-        for Xi in self.X_list:
+        for Xi in self.X_inlayers: #self.X_list:
             r = (Xi - self.O)/norm(Xi - self.O)
             r_list.append(r)
         
         # 4) finding the B coefficients -
-        xColumns = [self.cam.get_xCol(xi) for xi in self.x_list]
+        xColumns = [self.cam.get_xCol(xi) for xi in self.x_inlayers] #self.x_list]
         res = lstsq(xColumns, r_list, rcond=None)
         self.B = res[0]
         
@@ -134,9 +146,20 @@ class calibrate_extendedZolof(camera_extendedZolof):
         '''
         errorsSquard = []
         
-        for i in range(len(self.X_list)):
-            xProj = dot(self.get_XCol(self.X_list[i]), self.cam.A)
-            errorsSquard.append( norm(array(xProj)-array(self.x_list[i]))**2 )
+        try:
+            x_lst = array(self.x_inlayers)
+        except:
+            x_lst = array(self.x_list)
+        
+        try:
+            X_lst = array(self.X_inlayers)
+        except:
+            X_lst = array(self.X_list)
+                          
+
+        for i in range(len(X_lst)):
+            xProj = dot(self.get_XCol(X_lst[i]), self.cam.A)
+            errorsSquard.append( norm(array(xProj)-array(x_lst[i]))**2 )
         
         return (sum(errorsSquard)/len(errorsSquard))**0.5
         
@@ -150,8 +173,18 @@ class calibrate_extendedZolof(camera_extendedZolof):
         if ax == None:
             fig, ax = plt.subplots()
         
-        imc = array(self.x_list)
-        z_lst = array([self.cam.projection(x) for x in self.X_list])
+        #imc = array(self.x_list)
+        #z_lst = array([self.cam.projection(x) for x in self.X_list])
+        try:
+            imc = array(self.x_inlayers)
+        except:
+            imc = array(self.x_list)
+        
+        try:
+            z_lst = array([self.cam.projection(x) for x in self.X_inlayers])
+        except:
+            z_lst = array([self.cam.projection(x) for x in self.X_list])
+        
         err = npsum((imc-z_lst)**2, axis=1)**0.5
         
         h = ax.hist( err, bins='auto')
@@ -167,12 +200,18 @@ class calibrate_extendedZolof(camera_extendedZolof):
         if ax == None:
             fig, ax = plt.subplots()
         
-        imc = array(self.x_list)
+        try:
+            imc = array(self.x_inlayers)
+        except:
+            imc = array(self.x_list)
         ax.plot(imc[:,0], imc[:,1], 'ob')
         for i in range(imc.shape[0]):
             ax.text(imc[i,0], imc[i,1], '%d'%i, color = 'b')
         
-        z_lst = array([self.cam.projection(x) for x in self.X_list])
+        try:
+            z_lst = array([self.cam.projection(x) for x in self.X_inlayers])
+        except:
+            z_lst = array([self.cam.projection(x) for x in self.X_list])
         ax.plot( z_lst[:,0], z_lst[:,1], 'xr' )
         for i in range(z_lst.shape[0]):
             ax.text(z_lst[i,0], z_lst[i,1], '%d'%i, color = 'r')
@@ -184,7 +223,93 @@ class calibrate_extendedZolof(camera_extendedZolof):
         
         
         
-        
+
+
+
+
+
+ 
+ 
+def fit_A_robust(cam, X_list, x_list, quadratic=False,
+                  sigma_thresh=3.0, max_iterations=3,
+                  max_reject_fraction=0.25):
+    '''
+    Robustly fits the A (3D -> 2D) polynomial coefficients with iterative
+    outlier rejection.
+ 
+    sigma_thresh        : points with residual > median + sigma_thresh*MAD
+                           are rejected. ~3.0 is a reasonable starting
+                           point; lower it to reject more aggressively.
+    max_iterations       : safety cap on the number of refit iterations.
+    max_reject_fraction  : if more than this fraction of points would be
+                           rejected, stop early and warn -- usually means
+                           thresh is too strict or something else is wrong
+                           (e.g. bad initial correspondences), not just
+                           "a few outliers".
+ 
+    Returns (A, mask) where mask is a boolean array marking which points
+    were kept in the final fit.
+    '''
+    # --- build the design matrix, same as the original code ---
+    if quadratic == False:
+        XColumns = [cam.get_XCol(Xi) for Xi in X_list]
+    else:
+        XColumns = []
+        for Xi in X_list:
+            Xcol_i = cam.get_XCol(Xi)
+            # (-9 is for quadratic, -15 is linear)
+            for i in range(-9, 0):
+                Xcol_i[i] = 0
+            XColumns.append(Xcol_i)
+ 
+    XColumns = array(XColumns)
+    xTarget = array(x_list)
+    N = len(xTarget)
+ 
+    mask = array([True] * N)
+    A = None
+ 
+    for iteration in range(max_iterations):
+ 
+        res = lstsq(XColumns[mask], xTarget[mask], rcond=None)
+        A = res[0]
+ 
+        # residuals for ALL points, so rejected ones can be reconsidered
+        residuals = norm(XColumns.dot(A) - xTarget, axis=1)
+ 
+        med = median(residuals[mask])
+        mad = median(npabs(residuals[mask] - med)) * 1.4826  # -> ~std
+ 
+        if mad == 0:
+            # residuals are (numerically) identical; nothing more to reject
+            break
+ 
+        new_mask = residuals < (med + sigma_thresh * mad)
+ 
+        if new_mask.sum() < (1 - max_reject_fraction) * N:
+            warnings.warn(
+                'Outlier rejection would remove more than '
+                f'{max_reject_fraction*100:.0f}% of points; stopping '
+                'early and keeping the previous iteration\'s fit. '
+                'Consider raising sigma_thresh or checking your '
+                'correspondences.')
+            break
+ 
+        if (new_mask == mask).all():
+            break  # converged: no change in kept/rejected points
+ 
+        mask = new_mask
+ 
+    n_rejected = N - mask.sum()
+    if n_rejected > 0:
+        print(f'fit_A_robust: rejected {n_rejected}/{N} points '
+              f'({100*n_rejected/N:.1f}%) as outliers.')
+ 
+    return A, mask
+
+
+
+
         
         
         
