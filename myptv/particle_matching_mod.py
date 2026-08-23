@@ -16,9 +16,10 @@ from math import ceil, floor
 from itertools import combinations, product
 from numpy import savetxt, array, inf
 from numpy.random import uniform
+import numpy as np
 from scipy.spatial import KDTree
 from math import isinf
-
+from collections import defaultdict
 from pandas import read_csv
 
 
@@ -69,7 +70,7 @@ class matching_with_marching_particles_algorithm(object):
     '''
     
     
-    def __init__(self, imsys, blob_files, max_d_err, ROI, N0, voxel_size,
+    def __init__(self, imsys, blob_files, max_d_err, ROI, voxel_size,
                  min_cam_match=3, reverse_eta_zeta=False):
         '''
         inputs 
@@ -87,9 +88,6 @@ class matching_with_marching_particles_algorithm(object):
               in lab space. This is a tuple of length 6 with the following
               format: (xmin, xmax, ymin, ymax, zmin, zmax)
         
-        N0 (integer) - The number of random initial points to try and match in 
-                       the random initial guess method.
-             
         voxel_size (float of None) - Voxel size when getting initial guesses 
                                      with the ray traversal algorithm. If this
                                      is None then the ray traversal search is 
@@ -107,7 +105,6 @@ class matching_with_marching_particles_algorithm(object):
         self.max_d_err = max_d_err
         self.min_cam_match = min_cam_match
         self.ROI = ROI
-        self.N0 = N0
         self.matches = []
         self.Ncams = len(self.imsys.cameras)
         
@@ -142,9 +139,13 @@ class matching_with_marching_particles_algorithm(object):
         
         # a dicionary that is used to hold kd trees of blob coordinates
         self.B_ik_trees = {'frame': None}
- 
-    
- 
+
+        # A list that holds particles at consecutive frames that were matched
+        # based on proximity. This is used to predict future particle 
+        # positions.
+        self.Temporal_neighbors = []
+        
+        
         
     def match_nearest_blobs(self, x, frame, reuse=False):
         '''
@@ -158,10 +159,7 @@ class matching_with_marching_particles_algorithm(object):
         '''
         
         # (1) if the KDTrees are setup with the wromg frame, we fix this
-        if self.B_ik_trees['frame'] != frame:
-            self.generate_blob_trees(frame)
-            #for camNum in range(self.Ncams):
-            #    self.B_ik_trees[camNum] = KDTree(self.blobs[camNum][frame][:,:2])
+        self.ensure_blob_trees(frame)
         
         # (2) prepare a "coords" dictionary with the items being the NN blobs 
         coords = {}
@@ -175,7 +173,6 @@ class matching_with_marching_particles_algorithm(object):
             dist = kNN[0][0]
             for i in range(len(ind)):
                 
-
                 if dist[i]==inf:
                     continue
 
@@ -189,70 +186,7 @@ class matching_with_marching_particles_algorithm(object):
                 coords[camNum] = blob[:2]
                 matchBlobs[camNum] = (blob[:2], ind[i])
                 break
-                
-                
-# =============================================================================
-#                 else:
-#                     blob = self.blobs[camNum][frame][ind[i]]
-#                     # Test with multiple KNN, didn't work well.
-# # =============================================================================
-# #                     try:
-# #                         coords[camNum].append(blob[:2])
-# #                         matchBlobs[camNum].append((blob[:2], ind[i]))
-# #                     except:
-# #                         coords[camNum] = [blob[:2]]
-# #                         matchBlobs[camNum] = [(blob[:2], ind[i])]
-# # =============================================================================
-# 
-#                     coords[camNum] = blob[:2]
-#                     matchBlobs[camNum] = (blob[:2], ind[i])
-#                     break
-# =============================================================================
 
-                
-        
-        
-        # Test with multiple KNN, didn't work well.
-# =============================================================================
-#         # (3) perform the stereo matching; If it fails, return None.
-#         coords_combos = get_subdics(coords)
-#         matchBlobs_combos = get_subdics(matchBlobs)        
-#         for i in range(len(coords_combos)):
-#             coords = coords_combos[i]
-#             matchBlobs = matchBlobs_combos[i]
-#             
-#             res = self.imsys.stereo_match(coords, self.max_d_err, 
-#                                           strict_match=True)
-#             if res is None: continue
-#             else: xNew, pairedCams, err = res 
-#             
-#             # if the min_cam_match passes, return the results; else, return None
-#             if len(pairedCams)<self.min_cam_match: continue
-#             
-#             # if the error is too big, return None
-#             if err>self.max_d_err: continue
-#             
-#             # TEST1 - add ROI
-#             # if the poit is out of the ROI return None
-#             inX = self.ROI[0] <= xNew[0] <= self.ROI[1]
-#             inY = self.ROI[2] <= xNew[1] <= self.ROI[3]
-#             inZ = self.ROI[4] <= xNew[2] <= self.ROI[5]
-#             inROI = inX and inY and inZ
-#             if not(inROI): continue
-#             
-#             else:
-#                 for camNum in list(matchBlobs.keys()):
-#                     if camNum not in pairedCams:
-#                         del(matchBlobs[camNum])
-#                     else:
-#                         self.matchedBlobs[frame].add((camNum, frame, matchBlobs[camNum][1]))
-#             
-#             return xNew, matchBlobs, err, frame
-#         
-#         return None
-# =============================================================================
-    
-    
         
         # (3) perform the stereo matching; If it fails, return None.
         # res = self.imsys.stereo_match(coords, self.max_d_err*self.Ncams)
@@ -284,7 +218,127 @@ class matching_with_marching_particles_algorithm(object):
         
         return xNew, matchBlobs, err, frame
         
+    
+    
+    
+    def match_nearest_blobs_batch(self, points, frame, reuse=False):
+        '''
+        Batched replacement for calling match_nearest_blobs() once per
+        point in a Python loop.
         
+        input -
+        points (list of arrays) - lab-space initial guess points
+        frame (int)
+        reuse (bool) - same meaning as in match_nearest_blobs
+ 
+        output -
+        a list, same length as `points`, where each entry is either
+        None (no match found for that point) or (xNew, matchBlobs, err,
+        frame) -- exactly what match_nearest_blobs would have returned
+        for that point.
+        '''
+        if frame not in self.matchedBlobs.keys():
+            self.matchedBlobs[frame] = set([])
+ 
+        if self.B_ik_trees['frame'] != frame:
+            self.generate_blob_trees(frame)
+ 
+        N = len(points)
+        if N == 0:
+            return []
+ 
+        # ---- 1) batch projection + batch KD-tree query, per camera ----
+        dist_by_cam = {}
+        ind_by_cam = {}
+        for camNum in range(self.Ncams):
+            if frame not in self.blobs[camNum].keys():
+                continue
+            if self.B_ik_trees[camNum] is None:
+                continue
+ 
+            cam = self.imsys.cameras[camNum]
+            # per-point projection call (vectorizable further if cam.projection
+            # supports batched input -- see note in the matching writeup)
+            projections = array([cam.projection(x) for x in points])   # (N,2)
+ 
+            dist, ind = self.B_ik_trees[camNum].query(
+                projections, k=self.max_k, workers=-1)
+ 
+            if self.max_k == 1:
+                dist = dist[:, None]
+                ind = ind[:, None]
+ 
+            dist_by_cam[camNum] = dist
+            ind_by_cam[camNum] = ind
+ 
+        # ---- 2) sequential decision loop  ----
+        results = []
+        for p in range(N):
+            coords = {}
+            matchBlobs = {}
+ 
+            for camNum, ind_arr in ind_by_cam.items():
+                dist_arr = dist_by_cam[camNum]
+                ind_row = ind_arr[p]
+                dist_row = dist_arr[p]
+ 
+                for i in range(len(ind_row)):
+                    if dist_row[i] == inf:
+                        continue
+ 
+                    identifier = (camNum, frame, ind_row[i])
+                    if reuse == False:
+                        if identifier in self.matchedBlobs[frame]:
+                            continue
+ 
+                    blob = self.blobs[camNum][frame][ind_row[i]]
+                    coords[camNum] = blob[:2]
+                    matchBlobs[camNum] = (blob[:2], ind_row[i])
+                    break
+ 
+            res = self.imsys.stereo_match(coords, self.max_d_err,
+                                          strict_match=True)
+            if res is None:
+                results.append(None)
+                continue
+ 
+            xNew, pairedCams, err = res
+ 
+            if len(pairedCams) < self.min_cam_match:
+                results.append(None)
+                continue
+ 
+            if err > self.max_d_err:
+                results.append(None)
+                continue
+ 
+            inX = self.ROI[0] <= xNew[0] <= self.ROI[1]
+            inY = self.ROI[2] <= xNew[1] <= self.ROI[3]
+            inZ = self.ROI[4] <= xNew[2] <= self.ROI[5]
+            if not (inX and inY and inZ):
+                results.append(None)
+                continue
+ 
+            for camNum in list(matchBlobs.keys()):
+                if camNum not in pairedCams:
+                    del matchBlobs[camNum]
+                else:
+                    self.matchedBlobs[frame].add(
+                        (camNum, frame, matchBlobs[camNum][1]))
+ 
+            results.append((xNew, matchBlobs, err, frame))
+ 
+        return results
+        
+    
+    
+    def ensure_blob_trees(self, frame):
+        '''
+        if the KDTrees are setup with another frame, we fix this
+        '''
+        if self.B_ik_trees['frame'] != frame:
+            self.generate_blob_trees(frame)
+            
         
     
     def generate_blob_trees(self, frame):
@@ -295,9 +349,6 @@ class matching_with_marching_particles_algorithm(object):
         '''
             
         for camNum in range(self.Ncams):
-            # whr = [i for i in range(self.blobs[camNum][frame].shape[0]) 
-            #                              if i not in used_blob_indexes[camNum]]
-            # self.B_ik_trees[camNum] = KDTree(self.blobs[camNum][frame][whr,:2])
 
             if frame not in self.blobs[camNum].keys():
                 self.B_ik_trees[camNum] = None
@@ -307,34 +358,6 @@ class matching_with_marching_particles_algorithm(object):
             
         self.B_ik_trees['frame'] = frame
     
-    
-    
-    
-    def stereo_match_frame_with_random_initial_points(self, frame, message=False):
-        '''
-        This function iterates over the points in the initial point list
-        and attempt to match each of then with the nearest neighbout bolb
-        projections.
-        '''
-        
-        if frame not in self.matchedBlobs.keys():
-            self.matchedBlobs[frame] = set([])
-            
-        self.generate_blob_trees(frame)
-        
-        count = 0
-        for i in range(self.N0):
-            x0 = [uniform(self.ROI[0], self.ROI[1]),
-                  uniform(self.ROI[2], self.ROI[3]),
-                  uniform(self.ROI[4], self.ROI[5])]
-            res = self.match_nearest_blobs(x0, frame)
-            if res is not None:
-                self.matches.append(res)
-                count += 1
-                
-        if message:
-            print('', 'matches using random guesses: %d'%count)
-            
         
         
         
@@ -348,15 +371,15 @@ class matching_with_marching_particles_algorithm(object):
         if frame not in self.matchedBlobs.keys():
             self.matchedBlobs[frame] = set([])
             
-        self.generate_blob_trees(frame)
-        
+        self.ensure_blob_trees(frame)
+
+        results = self.match_nearest_blobs_batch(points, frame)
         count = 0
-        for x0 in points:
-            res = self.match_nearest_blobs(x0, frame)
+        for res in results:
             if res is not None:
-                self.matches.append(res)
+                self.matches.append(list(res)+[0])
                 count += 1
-                
+            
         if message:
             print('', 'matches using given points: %d'%count)
         
@@ -377,144 +400,229 @@ class matching_with_marching_particles_algorithm(object):
         if frame not in self.matchedBlobs.keys():
             self.matchedBlobs[frame] = set([])
             
-        self.generate_blob_trees(frame)
+        self.ensure_blob_trees(frame)
         
         if backwards==False:
-            pointToMatchOn = [m[0] for m in self.matches if m[3]==frame-1]
+            pointToMatchOn = [m[0] for m in self.matches if m[3]==frame-1 and m[4]==0]
             
         elif backwards==True:
-            pointToMatchOn = [m[0] for m in self.matches if m[3]==frame+1]
+            pointToMatchOn = [m[0] for m in self.matches if m[3]==frame+1 and m[4]==0] 
         
+        if len(pointToMatchOn)==0: 
+            return 
+        
+        results = self.match_nearest_blobs_batch(pointToMatchOn, frame)
         count = 0
-        for x0 in pointToMatchOn:
-            res = self.match_nearest_blobs(x0, frame, reuse=False) #RON
+        for e, res in enumerate(results):
+            x0 = pointToMatchOn[e]
             if res is not None:
-                self.matches.append(res)
+                self.matches.append(list(res)+[1])
                 count += 1
-                
+                self.Temporal_neighbors.append((x0, res[0]))
+
         if message:
             print('matches using prvious results: %d'%count)
         
+
+
+    def Predict_and_stereo_match(self, frame, message=False):
+        '''
+        This uses particles that were matched with previous frame 
+        information (self.stereo_match_frame_with_previous_matches() for 
+        frames i-2 and i-1) to predict positions at frame i and attempt
+        to match blobs near to these points. 
+
+        prediction is done as
+        x(i) ~= x(i-1) + ( x(i-1)-x(i-2) ) = 2*x(i-1)-x(i-2)
+        '''
+        if frame not in self.matchedBlobs.keys():
+            self.matchedBlobs[frame] = set([])
+            
+        self.ensure_blob_trees(frame)
+                
+        new_Temp_neighbors = []
+        count = 0
         
+        predicted_lst = [2*x_im1 - x_im2 for x_im2, x_im1 in 
+                         self.Temporal_neighbors]
+        matches = self.match_nearest_blobs_batch(predicted_lst, frame, reuse=True)
         
+        c_lst = []
+        uniques = []
+        #for res, x_im1 in res_lst:
+        for i in range(len(matches)):
+            if matches[i] is None: continue
+            
+            res, x_im1 = matches[i], self.Temporal_neighbors[i][1]
+            if tuple(res[0]) not in c_lst:
+                c_lst.append(tuple(res[0]))
+                uniques.append((res,x_im1))
         
+        for res, x_im1 in uniques:
+            self.matches.append(list(res)+[2])
+            new_Temp_neighbors.append((x_im1, res[0]))
+                
+        count = len(uniques)
+        if message:
+            print('matches using prvious results: %d'%count)
+
+        self.Temporal_neighbors = new_Temp_neighbors
+        
+    
+    
+
     def find_candidates_with_two_cameras(self, camNum1, camNum2, frame):
         '''
-        This function uses epipolar voxel traversal search to stereo match 
+        This function uses epipolar voxel traversal search to stereo match
         blob pairs in two given cameras. The points that are found are then
-        returned.
+        returned. (Fully batched version)
         '''
-        # ensure the cameras have blobs in this frame
         if frame not in list(self.blobs[camNum1].keys()): return []
         if frame not in list(self.blobs[camNum2].keys()): return []
         if frame not in self.matchedBlobs.keys():
             self.matchedBlobs[frame] = set([])
-        
-        # fetching the cameras and the blobs
+ 
         cam1 = self.imsys.cameras[camNum1] ; cam2 = self.imsys.cameras[camNum2]
-        # O1 = cam1.O ; O2 = cam2.O
         blobs1 = self.blobs[camNum1][frame]
         blobs2 = self.blobs[camNum2][frame]
-        
-        # getting the center point of the ROI (for epipolar line seach)
-        O_ROI = [(self.ROI[1]+self.ROI[0])/2, 
-                 (self.ROI[3]+self.ROI[2])/2, 
-                 (self.ROI[5]+self.ROI[4])/2]
-        
-        # getting the size of the ROI diagonal
+ 
+        O_ROI = array([(self.ROI[1]+self.ROI[0])/2,
+                       (self.ROI[3]+self.ROI[2])/2,
+                       (self.ROI[5]+self.ROI[4])/2])
+ 
         a_range = sum([(self.ROI[2*i+1]-self.ROI[2*i])**2 for i in range(3)])**0.5
         da = self.voxel_size/4.0
-        
-        # the number of voxel in each direction
+ 
         nx = int((self.ROI[1]-self.ROI[0])/self.voxel_size)+1
         ny = int((self.ROI[3]-self.ROI[2])/self.voxel_size)+1
         nz = int((self.ROI[5]-self.ROI[4])/self.voxel_size)+1
-        
-        
-        # a dicionary that holds the blob numbers traversed in each voxel
-        voxel_dic = {}
-        
-        # listing the traversed volxels for blobs in camera 2
-        for e,b in enumerate(blobs2):
-            
-            identifier = (camNum2, frame, e)
-            if identifier in self.matchedBlobs[frame]: # this blob has been used
-                continue
-            
-            #r = cam2.get_r(b[0], b[1])
-            O2, r = cam2.get_epipolarline(b[0], b[1])
-            a_center = sum([r[i]*(O_ROI[i]-O2[i]) for i in range(3)]) 
-            a1, a2 = a_center - a_range/2 , a_center + a_range/2 
-            
-            # traversing the blob from O2+a1*r to O2+a2*r to list the voxels
-            blob_voxels = set([])
-            a = a1
-            while a<=a2:
-                x, y, z = O2[0] + r[0]*a, O2[1] + r[1]*a, O2[2] + r[2]*a
-                
-                if self.ROI[0] < x < self.ROI[1]:
-                    if self.ROI[2] < y < self.ROI[3]:
-                        if self.ROI[4] < z < self.ROI[5]:
-                            i = int((x-self.ROI[0])/(self.ROI[1]-self.ROI[0])*nx)
-                            j = int((y-self.ROI[2])/(self.ROI[3]-self.ROI[2])*ny)
-                            k = int((z-self.ROI[4])/(self.ROI[5]-self.ROI[4])*nz)
-                            blob_voxels.add((i,j,k))
-                a += da
-            
-            for voxel in blob_voxels:
-                try:
-                    voxel_dic[voxel].append(e)
-                except:
-                    voxel_dic[voxel] = [e]
-            
-        candidate_pairs = set([])
-        # traversing the blobs in camera1 to obtain candidates pairs
-        for e,b in enumerate(blobs1):
-            
-            identifier = (camNum1, frame, e)
-            if identifier in self.matchedBlobs[frame]: # this blob has been used
-                continue
-            
-            # r = cam1.get_r(b[0], b[1])
-            O1, r = cam1.get_epipolarline(b[0], b[1])
-            a_center = sum([r[i]*(O_ROI[i]-O1[i]) for i in range(3)]) 
-            a1, a2 = a_center - a_range/2 , a_center + a_range/2 
-            
-            # traversing the blob from O2+a1*r to O2+a2*r to list the candidates
-            a = a1
-            while a<=a2:
-                x, y, z = O1[0] + r[0]*a, O1[1] + r[1]*a, O1[2] + r[2]*a
-                
-                if self.ROI[0] < x < self.ROI[1]:
-                    if self.ROI[2] < y < self.ROI[3]:
-                        if self.ROI[4] < z < self.ROI[5]:
-                            i = int((x-self.ROI[0])/(self.ROI[1]-self.ROI[0])*nx)
-                            j = int((y-self.ROI[2])/(self.ROI[3]-self.ROI[2])*ny)
-                            k = int((z-self.ROI[4])/(self.ROI[5]-self.ROI[4])*nz)
-                            try:
-                                candidates = voxel_dic[(i,j,k)]
-                                for cnd in candidates:
-                                    candidate_pairs.add((e, cnd))
-                            except:
-                                pass
-                a += da
-        
-        
-        candidate_points = []
-        for e1, e2 in candidate_pairs:
-            coords = {camNum1:blobs1[e1], camNum2:blobs2[e2]}
-            # stereoMatch = self.imsys.stereo_match(coords, self.max_d_err)
-            stereoMatch = self.imsys.stereo_match(coords, self.max_d_err, 
-                                                  strict_match=True)
-            if stereoMatch is not None:
-                candidate_points.append(stereoMatch[0])
-        
+ 
+        roi_min = array([self.ROI[0], self.ROI[2], self.ROI[4]])
+        roi_max = array([self.ROI[1], self.ROI[3], self.ROI[5]])
+        scale = array([nx/(self.ROI[1]-self.ROI[0]),
+                       ny/(self.ROI[3]-self.ROI[2]),
+                       nz/(self.ROI[5]-self.ROI[4])])
+ 
+        offsets = np.arange(0, a_range, da)
+ 
+        def unused_indices(camNum, blobs_arr):
+            return array([e for e in range(len(blobs_arr))
+                          if (camNum, frame, e) not in self.matchedBlobs[frame]],
+                         dtype=np.int64)
+ 
+        def voxel_table(cam, blobs_arr, unused_idx):
+            '''
+            Returns four 1D arrays (blob_id, i, j, k) -- one row per 
+            distinct voxel touched by each blob's ray, deduplicated via 
+            an encoded integer key, and the per-blob O and r arrays
+            (indexed by original blob id) so the caller can reuse them
+            in the final stereo-match step instead of recomputing.
+            '''
+            epi_O = {}
+            epi_R = {}
+ 
+            if len(unused_idx) == 0:
+                return (np.empty(0, dtype=np.int64),)*4, epi_O, epi_R
+ 
+            R = array([cam.get_epipolarline(blobs_arr[e, 0], blobs_arr[e, 1])[1]
+                       for e in unused_idx])
+            O = array(cam.get_epipolarline(blobs_arr[unused_idx[0], 0],
+                                           blobs_arr[unused_idx[0], 1])[0])
+ 
+            for i, e in enumerate(unused_idx):
+                epi_O[int(e)] = O          # same O for every blob of this camera
+                epi_R[int(e)] = R[i]
+ 
+            a_centers = R.dot(O_ROI - O)
+            a1 = a_centers - a_range/2
+            a_vals = a1[:, None] + offsets[None, :]
+            pts = O[None, None, :] + a_vals[:, :, None] * R[:, None, :]
+ 
+            in_roi = np.all((pts > roi_min) & (pts < roi_max), axis=2)
+            bi, si = np.nonzero(in_roi)
+            if bi.size == 0:
+                return (np.empty(0, dtype=np.int64),)*4, epi_O, epi_R
+ 
+            vox = np.floor((pts[bi, si] - roi_min) * scale).astype(np.int64)
+            blob_col = unused_idx[bi]
+ 
+            key = ((blob_col * (nx+1) + vox[:, 0]) * (ny+1) + vox[:, 1]) * (nz+1) + vox[:, 2]
+            _, first = np.unique(key, return_index=True)
+ 
+            return (blob_col[first], vox[first, 0], vox[first, 1], vox[first, 2]), epi_O, epi_R
+ 
+        idx2 = unused_indices(camNum2, blobs2)
+        idx1 = unused_indices(camNum1, blobs1)
+ 
+        (b2, i2, j2, k2), epi_O2, epi_R2 = voxel_table(cam2, blobs2, idx2)
+        (b1, i1, j1, k1), epi_O1, epi_R1 = voxel_table(cam1, blobs1, idx1)
+ 
+        if len(b1) == 0 or len(b2) == 0:
+            return []
+ 
+        voxel_key1 = (i1 * (ny+1) + j1) * (nz+1) + k1
+        voxel_key2 = (i2 * (ny+1) + j2) * (nz+1) + k2
+ 
+        order2 = np.argsort(voxel_key2, kind='stable')
+        sorted_key2 = voxel_key2[order2]
+        sorted_b2 = b2[order2]
+ 
+        left = np.searchsorted(sorted_key2, voxel_key1, side='left')
+        right = np.searchsorted(sorted_key2, voxel_key1, side='right')
+ 
+        candidate_pairs = set()
+        for row in range(len(voxel_key1)):
+            if right[row] > left[row]:
+                e1 = int(b1[row])
+                for e2 in sorted_b2[left[row]:right[row]]:
+                    candidate_pairs.add((e1, int(e2)))
+ 
+        if len(candidate_pairs) == 0:
+            return []
+ 
+        # ---- fully vectorized stereo-match of ALL candidate pairs at once ----
+        e1_arr = array([p[0] for p in candidate_pairs], dtype=np.int64)
+        e2_arr = array([p[1] for p in candidate_pairs], dtype=np.int64)
+ 
+        O1_arr = array([epi_O1[e] for e in e1_arr])
+        R1_arr = array([epi_R1[e] for e in e1_arr])
+        O2_arr = array([epi_O2[e] for e in e2_arr])
+        R2_arr = array([epi_R2[e] for e in e2_arr])
+ 
+        w0 = O1_arr - O2_arr
+        b = (R1_arr * R2_arr).sum(axis=1)
+        d = (R1_arr * w0).sum(axis=1)
+        e_ = (R2_arr * w0).sum(axis=1)
+        denom = 1.0 - b*b
+ 
+        safe = np.abs(denom) > 1e-10
+        denom_safe = np.where(safe, denom, 1.0)
+ 
+        t1 = (b*e_ - d) / denom_safe
+        t2 = (e_ - b*d) / denom_safe
+ 
+        P1 = O1_arr + t1[:, None]*R1_arr
+        P2 = O2_arr + t2[:, None]*R2_arr
+        X = (P1 + P2) / 2.0
+        D = ((P1 - P2)**2).sum(axis=1)**0.5
+ 
+        mask = safe & (D <= self.max_d_err)
+ 
+        # strict_match check: distance from X to each of the two lines
+        diff1 = X - O1_arr
+        perp1 = diff1 - (diff1*R1_arr).sum(axis=1, keepdims=True)*R1_arr
+        dist1 = (perp1**2).sum(axis=1)**0.5
+ 
+        diff2 = X - O2_arr
+        perp2 = diff2 - (diff2*R2_arr).sum(axis=1, keepdims=True)*R2_arr
+        dist2 = (perp2**2).sum(axis=1)**0.5
+ 
+        mask = mask & (dist1 <= self.max_d_err) & (dist2 <= self.max_d_err)
+ 
+        candidate_points = list(X[mask])
         return candidate_points
         
-        
-        
-        
-        
+
         
     def match_frame(self, frame, backwards=False, print_stat=True):
         '''
@@ -527,12 +635,31 @@ class matching_with_marching_particles_algorithm(object):
         if frame not in self.matchedBlobs.keys():
             self.matchedBlobs[frame] = set([])
         
+        # Matching with predictions
         m0 = len(self.matches)
-        self.stereo_match_frame_with_previous_matches(frame, backwards=backwards)
-        newPrevFrame = len(self.matches) - m0
+        self.Predict_and_stereo_match(frame, message=False)
+        newPredicted = len(self.matches) - m0
         
-        # Matching with random points
-        self.stereo_match_frame_with_random_initial_points(frame)
+        # Matching with previous matches
+        self.stereo_match_frame_with_previous_matches(frame, backwards=backwards)
+        newPrevFrame = len(self.matches) - newPredicted - m0
+        
+        
+# =============================================================================
+#         # A faster option that retunrs ~1% less particles. consider using
+#         # for experiments with a lot of particles t osave up time. 
+#         # matching with pair candidates
+#         if self.voxel_size is not None:
+#             cam_range = list(range(self.Ncams-1))
+#             shuffle(cam_range)
+#             if len(cam_range)%2: cam_range.append(cam_range[0])
+#             for i,j in list(zip(cam_range[::2], cam_range[1::2])):
+#                 camNum1=i ; camNum2=j
+#                 cands = self.find_candidates_with_two_cameras(camNum1, 
+#                                                               camNum2, 
+#                                                               frame)
+#                 self.stereo_match_frame_with_given_points(cands, frame)
+# =============================================================================
         
         # matching with pair candidates
         if self.voxel_size is not None:
@@ -543,13 +670,15 @@ class matching_with_marching_particles_algorithm(object):
                                                               frame)
                 self.stereo_match_frame_with_given_points(cands, frame)
         
-        newEpipolarCands = len(self.matches) - m0 - newPrevFrame
         
-        newTot = newEpipolarCands + newPrevFrame
+        
+        newEpipolarCands = len(self.matches) - m0 - newPrevFrame - newPredicted
+        
+        newTot = newEpipolarCands + newPrevFrame + newPredicted
         
         if print_stat:
-            prnt = (newTot, newPrevFrame, newEpipolarCands)
-            print('Found %d matches: %d from prev. frame + %d new'%prnt)
+            prnt = (newTot, newPredicted, newPrevFrame, newEpipolarCands)
+            print('Found %d matches: %d predicted + %d from prev. frame + %d new'%prnt)
         
         
         
@@ -613,6 +742,195 @@ class matching_with_marching_particles_algorithm(object):
         
         
         
+    # =========================================================================
+    # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    # ===============  Unused legacy functions ================================
+    # =========================================================================
+    # =========================================================================
+    
+    def stereo_match_frame_with_random_initial_points(self, frame, message=False):
+        '''
+        This function iterates over the points in the initial point list
+        and attempt to match each of then with the nearest neighbout bolb
+        projections.
+        '''
+        
+        if frame not in self.matchedBlobs.keys():
+            self.matchedBlobs[frame] = set([])
+            
+        self.ensure_blob_trees(frame)
+        
+        count = 0
+        for i in range(self.N0):
+            x0 = [uniform(self.ROI[0], self.ROI[1]),
+                  uniform(self.ROI[2], self.ROI[3]),
+                  uniform(self.ROI[4], self.ROI[5])]
+            res = self.match_nearest_blobs(x0, frame)
+            if res is not None:
+                self.matches.append(list(res)+[0])
+                count += 1
+                
+        if message:
+            print('', 'matches using random guesses: %d'%count)
+    
+    
+    
+    def get_voxel_dic(self, frame):
+        '''
+        Returns a voxel dictionary for unused blobs in a given frame; this
+        dictionary is used in the Ray traversal method, containing the list of 
+        ids of blobds found in each voxel. 
+        '''
+        
+        if frame not in self.matchedBlobs.keys():
+            self.matchedBlobs[frame] = set([])
+        
+        # getting the center point of the ROI (for epipolar line seach)
+        xmin, xmax, ymin, ymax, zmin, zmax = self.ROI
+        O_ROI = [(xmin + xmax)/2, (ymin + ymax)/2, (zmin + zmax)/2]
+        
+        # enlargement factor on voxel size based on used blobs
+        frmblb = sum([len(self.blobs[i][1]) for i in range(len(self.blobs))])
+        frmMatched = len(self.matchedBlobs[frame])
+        used_fract = (frmblb - frmMatched) / frmblb
+        vs = self.voxel_size/used_fract**0.333
+        
+        # getting the size of the ROI diagonal
+        a_range = sum([(self.ROI[2*i+1]-self.ROI[2*i])**2 for i in range(3)])**0.5
+        da = vs/4.0
+        
+        # the number of voxel in each direction and their separation
+        nx = int((xmax - xmin)/vs)+1
+        ny = int((ymax - ymin)/vs)+1
+        nz = int((zmax - zmin)/vs)+1
+        inv_dx = nx / (xmax - xmin)
+        inv_dy = ny / (ymax - ymin)
+        inv_dz = nz / (zmax - zmin)
+        
+        # a dicionary that holds the blob ids traversed in each voxel
+        voxel_dic = {}
+        
+        # for each unused blob, add its traversed voxel to voxel_dic
+        for cn in range(self.Ncams):
+            cam = self.imsys.cameras[cn]
+            for e,b in enumerate(self.blobs[cn][frame]):
+                identifier = (cn, frame, e)
+                if identifier in self.matchedBlobs[frame]: # this blob has been used
+                    continue
+                
+                O, r = cam.get_epipolarline(b[0], b[1])
+                a_center = sum([r[i]*(O_ROI[i]-O[i]) for i in range(3)]) 
+                a1, a2 = a_center - a_range/2 , a_center + a_range/2
+                
+                # traversing the blob from O2+a1*r to O2+a2*r to list the voxels
+                nsteps = int((a2 - a1)/da) + 1
+                x, y, z = O[0] + r[0]*a1, O[1] + r[1]*a1, O[2] + r[2]*a1
+                dx, dy, dz = r[0]*da, r[1]*da, r[2]*da
+                
+                blob_voxels = set([])
+                
+                for _ in range(nsteps):
+                    if (xmin <= x <= xmax and
+                        ymin <= y <= ymax and
+                        zmin <= z <= zmax):
+                
+                        blob_voxels.add((
+                            int((x-xmin)*inv_dx),
+                            int((y-ymin)*inv_dy),
+                            int((z-zmin)*inv_dz)
+                        ))
+                
+                    x += dx ; y += dy ; z += dz
+                
+                for voxel in blob_voxels:
+                    try:
+                        voxel_dic[voxel].append(identifier)
+                    except:
+                        voxel_dic[voxel] = [identifier]
+                        
+        voxel_dic = {k: v for k,v in voxel_dic.items() if len(v)>self.min_cam_match}
+                        
+        return voxel_dic
+    
+        
+    
+    def Ray_traversal_frame(self, frame):
+        '''
+        This function uses epipolar voxel traversal search to stereo match 
+        blobs in a given frame.
+        '''
+        # ensure the cameras have blobs in this frame
+        cams_with_particles = 0
+        for camNum in range(self.Ncams):
+            if frame in list(self.blobs[camNum].keys()): 
+                cams_with_particles += 1
+        if cams_with_particles<self.min_cam_match:
+            return []
+        
+        if frame not in self.matchedBlobs.keys():
+            self.matchedBlobs[frame] = set([])
+        
+        # get the voxel dictinoary
+        voxel_dic = self.get_voxel_dic(frame)
+        
+        xmin, xmax, ymin, ymax, zmin, zmax = self.ROI
+        
+        # For each voxel, we form all possible N-combinations of blobs from 
+        # different cameras for N >= self.min_cam_match and stereo match them.
+        groupSizes = list(range(self.min_cam_match, self.Ncams+1))[::-1]
+        for k in voxel_dic.keys():
+            vxl_blobs = voxel_dic[k]
+            
+            # 1) separate the voxel blobs according to their camera number
+            blobs_by_camNum = defaultdict(list)
+            for blob_id in vxl_blobs:
+                blobs_by_camNum[blob_id[0]].append(blob_id)
+            blobs_by_camNum = [blobs_by_camNum[k] for k in blobs_by_camNum.keys()]
+            
+            # 2) get all possible N-sized blob combinations
+            for N in groupSizes:
+                Ncandidates = []
+                for Ncomb in combinations(blobs_by_camNum, N):
+                    Ncandidates += product(*Ncomb)
+                    
+                # 3) stereo match the candidates if unused
+                for cand in Ncandidates:
+                    coords = {}
+                    matchBlobs = {}
+                    used = False
+                    for cn, frm, bn in cand:
+                        blob = self.blobs[cn][frm][bn]
+                        coords[cn] = blob[:2]
+                        matchBlobs[cn] = (blob[:2], bn)
+                        if (cn, frm, bn) in self.matchedBlobs[frame]: used=True
+                    
+                    if used: continue
+                        
+                    res = self.imsys.stereo_match(coords, 
+                                                  self.max_d_err, 
+                                                  strict_match=True)
+                    if res is None: continue
+                    
+                    xNew, pairedCams, err = res 
+                    
+                    if err>self.max_d_err: continue
+                    
+                    if len(pairedCams) < self.min_cam_match: continue
+                    
+                    if not((xmin <= xNew[0] <= xmax) and
+                           (ymin <= xNew[1] <= ymax) and 
+                           (zmin <= xNew[2] <= zmax)):
+                        continue
+                    
+                    # passed all checks. add to matches
+                    for cn, frm, bn in cand:
+                        if cn in pairedCams:
+                            self.matchedBlobs[frame].add((cn, frm, bn))
+                        else:
+                            del(matchBlobs[cn])
+                    
+                    self.matches.append([xNew, matchBlobs, err, frame, 0])
+
 
 
 

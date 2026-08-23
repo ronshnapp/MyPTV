@@ -11,7 +11,7 @@ Utility code to use for the MyPTV package.
 
 
 
-from numpy import dot, array, loadtxt, savetxt
+from numpy import dot, array, loadtxt, savetxt, sqrt
 from numpy import append as NPappend
 from numpy.linalg import inv, norm
 
@@ -33,7 +33,6 @@ def line_dist(O1, r1, O2, r2):
     dist (float) -the minimum distance between the lines
     x (array, n)- the point that is nearest to the two points crossing
     '''
-    
     # find the a,b that minimize the distance:
     # A = array([[dot(r1,r1), -dot(r1,r2)],
     #            [dot(r1,r2), -dot(r2,r2)]])
@@ -41,27 +40,33 @@ def line_dist(O1, r1, O2, r2):
     r1r2 = r1[0]*r2[0] + r1[1]*r2[1] + r1[2]*r2[2]
     r12 = r1[0]**2 + r1[1]**2 + r1[2]**2
     r22 = r2[0]**2 + r2[1]**2 + r2[2]**2
-
-    #Ainv = [[-r22, r1r2],
-    #        [-r1r2, r12]]
     
-    dO = O2-O1
+    dO = [O2[0]-O1[0], O2[1]-O1[1], O2[2]-O1[2]]
     B = [r1[0]*dO[0] + r1[1]*dO[1] + r1[2]*dO[2],
          r2[0]*dO[0] + r2[1]*dO[1] + r2[2]*dO[2]]
     
-    try:
-        #a,b = dot(Ainv, B)
-        a = (-r22*B[0] + r1r2*B[1])/(r1r2**2 - r12 * r22)
-        b = (-r1r2*B[0] + r12*B[1])/(r1r2**2 - r12 * r22)
-    except:
+    denom = r1r2**2 - r12 * r22
+    
+    if denom == 0.0:
         a,b = 0.0, 0.0
+    else:
+        a = (-r22*B[0] + r1r2*B[1])/denom
+        b = (-r1r2*B[0] + r12*B[1])/denom
     
     # use the a,b to calc the minimum distance:
-    l1,l2 = O1 + a*r1 , O2 + b*r2
-    dist = sum((l1 - l2)**2)**0.5
-    x = (l1+l2)*0.5
+    #dist = sum((O1 - O2 + a*r1 - b*r2)**2)**0.5
+    dist = ((a*r1[0]-b*r2[0]-dO[0])**2 + 
+            (a*r1[1]-b*r2[1]-dO[1])**2 + 
+            (a*r1[2]-b*r2[2]-dO[2])**2)**0.5
+    
+    x = (O1 + a*r1 + O2 + b*r2)*0.5
     
     return dist, x
+
+
+
+
+
 
 
 

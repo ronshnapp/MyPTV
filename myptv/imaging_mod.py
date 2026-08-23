@@ -13,16 +13,13 @@ handle the tasks of 2D to 3D transformations.
 """
 
 import os
-from math import sin, cos
-from numpy import zeros, array, dot, transpose
-from numpy.linalg import inv
-from myptv.utils import line_dist, point_line_dist
 
+from numpy import array, eye
+from numpy.linalg import solve, LinAlgError
+from myptv.utils import line_dist
 from myptv.TsaiModel.calibrate import calibrate_Tsai
 from myptv.TsaiModel.camera import camera_Tsai
-
 from myptv.extendedZolof.camera import camera_extendedZolof
-from myptv.extendedZolof.calibrate import calibrate_extendedZolof
 
 
 
@@ -49,6 +46,13 @@ class img_system(object):
         This point is estimated as the average of the crossing point of the
         epipolar lines, that cross at distances smaller than a maximum value.
         
+        The math: for lines with origin O_i and unit direction r_i, X
+        minimizing sum_i ||(I - r_i r_i^T)(X - O_i)||^2 satisfies
+            A X = b
+            A = sum_i (I - r_i r_i^T) = N*I - R^T R
+            b = sum_i (I - r_i r_i^T) O_i
+        where R is the (N,3) matrix of stacked direction vectors.
+        
         input - 
         coords (dic) - keys are camera number, values are the image space 
                        coordinates of each point. Must have at least 2 entries
@@ -65,70 +69,57 @@ class img_system(object):
         or - (if all epipolar lines )
         None
         '''
-        N = len(coords)
-        x = []
-        cams = []
-        d = []
+
         keys = list(coords.keys())
-        for i in range(N):
-            for j in range(i+1,N):
-                ki = keys[i]
-                #O1 = self.cameras[ki].O
-                #r1 = self.cameras[ki].get_r(coords[ki][0], coords[ki][1])
-                eta, zeta = (coords[ki][0], coords[ki][1])
-                O1, r1 = self.cameras[ki].get_epipolarline(eta, zeta)
-                
-                kj = keys[j]
-                #O2 = self.cameras[kj].O
-                #r2 = self.cameras[kj].get_r(coords[kj][0], coords[kj][1])
-                eta, zeta = (coords[kj][0], coords[kj][1])
-                O2, r2 = self.cameras[kj].get_epipolarline(eta, zeta)
-                
-                D, x_ij = line_dist(O1, r1, O2, r2)
-                
-                if D <= d_max:
-                    x.append(x_ij)
-                    cams.append(ki)
-                    cams.append(kj)
-                    d.append(D)
-                   
-                    
-        if len(x)==0:
+        N = len(keys)
+        if N < 2:
             return None
-
-
-        if strict_match==True:
-            
-            # calculate the mean of all crossing points
-            X = sum(x)/len(x)
-            
-            # Check the mean crossing point is close to all blobs' lines of 
-            # sight. If not, return None.  
-            for ki in keys:
-                ri = self.cameras[ki].get_r(coords[ki][0],coords[ki][1])
-                di = point_line_dist(self.cameras[ki].O, ri, X)
-                if di>d_max:
-                    return None
-                
-            return X, set(cams), sum(d)/len(x)
-            
-# =============================================================================
-#             if len(x)==len(coords):
-#                 X = sum(x)/1.0/len(x)
-#                 
-#                 for ki in keys:
-#                     ri = self.cameras[ki].get_r(coords[ki][0],coords[ki][1])
-#                     di = point_line_dist(self.cameras[ki].O, ri, X)
-#                     if di>d_max:
-#                         return None
-#                     
-#                 return sum(x)/1.0/len(x), set(cams), sum(d)/1.0/len(x)
-# =============================================================================
-                
-            
+ 
+        epilines = {k: self.cameras[k].get_epipolarline(coords[k][0], coords[k][1])
+                    for k in keys}
+ 
+        # ---- N == 2: lean direct two-line path (no O(N^2) to remove here) ----
+        if N == 2:
+            O1, r1 = epilines[keys[0]]
+            O2, r2 = epilines[keys[1]]
+ 
+            D, X = line_dist(O1, r1, O2, r2)
+            if D > d_max:
+                return None
+ 
+            return X, set(keys), D
+ 
+        # ---- N >= 3: closed-form multi-line least-squares solve ----
+        O = array([epilines[k][0] for k in keys])
+        R = array([epilines[k][1] for k in keys])
+        R = R / ((R**2).sum(axis=1, keepdims=True))**0.5  # defensive re-normalize, O(N)
+ 
+        A = N*eye(3) - R.T.dot(R)
+        c = (R*O).sum(axis=1)
+        b = O.sum(axis=0) - R.T.dot(c)
+ 
+        try:
+            X = solve(A, b)
+        except LinAlgError:
+            return None
+ 
+        diff = X[None, :] - O
+        perp = diff - (diff*R).sum(axis=1, keepdims=True)*R
+        dists = (perp**2).sum(axis=1)**0.5
+ 
+        if strict_match:
+            if (dists > d_max).any():
+                return None
+            return X, set(keys), dists.mean()
+ 
         else:
-            return sum(x)/len(x), set(cams), sum(d)/len(x)
-
+            passed = dists <= d_max
+            if passed.sum() < 2:
+                return None
+            cams = set(array(keys)[passed])
+            return X, cams, dists[passed].mean()
+        
+        
 
 
 
@@ -236,11 +227,13 @@ class camera_wrapper(object):
                              (eta, zeta) 
         '''
         
-        if self.modelName == 'Tsai':
-            return self.camera.projection(x)
+        return self.camera.projection(x)
         
-        elif self.modelName == 'extendedZolof':
-            return self.camera.projection(x)
+        # if self.modelName == 'Tsai':
+        #     return self.camera.projection(x)
+        
+        # elif self.modelName == 'extendedZolof':
+        #     return self.camera.projection(x)
             
     
     
@@ -256,11 +249,13 @@ class camera_wrapper(object):
         r (array, 3) - the direction vector of the epipolar line
         '''
         
-        if self.modelName == 'Tsai':
-            return (self.camera.O, self.camera.get_r(eta, zeta))
+        return (self.camera.O, self.camera.get_r(eta, zeta))
         
-        elif self.modelName == 'extendedZolof':
-            return (self.camera.O, self.camera.get_r(eta, zeta))
+        # if self.modelName == 'Tsai':
+        #     return (self.camera.O, self.camera.get_r(eta, zeta))
+        
+        # elif self.modelName == 'extendedZolof':
+        #     return (self.camera.O, self.camera.get_r(eta, zeta))
     
     
     
@@ -270,11 +265,13 @@ class camera_wrapper(object):
         output - direction vector in real space
         '''
         
-        if self.modelName == 'Tsai':
-            return self.camera.get_r(eta, zeta)
+        return self.camera.get_r(eta, zeta)
+    
+        # if self.modelName == 'Tsai':
+        #     return self.camera.get_r(eta, zeta)
         
-        elif self.modelName == 'extendedZolof':
-            return self.camera.get_r(eta, zeta)
+        # elif self.modelName == 'extendedZolof':
+        #     return self.camera.get_r(eta, zeta)
 
 
 
@@ -301,11 +298,14 @@ class camera_wrapper(object):
         in which a cantral origin point is used, and otherwise it will raise 
         an error. It is basically made to help in backward compatibility.
         '''
-        if self.modelName == 'Tsai':
-            return self.camera.O
         
-        elif self.modelName == 'extendedZolof':
-            return self.camera.O
+        return self.camera.O
+        
+        # if self.modelName == 'Tsai':
+        #     return self.camera.O
+        
+        # elif self.modelName == 'extendedZolof':
+        #     return self.camera.O
         
         
     @property

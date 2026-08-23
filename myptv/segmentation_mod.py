@@ -484,7 +484,8 @@ class loop_segmentation(object):
                  min_mass=None, max_mass=None,
                  method='labeling',
                  raw_format=False,
-                 multiprocessing=True):
+                 multiprocessing=True,
+                 print_msg=True):
         '''
         dir_name - string with the name of the directory that holds the 
                    images. Images should have a sequential numbers in their
@@ -534,6 +535,7 @@ class loop_segmentation(object):
         self.raw_format = raw_format
         self.DoG_sigma = DoG_sigma
         self.multiprocess = multiprocessing
+        self.print_msg = print_msg
         
         
         if self.raw_format == False:
@@ -642,7 +644,7 @@ class loop_segmentation(object):
                   self.median, self.loc_filter, self.BG, self.EQ_map, 
                   self.mask, self.DoG_sigma,
                   self.bbox_limits, self.mass_limits, self.method, 
-                  self.p_size, i0]
+                  self.p_size, i0, self.print_msg]
         
         if self.multiprocess:
             try:
@@ -721,7 +723,8 @@ def iter_frame(i, im, params):
     ps.get_blobs()
     ps.apply_blobs_size_filter()
     res_i = [[b[0][0], b[0][1], b[1][0], b[1][1], b[2], i+params[14]] for b in ps.blobs]
-    print('Frame: %d  ;  Blobs: %d'%(i, len(res_i)))
+    if params[14]:
+        print('Frame: %d  ;  Blobs: %d'%(i, len(res_i)))
     return res_i
 
 

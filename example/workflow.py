@@ -1000,7 +1000,6 @@ class workflow(object):
         ROI = self.get_param('matching', 'ROI').split(',')
         ROI = [float(ROI[i]) for i in range(6)]
         voxel_size = self.get_param('matching', 'voxel_size')
-        N0 = self.get_param('matching', 'N0')
         max_err = self.get_param('matching', 'max_err')
         min_cam_match = self.get_param('matching', 'min_cam_match')
         frame_start = self.get_param('matching', 'frame_start')
@@ -1010,8 +1009,8 @@ class workflow(object):
         save_name = self.get_param('matching', 'save_name')
         
         
-        if N0==0 and voxel_size==None:
-            raise ValueError('No initial guess method given (N0=0, voxel_size=None)')
+        if voxel_size==None:
+            raise ValueError('No initial guess method given (voxel_size=None)')
         
         if min_cam_match<2:
             raise ValueError('min_cam_match needs to be at least 2.')
@@ -1030,7 +1029,6 @@ class workflow(object):
                                                blob_fn, 
                                                max_err, 
                                                ROI,
-                                               N0,
                                                voxel_size,
                                                min_cam_match=min_cam_match,
                                                reverse_eta_zeta=True)
