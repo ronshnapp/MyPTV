@@ -524,19 +524,28 @@ class matching_with_marching_particles_algorithm(object):
             if len(unused_idx) == 0:
                 return (np.empty(0, dtype=np.int64),)*4, epi_O, epi_R
  
-            R = array([cam.get_epipolarline(blobs_arr[e, 0], blobs_arr[e, 1])[1]
-                       for e in unused_idx])
-            O = array(cam.get_epipolarline(blobs_arr[unused_idx[0], 0],
-                                           blobs_arr[unused_idx[0], 1])[0])
- 
+            # NOTE: O must be computed per-blob, exactly like R. For a
+            # fixed-origin camera model all these O's happen to be
+            # identical, so it used to be safe (and faster) to compute it
+            # once from a single blob and reuse it for every blob of this
+            # camera - but that shortcut is WRONG for a per-pixel origin
+            # model (e.g. extendedZolof with variable_origin=True), where
+            # each pixel has its own O(x). The downstream code
+            # (O1_arr/O2_arr below) already expects a genuinely per-blob
+            # origin, so we just need to actually provide one here.
+            epi_lines = [cam.get_epipolarline(blobs_arr[e, 0], blobs_arr[e, 1])
+                         for e in unused_idx]
+            O = array([ol[0] for ol in epi_lines])   # (n,3), per-blob origin
+            R = array([ol[1] for ol in epi_lines])   # (n,3), per-blob direction
+
             for i, e in enumerate(unused_idx):
-                epi_O[int(e)] = O          # same O for every blob of this camera
+                epi_O[int(e)] = O[i]
                 epi_R[int(e)] = R[i]
- 
-            a_centers = R.dot(O_ROI - O)
+
+            a_centers = np.sum(R * (O_ROI[None, :] - O), axis=1)
             a1 = a_centers - a_range/2
             a_vals = a1[:, None] + offsets[None, :]
-            pts = O[None, None, :] + a_vals[:, :, None] * R[:, None, :]
+            pts = O[:, None, :] + a_vals[:, :, None] * R[:, None, :]
  
             in_roi = np.all((pts > roi_min) & (pts < roi_max), axis=2)
             bi, si = np.nonzero(in_roi)
@@ -1300,8 +1309,16 @@ class matching_Ray_Traversal(object):
                                            self.ray_camera_indexes[-1])
             for j in range(len(particles_i)):
                 x, y = particles_i[j][0], particles_i[j][1]
-                r_ij = cam.get_r(x, y)
-                self.rays.append( (x, y, (i,j), r_ij) )
+                # NOTE: use get_epipolarline() (not get_r() alone) so that
+                # the stored direction is always paired with the ORIGIN
+                # that goes with it. For fixed-origin camera models this is
+                # the same self.camera.O for every pixel, but for models
+                # with a per-pixel origin (e.g. extendedZolof with
+                # variable_origin=True) the origin varies with (x,y), so it
+                # must be captured here rather than re-fetched from a
+                # single cam.O later (see triangulate_rays below).
+                O_ij, r_ij = cam.get_epipolarline(x, y)
+                self.rays.append( (x, y, (i,j), O_ij, r_ij) )
         
         self.RIO = RIO
         self.voxel_size = voxel_size
@@ -1445,8 +1462,12 @@ class matching_Ray_Traversal(object):
         for ray in rays:
             i = self.ray_camera_indexes[ray[0]] 
             ip1 = self.ray_camera_indexes[ray[0]+1]
-            ri = self.rays[i:ip1][ray[1]][3]
-            Oi = self.imsys.cameras[self.rays[i:ip1][ray[1]][2][0]].O
+            # Use the (O, r) pair captured together in __init__ (via
+            # get_epipolarline), rather than pairing the stored direction
+            # with a freshly-fetched cam.O - the latter is only correct
+            # for fixed-origin camera models (see note in __init__).
+            Oi = self.rays[i:ip1][ray[1]][3]
+            ri = self.rays[i:ip1][ray[1]][4]
             dc[ray[0]] = Oi, ri
             cams.append(ray[0])
         
@@ -1847,11 +1868,3 @@ class initiate_time_matching_Ray_Traversal(object):
                 updated_pd[cn][ind] = [-1,-1]
                 
         return updated_pd
-
-
-
-
-    
-        
-        
-        

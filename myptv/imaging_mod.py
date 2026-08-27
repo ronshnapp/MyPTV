@@ -246,16 +246,20 @@ class camera_wrapper(object):
         
         output:
         O (array, 3) - the origin of the epipolar line
-        r (array, 3) - the direction vector of the epipolar line
+        r (array, 3) - the (unit) direction vector of the epipolar line
         '''
         
+        # Models that support a per-pixel origin (e.g. extendedZolof with
+        # variable_origin=True) expose get_ray(), which returns the correct
+        # (O, e) pair for that pixel and always returns e as a unit vector.
+        # For models without get_ray() (e.g. Tsai), fall back to the
+        # previous behavior of a single fixed O plus get_r(). Note this
+        # fallback path does NOT normalize the direction vector, matching
+        # the historical behavior of those models.
+        if hasattr(self.camera, 'get_ray'):
+            return self.camera.get_ray(eta, zeta)
+        
         return (self.camera.O, self.camera.get_r(eta, zeta))
-        
-        # if self.modelName == 'Tsai':
-        #     return (self.camera.O, self.camera.get_r(eta, zeta))
-        
-        # elif self.modelName == 'extendedZolof':
-        #     return (self.camera.O, self.camera.get_r(eta, zeta))
     
     
     
@@ -318,6 +322,3 @@ class camera_wrapper(object):
         else:
             print('no loaded camera; returning fileName instead.')
             return self.fileName
-        
-
-

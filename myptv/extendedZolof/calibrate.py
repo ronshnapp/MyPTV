@@ -6,7 +6,9 @@ Created on Fri Nov  1 12:15:21 2019
 
 
 calibration module for Extended Zolof camera instances. This is used to 
-obtain the [A], [B], and O Extended Zolof model parameters.
+obtain the [A], [B], and O Extended Zolof model parameters, and optionally
+the [C] parameters of the variable-origin extension (see
+calibrate_variable_origin.py).
 
 """
 
@@ -47,6 +49,7 @@ class calibrate_extendedZolof(camera_extendedZolof):
         self.cam = camera
         self.A = [[0.0 for i in range(19)] for j in [0,1]]
         self.B = [[0.0 for i in range(10)] for j in [0, 1, 2]]
+        self.C = [[0.0 for i in range(10)] for j in [0, 1, 2]]
         self.x_list = x_list
         self.X_list = X_list
         self.quadratic = quadratic
@@ -54,10 +57,48 @@ class calibrate_extendedZolof(camera_extendedZolof):
         
         
     
-    def calibrate(self):
+    def calibrate(self, variable_origin=False, thresh_pix=5.0, c_order=3,
+                  origin_model='free'):
         '''
         Given a list of points, x and X, this function attempts to determine
-        the A coefficients. 
+        the A, B (and O) coefficients, or A, B, C (and O) coefficients if
+        variable_origin==True.
+        
+        variable_origin - if False (default), fits the original model where
+                          all epipolar lines pass through a single fixed
+                          camera center, self.O. If True, additionally fits
+                          [C] coefficients so that the origin of each
+                          epipolar line is itself a polynomial function of
+                          the pixel, O(x) = [C] G(x) (see
+                          calibrate_variable_origin.py). self.O is still
+                          computed either way: with variable_origin==True it
+                          is used only as an initial estimate / sign-
+                          convention anchor for the ray fit.
+        
+        thresh_pix       - reprojection-residual threshold (pixels) used for
+                          outlier rejection in both the camera-center
+                          estimate (step 2) and, if variable_origin==True,
+                          the per-pixel origin/direction fit.
+
+        c_order           - only used if variable_origin==True. Polynomial
+                          order for [C] (1=linear/affine, 2=quadratic,
+                          3=full cubic, default, matching [B]). Fewer terms
+                          means less flexibility - and less capacity to
+                          overfit - for the per-pixel origin specifically.
+                          See calibrate_variable_origin.fit_variable_origin_model
+                          and .cross_validate_origin_models for more detail
+                          and a way to check generalization on held-out
+                          points.
+
+        origin_model      - only used if variable_origin==True. Either
+                          'free' (default; O(x) floats freely in 3D) or
+                          'plane' (O(x) is constrained to a fixed plane
+                          through the approximate common camera center,
+                          facing the calibration volume). 'plane' uses 2
+                          rather than 3 coefficient sets per basis term
+                          and removes the along-ray gauge degeneracy of
+                          the 'free' model, so it is typically better
+                          conditioned and less prone to overfitting.
         '''
         # 1) finding the A coefficients - 
         #if self.quadratic==False:
@@ -83,6 +124,13 @@ class calibrate_extendedZolof(camera_extendedZolof):
         self.A_mask = A_mask  # keep for diagnostics/plotting
         self.x_inlayers = array(self.x_list)[A_mask]
         self.X_inlayers = array(self.X_list)[A_mask]
+
+        # IMPORTANT: update the camera's forward model *now*, not at the
+        # end. Steps 2 (camera-center estimate) and the variable-origin fit
+        # below both call self.cam.projection(), which uses self.cam.A
+        # internally - if we don't set it here they would use a stale A
+        # (whatever the camera object held before this calibration call).
+        self.cam.A = self.A
         
         # 2) finding the best camera center -
         #line_list = []
@@ -95,25 +143,59 @@ class calibrate_extendedZolof(camera_extendedZolof):
         self.O = step2_estimate_camera_center(
             self.cam.projection, #self.x_list, self.X_list,
             self.x_inlayers, self.X_inlayers,
-            thresh_pix=5.0,   # tune to your setup's expected pixel noise
+            thresh_pix=thresh_pix,
             refine=True
         )
-        
-        
-        # 3) finding the unit vector for each X -
-        r_list = []
-        for Xi in self.X_inlayers: #self.X_list:
-            r = (Xi - self.O)/norm(Xi - self.O)
-            r_list.append(r)
-        
-        # 4) finding the B coefficients -
-        xColumns = [self.cam.get_xCol(xi) for xi in self.x_inlayers] #self.x_list]
-        res = lstsq(xColumns, r_list, rcond=None)
-        self.B = res[0]
-        
         self.cam.O = self.O
-        self.cam.A = self.A
-        self.cam.B = self.B
+
+        if not variable_origin:
+            # 3) finding the unit vector for each X (fixed-origin model) -
+            r_list = []
+            for Xi in self.X_inlayers: #self.X_list:
+                r = (Xi - self.O)/norm(Xi - self.O)
+                r_list.append(r)
+
+            # 4) finding the B coefficients -
+            xColumns = [self.cam.get_xCol(xi) for xi in self.x_inlayers] #self.x_list]
+            res = lstsq(xColumns, r_list, rcond=None)
+            self.B = res[0]
+
+            self.cam.B = self.B
+            self.cam.variable_origin = False
+
+        else:
+            # 3'+4') fitting a per-pixel origin O(x)=[C]G(x) together with
+            # the direction B(x)=[B]G(x), instead of assuming a single
+            # fixed O for every epipolar line.
+            from myptv.extendedZolof.calibrate_variable_origin import \
+                fit_variable_origin_model
+
+            (self.C, self.B, self.ray_mask, self.ray_resid,
+             self.px_center, self.px_scale, self.plane) = \
+                fit_variable_origin_model(
+                    self.cam, self.X_inlayers, self.x_inlayers,
+                    O_init=self.O,
+                    thresh_pix=thresh_pix,
+                    c_order=c_order,
+                    origin_model=origin_model
+                )
+
+            self.cam.C = self.C
+            self.cam.B = self.B
+            self.cam.px_center = self.px_center
+            self.cam.px_scale = self.px_scale
+            self.cam.origin_mode = origin_model
+
+            if self.plane is not None:
+                # the plane passes through O0; keep cam.O consistent with
+                # it, since get_ray() builds O(x) relative to cam.O.
+                self.O = self.plane['O0']
+                self.cam.O = self.O
+                self.cam.plane_u = self.plane['u']
+                self.cam.plane_v = self.plane['v']
+                self.cam.plane_n = self.plane['n']
+
+            self.cam.variable_origin = True
         
         
             
@@ -142,7 +224,7 @@ class calibrate_extendedZolof(camera_extendedZolof):
     def mean_squared_err(self):
         '''
         Calculates and returns the mean square of the deviations in camera
-        space.
+        space (forward, 3D -> 2D projection error).
         '''
         errorsSquard = []
         
@@ -162,7 +244,34 @@ class calibrate_extendedZolof(camera_extendedZolof):
             errorsSquard.append( norm(array(xProj)-array(x_lst[i]))**2 )
         
         return (sum(errorsSquard)/len(errorsSquard))**0.5
-        
+
+
+    def mean_ray_err(self):
+        '''
+        Calculates and returns the mean point-to-line distance (lab units)
+        between the calibration points and their fitted epipolar lines
+        (backward, 2D -> 3D ray error).
+
+        For variable_origin fits this uses the residuals already computed
+        during fit_variable_origin_model (self.ray_resid). For fixed-origin
+        fits it recomputes the distance from each inlier point to its ray
+        using self.cam.get_ray().
+        '''
+        if getattr(self.cam, 'variable_origin', False) and \
+                hasattr(self, 'ray_resid'):
+            resid = array(self.ray_resid)
+            return (sum(resid**2)/len(resid))**0.5
+
+        dists = []
+        for i in range(len(self.X_inlayers)):
+            Xi = array(self.X_inlayers[i])
+            xi = self.x_inlayers[i]
+            O, e = self.cam.get_ray(xi[0], xi[1])
+            diff = Xi - O
+            perp = diff - dot(diff, e)*e
+            dists.append(norm(perp)**2)
+
+        return (sum(dists)/len(dists))**0.5
         
         
         

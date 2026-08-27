@@ -170,7 +170,12 @@ class cal_gui(object):
         self.status_show.configure(fg='red', 
                                    text='minimizing external parameters...')
         self.root.update()
-        self.calibrate_obj.calibrate()
+        try:
+            self.calibrate_obj.calibrate(variable_origin=True, 
+                                         c_order=2,
+                                         origin_model='plane')
+        except:
+            self.calibrate_obj.calibrate()
         err = self.calibrate_obj.mean_squared_err()
         print('\n','calibration error: %.3f pixels'%(err),'\n')
         self.error_input.config(text = '%.3e'%err)
