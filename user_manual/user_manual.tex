@@ -815,6 +815,77 @@ However, in some PTV systems another solution is taken such that the calibration
 
 
 
+\subsubsection{Calibration from checkerboard images}\label{sec:checkerboard_cal}
+
+The calibration described so far obtains its calibration points by hand: the user clicks a number of points of the target in the initial calibration GUI, and the remaining points are then matched to the \texttt{target\_file} automatically. This subsection describes an alternative way of obtaining the same calibration points, from images of a checkerboard target, in which the points are found without any clicking.
+
+It is worth being clear about what this replaces. The checkerboard procedure produces an ordinary calibration points file, of exactly the form described in Sec.~\ref{sec:target_file}, holding the pixel coordinates of each point and its lab coordinates. It does not replace the fitting of a 3D model, and it makes no assumption about which model is used: once the file exists, the model is fitted from it with the \texttt{final\_calibration} action, exactly as it would be from a hand picked file, and equally well with the Tsai model or with the extended Zolof model. The checkerboard procedure therefore replaces the point picking, and nothing else.
+
+\paragraph{The experiment.} The procedure expects the arrangement that is usual in 3D-PTV. A checkerboard is mounted on a translation stage inside the measurement volume, oriented so that its two sides lie along known directions of the lab frame. It is then photographed by all the cameras simultaneously at a number of known positions of the stage, so that its corners between them span the depth of the volume. This is the same multiplane idea as in Sec.~\ref{sec:multiplane_cal}, and it has two useful consequences: because the cameras record the board at the same instant they share one lab frame by construction, and because the stage positions are known the depth coordinate of every corner is known to the accuracy of the stage, rather than having to be fitted.
+
+The board is described to the program by the number of its \textbf{internal} corners, by the physical spacing of those corners, and by its pose. Only the internal corners are used, since a corner on the outer boundary of the pattern is not surrounded by the board on all sides and cannot be located reliably; a board of $10 \times 7$ squares therefore has $9 \times 6$ internal corners, and \texttt{board\_size} would be \texttt{9, 6}.
+
+\paragraph{How the corners are found.} An internal corner of a checkerboard is a saddle point of the image intensity, and candidates are found as the maxima of $-\det(\mathsf{H})$, where $\mathsf{H}$ is the Hessian of the smoothed image. Each candidate is then refined to sub-pixel accuracy using the fact that at any pixel $p$ lying on one of the two edges through the corner $c$, the intensity gradient is perpendicular to $p - c$; minimizing the squared residuals of $g(p)\cdot(p-c) = 0$ over a window around the corner gives a small linear system for $c$. The two edge directions of each corner are recovered from a histogram of the gradient orientations around it, and are used both to reject candidates whose surroundings do not look like a checkerboard and, afterwards, as the local lattice directions.
+
+The refined corners are then assembled into an ordered grid by growing it outwards from a seed corner, in the spirit of Ref.~\cite{Geiger2012}: at each step the image position of a lattice site next to an already filled one is predicted from its filled neighbours, and the nearest unused corner is assigned to it if it falls close enough to the prediction. Growing the grid locally, rather than fitting a global model to it, means that the procedure follows perspective and lens distortion without having to know anything about either, and that it stops of its own accord at the edge of the board. Tested on synthetic images, the corners are recovered to within about a twentieth of a pixel of where the camera model projects them.
+
+\paragraph{The orientation of the board.} One point deserves attention, because getting it wrong produces a calibration that is badly wrong without any obvious symptom. The grid that comes out of the growth is indexed arbitrarily: which corner ended up being called $(0,0)$, and which side of the board was called the first axis, depend on where the growth happened to start. A grid can therefore be laid over the physical board in eight different ways. If two cameras resolve this differently, they assign different lab coordinates to the same physical corner, and the calibration silently fails.
+
+The ambiguity is resolved by the \texttt{origin\_hint} parameter, which is the approximate pixel position, in that camera, of the corner that the user has chosen to be the origin of the board. It need only be accurate to within a fraction of the corner spacing. For a board whose two sides have different numbers of corners this fixes the orientation completely; for a square board a second hint, \texttt{iaxis\_hint}, pointing along the first axis, is also needed. \textbf{The same physical corner must be hinted at in every camera.} It is worth looking at the figure that the action plots, in which the chosen origin is circled and the two axes labelled, once per camera, before going on to fit the models.
+
+\paragraph{Running it.} With the parameters of Tab.~\ref{tab:checkerboard_paramsfile} set, the points are found with
+
+\begin{verbatim}
+    python workflow.py params_file.yml checkerboard_calibration
+\end{verbatim}
+
+once per camera, after which the models are fitted with \texttt{initial\_calibration} and \texttt{final\_calibration} as usual. A set of synthetic checkerboard images can be generated from existing camera files with the script \texttt{synthetic\_data\_generation/checkerboard/checkerboard\_image\_generation.py}, which is a convenient way of becoming familiar with the parameters before relying on them.
+
+\begin{table}
+	\centering
+	\caption{The \texttt{params\_file.yml} parameters for the \texttt{checkerboard\_calibration} step. All paths to files are relative to the \texttt{workflow.py} script. \label{tab:checkerboard_paramsfile}}
+	\begin{tabular}{l m{10cm}}
+		\hline
+		Parameter & Description\\[.2cm]
+		\hline
+
+		\texttt{camera\_name} & The name of the camera whose images are being processed; for example \texttt{cam1}. \\[.2cm]
+
+		\texttt{images} & The images of the board for this camera, either as a list or as a pattern such as \texttt{./Calibration/cam1\_board\_*.tif}. A pattern is expanded in sorted order, so it is worth numbering the files with a fixed number of digits. \\[.2cm]
+
+		\texttt{board\_size} & The number of \textbf{internal} corners along the two sides of the board; for example \texttt{9, 6} for a board of $10 \times 7$ squares. \\[.2cm]
+
+		\texttt{square\_size} & The physical spacing of the corners, in the length units used for the lab coordinates. Two values may be given if the spacing differs along the two sides. \\[.2cm]
+
+		\texttt{board\_origin} & The lab coordinates of the corner $(0,0)$ of the board, for the board at zero translation; for example \texttt{7.0, 17.5, 0.0}. \\[.2cm]
+
+		\texttt{board\_i\_axis} & The lab space direction of the first side of the board; for example \texttt{1, 0, 0}. \\[.2cm]
+
+		\texttt{board\_j\_axis} & The lab space direction of the second side of the board; for example \texttt{0, 1, 0}. \\[.2cm]
+
+		\texttt{translations} & One value per image, giving the position of the translation stage when that image was taken, measured along the normal of the board; for example \texttt{-8.0, -4.0, 0.0, 4.0, 8.0}. \\[.2cm]
+
+		\texttt{origin\_hint} & The approximate pixel position, in this camera, of the corner chosen as the origin of the board; for example \texttt{339, 703}. This must be the same physical corner in every camera. \\[.2cm]
+
+		\texttt{iaxis\_hint} & The approximate pixel position of a corner along the first axis of the board. Needed only when the board is square, where the origin alone leaves two possibilities; \texttt{None} otherwise. \\[.2cm]
+
+		\texttt{sigma} & The smoothing scale of the corner detector, in pixels. It should be of the order of the blur of the edges of the board; 2.0 is a reasonable starting value. \\[.2cm]
+
+		\texttt{min\_distance} & The minimum separation of two corners, in pixels. It must be smaller than the spacing of the corners in the image, and also sets the size of the windows in which the corners are refined. \\[.2cm]
+
+		\texttt{min\_score} & Candidates whose surroundings match an ideal checkerboard corner less well than this are discarded. The default of 0.7 separates true internal corners, which score above about 0.85, from the spurious candidates found on the outer boundary of the pattern, which stay below about 0.55. \\[.2cm]
+
+		\texttt{plot\_result} & If \texttt{True}, plots the corners found in the first image with the chosen origin circled, which is the check that the orientation of the board came out as intended. \\[.2cm]
+
+		\texttt{save\_name} & The name of the calibration points file to write. If it has no directory part it is written into the calibration folder. \\[.2cm]
+
+		\hline
+	\end{tabular}
+\end{table}
+
+
+
+
 \subsection{Segmentation}\label{sec:workflow_segment}
 
 

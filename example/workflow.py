@@ -47,6 +47,7 @@ class workflow(object):
         
         self.allowed_actions = ['help', 'initial_calibration', 
                                 'final_calibration',
+                                'checkerboard_calibration',
                                 'analyze_calibration_error',
                                 'calibration_with_particles', 
                                 'matching', 'analyze_disparity',
@@ -80,6 +81,9 @@ class workflow(object):
                 
             elif action == 'final_calibration':
                 self.final_calibration()
+
+            elif action == 'checkerboard_calibration':
+                self.checkerboard_calibration()
                 
             elif action == 'analyze_calibration_error':
                 self.calibration_error_estimation()
@@ -355,6 +359,119 @@ class workflow(object):
             models = str(['Tsai', 'extendedZolof'])[1:-1]
             msg = 'Unknown 3D model; permisible model names are: '
             raise ValueError(msg + models)                                
+
+
+
+
+    def checkerboard_calibration(self):
+        '''
+        Locates the corners of a checkerboard target in a set of images and
+        writes them, together with their lab space coordinates, into a
+        calibration points file.
+
+        This is an alternative to picking the calibration points by hand with
+        the initial_calibration GUI and then matching them to a target file.
+        It does not replace the fitting of a camera model: the file that this
+        action writes is an ordinary MyPTV calibration points file, and the
+        model is fitted from it afterwards, with final_calibration, exactly as
+        it would be from a hand picked one. It therefore works with any of the
+        3D models.
+
+        The expected experiment is a checkerboard on a translation stage,
+        photographed by all the cameras at the same time at a number of known
+        stage positions.
+        '''
+        import os
+        from myptv.checkerboard.cal_points import checkerboard_cal_points
+
+        act = 'checkerboard_calibration'
+
+        def numbers(param, n=None):
+            '''parses a comma separated list of numbers from the params file'''
+            val = self.get_param(act, param)
+            if val is None:
+                return None
+            nums = [float(s) for s in str(val).split(',')]
+            if n is not None and len(nums) != n:
+                raise ValueError('%s -> %s should hold %d numbers, got %d'
+                                 %(act, param, n, len(nums)))
+            return nums
+
+        def optional(param, default):
+            '''fetches a parameter that need not be in the params file'''
+            try:
+                val = self.get_param(act, param)
+            except ValueError:
+                return default
+            return default if val is None else val
+
+        cam_name = self.get_param(act, 'camera_name')
+        images = self.get_param(act, 'images')
+
+        board_size = [int(s) for s in numbers('board_size', n=2)]
+        square_size = numbers('square_size')
+        square_size = square_size[0] if len(square_size) == 1 else square_size
+
+        origin = numbers('board_origin', n=3)
+        i_axis = numbers('board_i_axis', n=3)
+        j_axis = numbers('board_j_axis', n=3)
+
+        translations = numbers('translations')
+
+        origin_hint = numbers('origin_hint')
+        iaxis_hint = numbers('iaxis_hint')
+
+        sigma = float(optional('sigma', 2.0))
+        min_distance = int(optional('min_distance', 10))
+        min_score = float(optional('min_score', 0.7))
+        plot_result = optional('plot_result', True)
+
+        save_name = optional('save_name', cam_name + '_cal_points')
+
+        # the calibration folder, following the same convention as the other
+        # calibration actions
+        cal_folder = '.'
+        for fname in os.listdir('.'):
+            if fname in ['calibration', 'Calibration', 'cal', 'Cal']:
+                if os.path.isdir(os.path.join('.', fname)):
+                    cal_folder = os.path.join('.', fname)
+                    break
+
+        if not os.path.isabs(save_name) and os.path.dirname(save_name) == '':
+            save_name = os.path.join(cal_folder, save_name)
+
+        print('\nlooking for the checkerboard in the images of %s\n'%cam_name)
+
+        ch = checkerboard_cal_points(images,
+                                     board_size=board_size,
+                                     square_size=square_size,
+                                     origin=origin,
+                                     i_axis=i_axis,
+                                     j_axis=j_axis,
+                                     translations=translations,
+                                     origin_hint=origin_hint,
+                                     iaxis_hint=iaxis_hint,
+                                     sigma=sigma,
+                                     min_distance=min_distance,
+                                     min_score=min_score)
+
+        ch.process()
+        ch.save(save_name)
+
+        print('\nThe calibration points are ready. Fit the camera model to '
+              'them with the initial_calibration and final_calibration '
+              'actions, as for hand picked points.')
+
+        if plot_result:
+            from matplotlib.pyplot import show
+            print('\nCheck in the figure that the circled corner is the one '
+                  'you meant to be the origin of the board, and that it is '
+                  'the same physical corner in every camera.')
+            for e, res in enumerate(ch.results):
+                if res['ok']:
+                    ch.plot_detection(e)
+                    break
+            show()                                
             
     
     

@@ -5,6 +5,26 @@
     calibration_image: ./Calibration/cal1.tif
     target_file: ./Calibration/target_file
 
+# The images below can be generated from the example cameras by running
+# ../synthetic_data_generation/checkerboard/checkerboard_image_generation.py
+# from this directory, which also prints the origin_hint of each camera.
+- checkerboard_calibration:
+    camera_name: cam1
+    images: ./Calibration/cam1_board_*.tif
+    board_size: 9, 6
+    square_size: 7.0
+    board_origin: 7.0, 17.5, 0.0
+    board_i_axis: 1, 0, 0
+    board_j_axis: 0, 1, 0
+    translations: -8.0, -4.0, 0.0, 4.0, 8.0
+    origin_hint: 339, 703
+    iaxis_hint: None
+    sigma: 2.0
+    min_distance: 12
+    min_score: 0.7
+    plot_result: True
+    save_name: cam1_cal_points
+
 - analyze_calibration_error:
     camera_names: cam1, cam2, cam3
     plot_histogram: True

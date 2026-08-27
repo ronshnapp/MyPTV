@@ -32,6 +32,7 @@ MyPTV is designed to be used by scientists and engineers who need to track the t
 7) Smoothing particle trajectories while calculating their velocities and accelerations
 8) Re-connecting broken trajectories
 9) Measuring the orientations of anisotropic particles in 3D (new from version 7.0.0 and on)
+10) Calibrating cameras from images of a checkerboard target, with the corners found automatically
 
 ## How to install?
 
