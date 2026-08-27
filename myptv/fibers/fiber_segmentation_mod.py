@@ -276,8 +276,8 @@ class fiber_segmentation(object):
         regions = regionprops(label_img)
         for props in regions:
             x, y = props.centroid
-            minr, minc, maxr, maxc = props.bbox
-            box_size = [maxr - minr, maxc - minc]
+            #minr, minc, maxr, maxc = props.bbox
+            #box_size = [maxr - minr, maxc - minc]
             ori = props.orientation
             center = [round(x, ndigits=2), round(y, ndigits=2)] 
             if hasattr(props, 'axis_major_length'):
@@ -286,6 +286,8 @@ class fiber_segmentation(object):
             else:
                 a = props.major_axis_length
                 b = props.minor_axis_length
+            # Fitted ellipse major (length) and minor (diameter) axes in pixels
+            box_size = [round(a, ndigits=2), round(b, ndigits=2)]
             pca_lim = a / b if b > 0 else -1
             mass = a * b
             if pca_lim >= self.pca_limit:
@@ -355,7 +357,7 @@ class fiber_segmentation(object):
                               blb[2], 0])
             
         savetxt(fname, blob_list, 
-                fmt=['%.02f','%.02f','%d','%d','%d','%d'], delimiter='\t')
+                fmt=['%.02f','%.02f','%.02f','%.02f','%.02f','%.02f'], delimiter='\t')
         
     def save_results_direction(self, fname):
         '''
@@ -368,7 +370,7 @@ class fiber_segmentation(object):
                               blb[2], 0, blb[3][0],blb[3][1]])
             
         savetxt(fname, blob_list, 
-                fmt=['%.02f','%.02f','%d','%d','%d','%d','%.05f','%.05f'], delimiter='\t')
+                fmt=['%.02f','%.02f','%.02f','%.02f','%.02f','%.02f','%.05f','%.05f'], delimiter='\t')
         
         
     def save_results_endpoints(self, fname):
