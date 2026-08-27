@@ -406,7 +406,7 @@ def corner_score(img, c, d1, d2, half_window=6, sigma=2.0):
 
 
 def detect_corners(img, sigma=2.0, min_distance=6, half_window=None,
-                   threshold_rel=0.05, min_score=0.7, max_candidates=20000):
+                   threshold_rel=0.05, min_score=0.75, max_candidates=20000):
     '''
     The full checkerboard corner detection pipeline: candidates are found
     from the saddle response, refined to sub-pixel accuracy, given edge
@@ -423,12 +423,32 @@ def detect_corners(img, sigma=2.0, min_distance=6, half_window=None,
                         min_distance.
     threshold_rel (float) - relative threshold on the corner response
     min_score (float) - candidates whose score of eq. (4) is below this value
-                        are discarded. The default of 0.7 was chosen from
-                        tests on synthetic boards, in which true internal
-                        corners scored above 0.85 while the spurious
-                        candidates found along the outer boundary of the
-                        pattern, where only two of the four quadrants belong
-                        to the board, stayed below 0.55.
+                        are discarded.
+
+                        The default of 0.75 comes from measurement rather than
+                        from taste. On a real set of 200 photographs of an
+                        8x11 target, the fraction of images that yielded a
+                        complete board was
+
+                          0.60  0.70  0.75  0.80  0.85  0.88  0.90  0.92
+                           78%   95%   98%   98%   98%   94%   93%   89%
+
+                        Below that plateau the lattice grows past the board,
+                        because a stray saddle elsewhere in the scene, on the
+                        mount holding the target for instance, is accepted and
+                        happens to fall near a lattice site. Above it, real
+                        corners start being thrown away. The three values on
+                        the plateau are indistinguishable on that data, so the
+                        lowest is taken, since it is the most tolerant of
+                        corners that are genuinely hard to see.
+
+                        That tolerance is worth having, because the score of a
+                        true corner falls as the board is tilted away from the
+                        camera and its image is foreshortened. A board seen at
+                        a large angle may need a threshold as low as 0.6. If
+                        images of a strongly tilted board are being rejected
+                        for having grown an incomplete lattice, lowering this
+                        is the first thing to try.
     max_candidates (int) - a safety limit on the number of candidates
 
     output - a dictionary with the keys:

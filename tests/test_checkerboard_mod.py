@@ -297,8 +297,8 @@ def test_grid_assembly():
     which is the ambiguity that resolve_orientation exists to settle, so only
     the shape up to a transposition is checked here.
     '''
-    for board_size in [(9, 6), (7, 7), (11, 4)]:
-        for alpha, beta in [(0.0, 0.0), (0.5, -0.6)]:
+    for board_size in [(8, 11), (9, 6), (7, 7), (11, 4)]:
+        for alpha, beta in [(0.0, 0.0), (0.4, 0.5)]:
 
             cam, origin, e1, e2 = board_view(board_size, alpha=alpha,
                                              beta=beta)
@@ -317,6 +317,43 @@ def test_grid_assembly():
                 'board %s at tilt (%.1f,%.1f): only %d of %d sites filled' \
                 %(board_size, alpha, beta, int((idx >= 0).sum()),
                   board_size[0]*board_size[1])
+
+
+def test_grid_assembly_of_a_strongly_tilted_board():
+    '''
+    A board tilted until one of its sides is nearly edge-on has an image whose
+    two lattice spacings differ substantially. This is a regression test: the
+    assembly used to fail outright on such a board, returning an empty
+    lattice, because the search for the neighbours of the seed corner took its
+    radius from a single spacing estimate. That estimate is the shorter of the
+    two spacings, being the distance to the nearest neighbour, so the radius
+    fell short of reaching along the longer one, no seed ever acquired
+    neighbours on both axes, and the growth had nowhere to start.
+
+    The case was found on real photographs of a target held at a steep angle,
+    where the two spacings were 36 and 62 pixels.
+    '''
+    board_size = (8, 11)
+
+    cam, origin, e1, e2 = board_view(board_size, alpha=0.0, beta=1.05)
+    img, truth = render_board(cam, board_size, SQUARE, origin, e1, e2,
+                              noise=0.01)
+
+    # the point of the test is that the two spacings really do differ
+    s1 = norm(truth[1, 0] - truth[0, 0])
+    s2 = norm(truth[0, 1] - truth[0, 0])
+    assert max(s1, s2)/min(s1, s2) > 1.6, \
+        'this test is meant to exercise an anisotropic lattice, but the two ' \
+        'spacings came out at %.1f and %.1f px'%(s1, s2)
+
+    det = detect_corners(img, sigma=2.0, min_distance=8)
+    idx = assemble_grid(det)
+
+    assert sorted(idx.shape) == sorted(board_size), \
+        'lattice of shape %s, expected %s'%(idx.shape, board_size)
+    assert (idx >= 0).sum() == board_size[0]*board_size[1], \
+        'only %d of %d sites filled'%(int((idx >= 0).sum()),
+                                      board_size[0]*board_size[1])
 
 
 def test_orientation_follows_the_hint():

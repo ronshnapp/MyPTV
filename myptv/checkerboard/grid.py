@@ -68,11 +68,18 @@ from scipy.spatial import cKDTree
 
 def estimate_spacing(points):
     '''
-    Estimates the typical spacing, in pixels, between neighbouring corners of
-    the board, as the median distance from a corner to its nearest neighbour.
-    For a checkerboard the nearest neighbour of a corner is one of its
-    lattice neighbours, so this is a robust estimate even when part of the
-    cloud is spurious.
+    Estimates the spacing, in pixels, between neighbouring corners of the
+    board, as the median distance from a corner to its nearest neighbour. For
+    a checkerboard the nearest neighbour of a corner is one of its lattice
+    neighbours, so this is robust even when part of the cloud is spurious.
+
+    Note that a single number cannot describe the lattice when the board is
+    seen very obliquely, because the image is then foreshortened along one
+    direction and the two lattice spacings differ. What this returns in that
+    case is the shorter of the two, since that is what the nearest neighbour
+    of a corner sits at. Anything that searches for neighbours using this
+    value must therefore allow for a distance several times larger; see
+    find_neighbor_in_direction.
 
     input -
     points (array, (N,2)) - the (x, y) corner positions
@@ -94,13 +101,23 @@ def estimate_spacing(points):
 
 def find_neighbor_in_direction(points, tree, i, direction, spacing,
                               used=None, max_angle=0.45, r_min=0.5,
-                              r_max=1.7):
+                              r_max=3.0):
     '''
     Finds the lattice neighbour of corner i lying in a given direction.
 
     Candidates are the corners at a distance between r_min*spacing and
     r_max*spacing from corner i whose bearing differs from the given
     direction by less than max_angle. Of these, the nearest is returned.
+
+    The default r_max is deliberately generous, because spacing is the
+    shorter of the two lattice spacings when the board is seen obliquely (see
+    estimate_spacing), and the neighbour being sought may be along the longer
+    one. A board tilted enough to foreshorten its image by a factor of three
+    is still handled. Being generous costs nothing, because the nearest
+    candidate within the cone is taken: along any lattice direction the true
+    neighbour is nearer than the next corner beyond it, and nearer than any
+    diagonal that the cone might admit, so widening the search cannot change
+    which corner is chosen when the true neighbour is present.
 
     input -
     points (array, (N,2)) - the corner positions
