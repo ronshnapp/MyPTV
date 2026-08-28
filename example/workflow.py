@@ -48,6 +48,7 @@ class workflow(object):
         self.allowed_actions = ['help', 'initial_calibration', 
                                 'final_calibration',
                                 'checkerboard_calibration',
+                                'moving_board_calibration',
                                 'analyze_calibration_error',
                                 'calibration_with_particles', 
                                 'matching', 'analyze_disparity',
@@ -84,6 +85,9 @@ class workflow(object):
 
             elif action == 'checkerboard_calibration':
                 self.checkerboard_calibration()
+
+            elif action == 'moving_board_calibration':
+                self.moving_board_calibration()
                 
             elif action == 'analyze_calibration_error':
                 self.calibration_error_estimation()
@@ -477,6 +481,156 @@ class workflow(object):
     
     
     
+    def moving_board_calibration(self):
+        '''
+        Calibrates several cameras from images of a checkerboard that was
+        moved and turned about freely, so that where it was is not known and
+        has to be recovered from the images together with the cameras.
+
+        This is the counterpart of checkerboard_calibration, which needs the
+        board on a translation stage so that its position is read off the
+        stage. Use this one when the board was simply held in the volume and
+        turned about, which requires that the cameras were triggered
+        together, so that a given frame shows one pose of the board seen from
+        several directions.
+
+        It writes a calibration points file per camera, and, for the Tsai
+        model, a camera file as well, since the recovered parameters are a
+        good starting point and there is then no need for the initial
+        calibration GUI at all: go straight to final_calibration.
+
+        Note that the lab frame this produces is anchored on one camera,
+        because nothing in the images says where the origin of the lab frame
+        is. Distances and shapes are right; the origin and the directions of
+        the axes are a convention. If the coordinates have to line up with
+        the apparatus, relate the frame to it afterwards.
+        '''
+        import os
+        from myptv.checkerboard.moving_board import moving_board_calibration \
+            as mbc
+
+        act = 'moving_board_calibration'
+
+        def numbers(param, n=None):
+            '''parses a comma separated list of numbers from the params file'''
+            val = self.get_param(act, param)
+            if val is None:
+                return None
+            nums = [float(s) for s in str(val).split(',')]
+            if n is not None and len(nums) != n:
+                raise ValueError('%s -> %s should hold %d numbers, got %d'
+                                 %(act, param, n, len(nums)))
+            return nums
+
+        def optional(param, default):
+            '''fetches a parameter that need not be in the params file'''
+            try:
+                val = self.get_param(act, param)
+            except ValueError:
+                return default
+            return default if val is None else val
+
+        cam_names = [s.strip() for s in
+                     str(self.get_param(act, 'camera_names')).split(',')]
+        pattern = str(self.get_param(act, 'images'))
+
+        board_size = [int(s) for s in numbers('board_size', n=2)]
+        square_size = numbers('square_size')[0]
+
+        model_name = str(optional('3D_model', 'Tsai'))
+        every = int(optional('every_nth_frame', 1))
+        max_frames = int(optional('max_frames', 60))
+        n_dist = int(optional('n_distortion', 2))
+        sigma = float(optional('sigma', 2.0))
+        min_distance = int(optional('min_distance', 10))
+        min_score = float(optional('min_score', 0.75))
+        max_iter = int(optional('max_iterations', 2000))
+        reference = optional('reference_camera', cam_names[0])
+        save_folder = str(optional('save_folder', None) or '.')
+
+        res = optional('resolution', None)
+        if res is not None:
+            res = [int(float(s)) for s in str(res).split(',')]
+
+        # the images of each camera, from a pattern in which {camera} stands
+        # for the camera's name
+        from glob import glob
+        images = {}
+        for c in cam_names:
+            pat = pattern.replace('{camera}', c)
+            fl = sorted(glob(pat))
+            if len(fl) == 0:
+                raise ValueError('the pattern "%s" matched no files'%pat)
+            images[c] = fl[::every]
+
+        print('\nrecovering %d cameras and the pose of the board in each '
+              'frame\n'%len(cam_names))
+
+        cal = mbc(images, board_size, square_size, sigma=sigma,
+                  min_distance=min_distance, min_score=min_score,
+                  n_dist=n_dist, reference_camera=reference,
+                  max_frames=max_frames)
+
+        cal.detect()
+        cal.solve(max_nfev=max_iter)
+        cal.report()
+
+        if not os.path.isdir(save_folder):
+            os.makedirs(save_folder)
+
+        print('\nwriting the calibration points')
+        cal.save_cal_points(save_folder)
+
+        if model_name == 'Tsai':
+            if res is None:
+                raise ValueError(
+                    'the resolution is needed to write Tsai camera files, '
+                    'since that model holds the principal point as an offset '
+                    'from the centre of the image. Add "resolution" to the '
+                    '%s parameters, or set 3D_model to extendedZolof.'%act)
+
+            from myptv.TsaiModel.camera import camera_Tsai
+            from myptv.TsaiModel.calibrate import calibrate_Tsai
+            from myptv.utils import Cal_image_coord
+            from numpy import zeros
+
+            print('\nfitting the Tsai model to them')
+            for c in cam_names:
+                p = cal.camera_parameters()[c]
+                cam = camera_Tsai(c)
+                cam.resolution = (res[0], res[1])
+                cam.O = p['O']
+                cam.theta = p['theta']
+                cam.f = p['f']
+                cam.xh = p['principal_point'][0] - res[0]/2.0
+                cam.yh = p['principal_point'][1] - res[1]/2.0
+                cam.E = zeros((3, 5))
+                cam.calc_R()
+
+                cic = Cal_image_coord(os.path.join(save_folder,
+                                                   c + '_cal_points'))
+                cl = calibrate_Tsai(cam, cic.lab_coords, cic.image_coords)
+                e0 = cl.mean_squared_err()
+                cl.searchCalibration(maxiter=3000, fix_f=False)
+                cl.fineCalibration(maxiter=2000)
+                e1 = cl.mean_squared_err()
+                cam.save('.')
+                print('   %s: %.3f -> %.3f px, saved as ./%s'
+                      %(c, e0, e1, c))
+
+            print('\nThe camera files are written, so the initial '
+                  'calibration GUI is not needed. Check the result with '
+                  'analyze_calibration_error, and refine further with '
+                  'final_calibration if you wish.')
+
+        else:
+            print('\nThe calibration points are ready. Fit the model to them '
+                  'with the final_calibration action.')
+
+
+
+
+
     def calibration_error_estimation(self):
         '''
         Performs stereo matching of the calibration points and compares
