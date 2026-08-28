@@ -455,7 +455,8 @@ class moving_board_calibration(object):
 
 
     # ------------------------------------------------------------------
-    def save_cal_points(self, folder, suffix='_cal_points'):
+    def save_cal_points(self, folder, suffix='_cal_points',
+                        with_view_index=True):
         '''
         Writes one calibration points file per camera, in the format that
         myptv.utils.Cal_image_coord reads, so that the 3D models can be
@@ -464,6 +465,14 @@ class moving_board_calibration(object):
         input -
         folder (string) - where to write
         suffix (string) - appended to the camera name
+        with_view_index (bool) - whether to add a sixth column saying which
+                    frame each point came from. Cal_image_coord reads only
+                    the first five columns, so the file remains an ordinary
+                    calibration points file and every existing use of it is
+                    unaffected; but knowing which points share a view is what
+                    allows the error to be reported per view afterwards,
+                    which is how a single badly labelled image is found. See
+                    myptv.makePlots.plot_calibration.
 
         output -
         paths (dict) - camera -> the file written
@@ -479,7 +488,8 @@ class moving_board_calibration(object):
             uv = self.bundle.obs[n]
             X = lab[k]
             for i in range(self.NPT):
-                rows[c].append((uv[i, 0], uv[i, 1], X[i, 0], X[i, 1], X[i, 2]))
+                rows[c].append((uv[i, 0], uv[i, 1], X[i, 0], X[i, 1],
+                                X[i, 2], k))
 
         if not os.path.isdir(folder):
             os.makedirs(folder)
@@ -489,7 +499,10 @@ class moving_board_calibration(object):
             p = os.path.join(folder, c + suffix)
             with open(p, 'w') as f:
                 for r in rows[c]:
-                    f.write('%.3f\t%.3f\t%.4f\t%.4f\t%.4f\n'%r)
+                    if with_view_index:
+                        f.write('%.3f\t%.3f\t%.4f\t%.4f\t%.4f\t%d\n'%r)
+                    else:
+                        f.write('%.3f\t%.3f\t%.4f\t%.4f\t%.4f\n'%r[:5])
             paths[c] = p
             if self.print_progress:
                 print('  %s: %d points -> %s'%(c, len(rows[c]), p))
