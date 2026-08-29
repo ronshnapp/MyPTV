@@ -1,0 +1,29 @@
+# Calibration of four cameras from a checkerboard turned about freely.
+#
+# Run from inside this folder:
+#
+#     python ../workflow.py params_file.yml moving_board_calibration
+#
+# It writes the calibration points into ./Calibration and a camera file for
+# each camera into this folder.
+
+- moving_board_calibration:
+    camera_names: cam1, cam2, cam3, cam4
+    images: ./images/{camera}/*.png
+    resolution: 1800, 1088
+    3D_model: Tsai
+    board_size: 8, 11
+    square_size: 15.0
+    every_nth_frame: 1
+    max_frames: 14
+    reference_camera: cam1
+    n_distortion: 4
+    sigma: 1.5
+    min_distance: 10
+    min_score: 0.75
+    max_iterations: 1500
+    save_folder: ./Calibration
+
+- analyze_calibration_error:
+    camera_names: cam1, cam2, cam3, cam4
+    plot_histogram: False

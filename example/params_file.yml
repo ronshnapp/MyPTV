@@ -25,6 +25,10 @@
     plot_result: True
     save_name: cam1_cal_points
 
+# A template. There is a worked example, with real images of four cameras,
+# in ./checkerboard_moving_example; run it from inside that folder, which
+# keeps the camera files it writes away from the ones this example already
+# has.
 - moving_board_calibration:
     camera_names: cam1, cam2, cam3, cam4
     images: ./Calibration/{camera}/*.tif
@@ -32,8 +36,8 @@
     3D_model: Tsai
     board_size: 8, 11
     square_size: 15.0
-    every_nth_frame: 3
-    max_frames: 60
+    every_nth_frame: 1
+    max_frames: 40
     reference_camera: cam1
     n_distortion: 4
     sigma: 2.5

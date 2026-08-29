@@ -913,6 +913,8 @@ The essential point is that the board pose at a given frame is \emph{one} set of
 
 processes all the cameras at once, unlike the other calibration actions, since they have to be solved together. It writes a calibration points file per camera and, when the Tsai model is asked for, a camera file as well: the parameters that come out of the adjustment are already a good fit, so the initial calibration GUI of Sec.~\ref{sec:init_calibration} is not needed at all. Check the result with \texttt{analyze\_calibration\_error}, and refine further with \texttt{final\_calibration} if wished.
 
+A worked example is provided, of fourteen frames from four cameras of a real board being turned about, in \texttt{example/checkerboard\_moving\_example}. Its \texttt{README} lists the numbers it should reproduce, including the two that are independent of the choice of lab frame: the two pairs of cameras come out 246.1 mm and 245.1 mm apart, recovered independently of each other, and triangulating the corners back through \texttt{img\_system} returns the spacing of the board as 14.97 mm against its true 15 mm. Synthetic images for either procedure can also be generated from existing camera files with \texttt{synthetic\_data\_generation/checkerboard/checkerboard\_image\_generation.py}, choosing between them with its \texttt{mode} setting.
+
 \paragraph{What to look at afterwards.} The action prints several things worth reading rather than skipping.
 
 \begin{itemize}
