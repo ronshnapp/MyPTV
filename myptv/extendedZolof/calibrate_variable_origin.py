@@ -179,7 +179,7 @@ _ORDER_N_TERMS = {1: 3, 2: 6, 3: 10}
 
 def fit_variable_origin_model(cam, X_list, x_list, O_init=None,
                                thresh_pix=5.0, min_points=15, c_order=3,
-                               origin_model='free'):
+                               origin_model='free', freeze_C=False):
     '''
     Fits the variable-origin epipolar model, replacing the fixed-origin
     assumption r(x) = [B]G(x), O = const.
@@ -236,6 +236,25 @@ def fit_variable_origin_model(cam, X_list, x_list, O_init=None,
                  to check whether a given c_order actually generalizes
                  better on held-out points, rather than assuming it does.
 
+    freeze_C   : if True, [C] is NOT fit - it is taken unchanged from
+                 cam.C, and only [B] (the ray directions) is optimized.
+                 c_order and origin_model are then inherited from the
+                 camera as well, and so are the pixel normalization
+                 (cam.px_center/px_scale) and, in 'plane' mode, the plane
+                 itself (cam.O, cam.plane_u/v/n) - all of these define the
+                 reference frame that [C]'s coefficients are expressed in,
+                 so re-deriving any of them from a new point set would
+                 silently reinterpret the frozen coefficients.
+
+                 This is intended for refining a camera against particle
+                 trajectories: those 3D target positions were themselves
+                 triangulated with the current model, and the points are
+                 selected for LOW triangulation error, i.e. for being most
+                 consistent with the existing [C]. Refitting [C] on them
+                 therefore tends to reinforce its own bias rather than
+                 correct it, while [B] is far less able to exploit that
+                 feedback. Requires cam.variable_origin == True.
+
     returns (C, B, mask, resid, px_center, px_scale, plane) -
     C     : ndarray - the fitted origin coefficients (rows = pixel basis
             terms; n_c = 3/6/10 rows depending on c_order). For
@@ -259,6 +278,11 @@ def fit_variable_origin_model(cam, X_list, x_list, O_init=None,
             'O0', 'u', 'v', 'n' (each a (3,) ndarray) defining the plane.
             The caller should store these as cam.O / cam.plane_u /
             cam.plane_v / cam.plane_n.
+    origin_model : the origin model actually used. This can DIFFER from
+            the requested one when freeze_C=True (the camera's own model
+            wins), so callers must store THIS value on the camera rather
+            than the argument they passed in - otherwise the camera would
+            be labelled with a model that does not match its [C].
     '''
     if c_order not in _ORDER_N_TERMS:
         raise ValueError(f'c_order must be one of {sorted(_ORDER_N_TERMS)} '
@@ -266,7 +290,53 @@ def fit_variable_origin_model(cam, X_list, x_list, O_init=None,
     if origin_model not in ('free', 'plane'):
         raise ValueError("origin_model must be 'free' or 'plane' "
                           f'(got {origin_model!r}).')
-    n_c = _ORDER_N_TERMS[c_order]
+
+    if freeze_C:
+        # Reuse the camera's existing origin model wholesale. Everything
+        # that [C]'s coefficients are expressed RELATIVE TO must be reused
+        # unchanged too, or the frozen coefficients would be reinterpreted
+        # against a different reference and silently produce wrong
+        # origins: the pixel normalization (px_center/px_scale), and for
+        # 'plane' mode also the plane's anchor point (cam.O) and axes.
+        if not getattr(cam, 'variable_origin', False):
+            raise ValueError(
+                'freeze_C=True requires a camera that was already '
+                'calibrated with the variable-origin model, but '
+                f'"{getattr(cam, "name", "?")}" has variable_origin=False '
+                '(so it has no [C] to freeze).')
+
+        C_frozen = array(cam.C, dtype=float)
+        n_c = C_frozen.shape[0]
+
+        if n_c not in _ORDER_N_TERMS.values():
+            raise ValueError(
+                f'Camera [C] has {n_c} rows, which is not a valid '
+                'polynomial basis size (3, 6 or 10).')
+
+        cam_order = {v: k for k, v in _ORDER_N_TERMS.items()}[n_c]
+        if cam_order != c_order:
+            warnings.warn(
+                f'freeze_C=True: using the camera\'s own C order '
+                f'({cam_order}), ignoring the requested c_order={c_order}.')
+
+        cam_model = getattr(cam, 'origin_mode', 'free')
+        if cam_model != origin_model:
+            warnings.warn(
+                f'freeze_C=True: using the camera\'s own origin model '
+                f"('{cam_model}'), ignoring the requested "
+                f"origin_model='{origin_model}'.")
+            origin_model = cam_model
+
+        expected_cols = 2 if origin_model == 'plane' else 3
+        if C_frozen.shape[1] != expected_cols:
+            raise ValueError(
+                f"Camera [C] has {C_frozen.shape[1]} columns but origin "
+                f"model '{origin_model}' requires {expected_cols}. The "
+                'camera file may be inconsistent.')
+    else:
+        n_c = _ORDER_N_TERMS[c_order]
+        C_frozen = None
+
     X_list = array(X_list, dtype=float)
     x_list = array(x_list, dtype=float)
     N = len(X_list)
@@ -320,19 +390,25 @@ def fit_variable_origin_model(cam, X_list, x_list, O_init=None,
     ])
     e_arr = e_arr * signs[:, None]
 
-    # --- pixel-coordinate normalization ---
-    # [C] predicts unbounded lab-space coordinates (unlike [B], which
-    # predicts a bounded unit direction), so fitting it against a cubic
-    # polynomial in RAW pixel coordinates is poorly conditioned and prone
-    # to wild extrapolation for any pixel far from the calibration points
-    # (e.g. x^3 for x~1000px is ~1e9). Center/scale the pixels first so
-    # every basis term stays O(1) within the calibrated footprint. These
-    # constants are returned so the caller can store them on the camera
-    # (cam.px_center / cam.px_scale) and use the exact same normalized
-    # basis at prediction time (see camera.get_xCol_scaled / get_ray).
-    px_center = mean(x_kept, axis=0)
-    px_range = x_kept.max(axis=0) - x_kept.min(axis=0)
-    px_scale = array([s if s > 0 else 1.0 for s in px_range / 2.0])
+    if freeze_C:
+        # MUST reuse the camera's normalization - [C]'s coefficients are
+        # expressed in these normalized pixel units.
+        px_center = array(cam.px_center, dtype=float)
+        px_scale = array(cam.px_scale, dtype=float)
+    else:
+        # --- pixel-coordinate normalization ---
+        # [C] predicts unbounded lab-space coordinates (unlike [B], which
+        # predicts a bounded unit direction), so fitting it against a cubic
+        # polynomial in RAW pixel coordinates is poorly conditioned and prone
+        # to wild extrapolation for any pixel far from the calibration points
+        # (e.g. x^3 for x~1000px is ~1e9). Center/scale the pixels first so
+        # every basis term stays O(1) within the calibrated footprint. These
+        # constants are returned so the caller can store them on the camera
+        # (cam.px_center / cam.px_scale) and use the exact same normalized
+        # basis at prediction time (see camera.get_xCol_scaled / get_ray).
+        px_center = mean(x_kept, axis=0)
+        px_range = x_kept.max(axis=0) - x_kept.min(axis=0)
+        px_scale = array([s if s > 0 else 1.0 for s in px_range / 2.0])
 
     G_b = array([_get_xCol_scaled(xi, px_center, px_scale) for xi in x_kept])  # (M,10)
     G_c = G_b[:, :n_c]   # (M, n_c) -- leading terms = the reduced-order basis,
@@ -340,44 +416,69 @@ def fit_variable_origin_model(cam, X_list, x_list, O_init=None,
                          # increasing degree (see _ORDER_N_TERMS above).
 
     if origin_model == 'free':
-        # closed-form initial guesses
-        C0, *_ = lstsq(G_c, X1_arr, rcond=None)   # (n_c,3): O(x) ~ X1
-        B0, *_ = lstsq(G_b, e_arr, rcond=None)    # (10,3):  direction(x) ~ e
+        if not freeze_C:
+            # closed-form initial guesses
+            C0, *_ = lstsq(G_c, X1_arr, rcond=None)   # (n_c,3): O(x) ~ X1
+            B0, *_ = lstsq(G_b, e_arr, rcond=None)    # (10,3): direction(x) ~ e
 
-        a0 = hstack([C0.ravel(), B0.ravel()])     # flat: [C terms | B terms]
+            a0 = hstack([C0.ravel(), B0.ravel()])     # flat: [C terms | B terms]
 
-        def indirect_cost(a):
-            C_ = a[:n_c * 3].reshape(n_c, 3)
-            B_ = a[n_c * 3:].reshape(10, 3)
-            d = _dist_pt_to_line_batch(C_, B_, G_c, G_b, X_kept)
-            return npsum(d ** 2)
+        if freeze_C:
+            # only [B] is free; [C] is taken from the camera as-is.
+            C = C_frozen
+            B0, *_ = lstsq(G_b, e_arr, rcond=None)
 
-        res = minimize(indirect_cost, a0, method='BFGS')
+            def b_only_cost(b):
+                B_ = b.reshape(10, 3)
+                d = _dist_pt_to_line_batch(C, B_, G_c, G_b, X_kept)
+                return npsum(d ** 2)
 
-        C = res.x[:n_c * 3].reshape(n_c, 3)
-        B = res.x[n_c * 3:].reshape(10, 3)
+            res = minimize(b_only_cost, B0.ravel(), method='BFGS')
+            B = res.x.reshape(10, 3)
+        else:
+            def indirect_cost(a):
+                C_ = a[:n_c * 3].reshape(n_c, 3)
+                B_ = a[n_c * 3:].reshape(10, 3)
+                d = _dist_pt_to_line_batch(C_, B_, G_c, G_b, X_kept)
+                return npsum(d ** 2)
+
+            res = minimize(indirect_cost, a0, method='BFGS')
+
+            C = res.x[:n_c * 3].reshape(n_c, 3)
+            B = res.x[n_c * 3:].reshape(10, 3)
 
         final_resid = _dist_pt_to_line_batch(C, B, G_c, G_b, X_kept)
         plane = None
 
     else:
-        # ---- plane-constrained origins ----
-        # (step 2) The plane passes through the approximate common camera
-        # center O0 (=O_init, normally the step2 estimate), with normal
-        # along the line joining O0 to the centroid of the calibration
-        # points - i.e. a plane squarely facing the measurement volume.
-        # Because that normal is roughly the mean viewing direction, the
-        # in-plane axes (u,v) span precisely the origin displacements that
-        # actually CHANGE the epipolar lines, while the discarded
-        # out-of-plane direction is the (unidentifiable) along-ray one.
-        O0 = array(O_init, dtype=float)
-        n_vec = mean(X_kept, axis=0) - O0
-        if norm(n_vec) == 0:
-            raise ValueError(
-                'Cannot build the origin plane: the estimated camera '
-                'center coincides with the centroid of the calibration '
-                'points. Check O_init / the step2 camera-center estimate.')
-        u_ax, v_ax, n_hat = _make_plane_basis(n_vec)
+        if freeze_C:
+            # Reuse the camera's own plane. [C]'s coefficients are offsets
+            # measured from THIS anchor point along THESE axes, so
+            # re-deriving the plane from the new point set would silently
+            # reinterpret them.
+            O0 = array(cam.O, dtype=float)
+            u_ax = array(cam.plane_u, dtype=float)
+            v_ax = array(cam.plane_v, dtype=float)
+            n_hat = array(cam.plane_n, dtype=float)
+        else:
+            # ---- plane-constrained origins ----
+            # (step 2) The plane passes through the approximate common
+            # camera center O0 (=O_init, normally the step2 estimate), with
+            # normal along the line joining O0 to the centroid of the
+            # calibration points - i.e. a plane squarely facing the
+            # measurement volume. Because that normal is roughly the mean
+            # viewing direction, the in-plane axes (u,v) span precisely the
+            # origin displacements that actually CHANGE the epipolar lines,
+            # while the discarded out-of-plane direction is the
+            # (unidentifiable) along-ray one.
+            O0 = array(O_init, dtype=float)
+            n_vec = mean(X_kept, axis=0) - O0
+            if norm(n_vec) == 0:
+                raise ValueError(
+                    'Cannot build the origin plane: the estimated camera '
+                    'center coincides with the centroid of the calibration '
+                    'points. Check O_init / the step2 camera-center estimate.')
+            u_ax, v_ax, n_hat = _make_plane_basis(n_vec)
 
         # (step 3) intersect each estimated ray with that plane, and
         # express the crossing point in the plane's own 2D coordinates.
@@ -405,25 +506,39 @@ def fit_variable_origin_model(cam, X_list, x_list, O_init=None,
         G_c_g, G_b_g = G_c[good], G_b[good]
         X_g, ab_g, e_g = X_kept[good], ab_target[good], e_arr[good]
 
-        # (step 4) fit the in-plane deviations with the same normalized
-        # polynomial basis used for the 'free' model, then jointly refine
-        # C and B against the true point-to-line distance.
-        C0, *_ = lstsq(G_c_g, ab_g, rcond=None)   # (n_c,2)
         B0, *_ = lstsq(G_b_g, e_g, rcond=None)    # (10,3)
 
-        a0 = hstack([C0.ravel(), B0.ravel()])
+        if freeze_C:
+            # only [B] is free; [C] is taken from the camera as-is.
+            C = C_frozen
 
-        def indirect_cost(a):
-            C_ = a[:n_c * 2].reshape(n_c, 2)
-            B_ = a[n_c * 2:].reshape(10, 3)
-            d = _dist_pt_to_line_plane(C_, B_, G_c_g, G_b_g, X_g,
-                                        O0, u_ax, v_ax)
-            return npsum(d ** 2)
+            def b_only_cost(b):
+                B_ = b.reshape(10, 3)
+                d = _dist_pt_to_line_plane(C, B_, G_c_g, G_b_g, X_g,
+                                            O0, u_ax, v_ax)
+                return npsum(d ** 2)
 
-        res = minimize(indirect_cost, a0, method='BFGS')
+            res = minimize(b_only_cost, B0.ravel(), method='BFGS')
+            B = res.x.reshape(10, 3)
+        else:
+            # (step 4) fit the in-plane deviations with the same normalized
+            # polynomial basis used for the 'free' model, then jointly
+            # refine C and B against the true point-to-line distance.
+            C0, *_ = lstsq(G_c_g, ab_g, rcond=None)   # (n_c,2)
 
-        C = res.x[:n_c * 2].reshape(n_c, 2)
-        B = res.x[n_c * 2:].reshape(10, 3)
+            a0 = hstack([C0.ravel(), B0.ravel()])
+
+            def indirect_cost(a):
+                C_ = a[:n_c * 2].reshape(n_c, 2)
+                B_ = a[n_c * 2:].reshape(10, 3)
+                d = _dist_pt_to_line_plane(C_, B_, G_c_g, G_b_g, X_g,
+                                            O0, u_ax, v_ax)
+                return npsum(d ** 2)
+
+            res = minimize(indirect_cost, a0, method='BFGS')
+
+            C = res.x[:n_c * 2].reshape(n_c, 2)
+            B = res.x[n_c * 2:].reshape(10, 3)
 
         final_resid = _dist_pt_to_line_plane(C, B, G_c_g, G_b_g, X_g,
                                               O0, u_ax, v_ax)
@@ -443,7 +558,7 @@ def fit_variable_origin_model(cam, X_list, x_list, O_init=None,
     mask = array([False] * N)
     mask[array(keep_idx)] = True
 
-    return C, B, mask, final_resid, px_center, px_scale, plane
+    return C, B, mask, final_resid, px_center, px_scale, plane, origin_model
 
 
 def _mean_ray_err(ray_fn, X_arr, x_arr):
@@ -525,7 +640,7 @@ def cross_validate_origin_models(cam, X_list, x_list, test_fraction=0.25,
     # --- variable-origin model, fit on TRAIN only ---
     var_train_err = var_test_err = None
     try:
-        C_t, B_t, _, _, px_c, px_s, plane_t = fit_variable_origin_model(
+        C_t, B_t, _, _, px_c, px_s, plane_t, _om = fit_variable_origin_model(
             cam, X_train, x_train, O_init=O_train, thresh_pix=thresh_pix,
             min_points=max(15, int(0.5 * len(train_idx))), c_order=c_order,
             origin_model=origin_model)

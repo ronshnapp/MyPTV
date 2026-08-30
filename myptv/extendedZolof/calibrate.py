@@ -58,7 +58,7 @@ class calibrate_extendedZolof(camera_extendedZolof):
         
     
     def calibrate(self, variable_origin=False, thresh_pix=5.0, c_order=3,
-                  origin_model='free'):
+                  origin_model='free', freeze_C=False):
         '''
         Given a list of points, x and X, this function attempts to determine
         the A, B (and O) coefficients, or A, B, C (and O) coefficients if
@@ -99,6 +99,18 @@ class calibrate_extendedZolof(camera_extendedZolof):
                           and removes the along-ray gauge degeneracy of
                           the 'free' model, so it is typically better
                           conditioned and less prone to overfitting.
+
+        freeze_C          - only used if variable_origin==True. If True,
+                          [C] is taken unchanged from the camera and only
+                          [B] is refit; c_order, origin_model, the pixel
+                          normalization, O and the plane are all inherited
+                          from the camera too (they define the frame [C]
+                          is expressed in). Intended for refining against
+                          particle trajectories, where the 3D targets were
+                          themselves triangulated with the current model
+                          and are selected for consistency with it, so
+                          refitting [C] tends to reinforce its own bias.
+                          Requires an already variable-origin camera.
         '''
         # 1) finding the A coefficients - 
         #if self.quadratic==False:
@@ -140,13 +152,21 @@ class calibrate_extendedZolof(camera_extendedZolof):
         #self.O = get_nearest_line_crossing(line_list)
         
         from myptv.extendedZolof.calibrate_step2_improved import step2_estimate_camera_center
-        self.O = step2_estimate_camera_center(
-            self.cam.projection, #self.x_list, self.X_list,
-            self.x_inlayers, self.X_inlayers,
-            thresh_pix=thresh_pix,
-            refine=True
-        )
-        self.cam.O = self.O
+
+        if variable_origin and freeze_C:
+            # Do NOT re-estimate O here. With a frozen [C] in 'plane' mode
+            # the origins are offsets measured from cam.O along the stored
+            # plane axes, so moving cam.O would silently shift every
+            # frozen origin. Keep the camera's own center.
+            self.O = array(self.cam.O, dtype=float)
+        else:
+            self.O = step2_estimate_camera_center(
+                self.cam.projection, #self.x_list, self.X_list,
+                self.x_inlayers, self.X_inlayers,
+                thresh_pix=thresh_pix,
+                refine=True
+            )
+            self.cam.O = self.O
 
         if not variable_origin:
             # 3) finding the unit vector for each X (fixed-origin model) -
@@ -171,20 +191,26 @@ class calibrate_extendedZolof(camera_extendedZolof):
                 fit_variable_origin_model
 
             (self.C, self.B, self.ray_mask, self.ray_resid,
-             self.px_center, self.px_scale, self.plane) = \
+             self.px_center, self.px_scale, self.plane,
+             resolved_origin_model) = \
                 fit_variable_origin_model(
                     self.cam, self.X_inlayers, self.x_inlayers,
                     O_init=self.O,
                     thresh_pix=thresh_pix,
                     c_order=c_order,
-                    origin_model=origin_model
+                    origin_model=origin_model,
+                    freeze_C=freeze_C
                 )
 
             self.cam.C = self.C
             self.cam.B = self.B
             self.cam.px_center = self.px_center
             self.cam.px_scale = self.px_scale
-            self.cam.origin_mode = origin_model
+            # use the RESOLVED model, not the requested one: with
+            # freeze_C=True the camera's own model wins, and stamping the
+            # requested one here would leave the camera labelled
+            # inconsistently with its own [C].
+            self.cam.origin_mode = resolved_origin_model
 
             if self.plane is not None:
                 # the plane passes through O0; keep cam.O consistent with
@@ -426,6 +452,52 @@ def fit_A_robust(cam, X_list, x_list, quadratic=False,
         
         
 
+_N_TERMS_TO_ORDER = {3: 1, 6: 2, 10: 3}
+
+
+def get_model_settings_from_camera(camera):
+    '''
+    Recovers the backward-model (epipolar line) settings that a camera was
+    calibrated with, so that a re-calibration can preserve them instead of
+    silently reverting to the fixed-origin default.
+
+    Everything needed is already stored in the camera file:
+      - variable_origin : saved explicitly
+      - origin_mode     : saved explicitly ('free' or 'plane')
+      - c_order         : recovered from the number of rows of [C], since
+                          the polynomial basis is ordered by increasing
+                          degree (3 terms = linear, 6 = quadratic,
+                          10 = cubic).
+
+    input - camera : a camera_extendedZolof instance (or a camera_wrapper,
+                     whose .camera attribute is used).
+
+    returns a dict of keyword arguments for
+    calibrate_extendedZolof.calibrate().
+    '''
+    # accept either a raw camera or a camera_wrapper
+    cam = getattr(camera, 'camera', camera)
+
+    if not getattr(cam, 'variable_origin', False):
+        return {'variable_origin': False}
+
+    n_c = array(cam.C).shape[0]
+    c_order = _N_TERMS_TO_ORDER.get(n_c)
+
+    if c_order is None:
+        warnings.warn(
+            f'Camera "{getattr(cam, "name", "?")}" has a [C] matrix with '
+            f'{n_c} rows, which does not correspond to any known '
+            'polynomial order (3/6/10). Falling back to c_order=3.')
+        c_order = 3
+
+    return {
+        'variable_origin': True,
+        'c_order': c_order,
+        'origin_model': getattr(cam, 'origin_mode', 'free'),
+    }
+
+
 class calibrate_with_particles_EZ(object):
     '''
     A class used to refine the calibration using particles data. In short,
@@ -532,6 +604,20 @@ class calibrate_with_particles_EZ(object):
         disparities = [cam.projection(p[0]) - p[1] for p in self.cal_points]
         return disparities
         
+
+    def get_model_settings(self):
+        '''
+        Returns the backward-model settings (variable_origin, c_order,
+        origin_model) that this camera was originally calibrated with, as
+        keyword arguments for calibrate(). Use this so that refining a
+        camera against particle trajectories preserves its model instead
+        of reverting it to the fixed-origin default:
+
+            cal = cwp.get_calibrate_instance()
+            cal.calibrate(**cwp.get_model_settings())
+        '''
+        return get_model_settings_from_camera(self.camera)
+
 
     def get_calibrate_instance(self):
         

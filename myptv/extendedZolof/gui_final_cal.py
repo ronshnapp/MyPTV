@@ -9,7 +9,8 @@ A gui for the final calibration of a Tsai model camera.
 
 
 #from PIL import Image, ImageTk
-from tkinter import Label, LabelFrame, Entry, Tk, Button, Checkbutton, IntVar
+from tkinter import (Label, LabelFrame, Entry, Tk, Button, Checkbutton,
+                     IntVar, StringVar, OptionMenu, DISABLED, NORMAL)
 from matplotlib.pyplot import subplots, show, imread
 
 
@@ -34,9 +35,13 @@ class cal_gui(object):
         
         # set the window
         self.root = Tk()
-        self.root.geometry('370x350')
-        #self.root.resizable(0,0)
-        self.root.resizable(height = None, width = None)
+        # NOTE: no hard-coded geometry() here on purpose. A fixed pixel
+        # size clips the lower widgets whenever the actual required size
+        # is larger than assumed - which happens with different fonts,
+        # DPI/scaling, or Tk themes. Instead the window is sized from the
+        # widgets' own requested size at the end of __init__, and that
+        # size is enforced as a minimum so nothing can ever be cut off.
+        self.root.resizable(True, True)
         self.root.title('MyPTV: Extended Zolof calibration GUI')
 
 
@@ -89,7 +94,60 @@ class cal_gui(object):
         
         
         
-        
+        # =============================
+        # BACKWARD-MODEL OPTIONS:
+        #
+        # These control how the camera-to-lab (epipolar line) model is
+        # fit. The forward (lab-to-camera, [A]) model is unaffected by
+        # them - which is why the "Error" readout below, which measures
+        # only the forward projection, does NOT respond to these settings.
+        # Watch "Ray err" instead when comparing them.
+
+        opts_label = LabelFrame(self.root, text='Backward model (epipolar lines)',
+                                padx=10, pady=4)
+        opts_label.grid(row=1, column=0, padx=(10), pady=4, sticky='nsew')
+
+        # -- variable origin on/off --
+        self.var_origin = IntVar(value=0)
+        self.var_origin_check = Checkbutton(
+            opts_label, text='Use variable origin O(x)',
+            variable=self.var_origin, command=self._toggle_origin_opts,
+            padx=2, pady=2, anchor='w')
+        self.var_origin_check.grid(row=0, column=0, columnspan=2,
+                                   sticky='nw', padx=2, pady=2)
+
+        # -- origin model: free / plane --
+        self.origin_model_lbl = Label(opts_label, text='Origin model:',
+                                      padx=2, pady=2)
+        self.origin_model_lbl.grid(row=1, column=0, sticky='nw',
+                                   padx=2, pady=2)
+
+        self.origin_model = StringVar(value='plane')
+        self.origin_model_menu = OptionMenu(opts_label, self.origin_model,
+                                            'plane', 'free')
+        self.origin_model_menu.config(width=12)
+        self.origin_model_menu.grid(row=1, column=1, sticky='nw',
+                                    padx=2, pady=2)
+
+        # -- polynomial order of C --
+        self.c_order_lbl = Label(opts_label, text='O(x) poly. order:',
+                                 padx=2, pady=2)
+        self.c_order_lbl.grid(row=2, column=0, sticky='nw', padx=2, pady=2)
+
+        self.c_order = StringVar(value='1')
+        self.c_order_menu = OptionMenu(opts_label, self.c_order,
+                                       '1', '2', '3')
+        self.c_order_menu.config(width=12)
+        self.c_order_menu.grid(row=2, column=1, sticky='nw', padx=2, pady=2)
+
+        # -- hint --
+        hint = Label(opts_label, anchor='w', justify='left', fg='gray25',
+                     text=('lower order = less overfitting.\n'
+                           '1=linear, 2=quadratic, 3=cubic'))
+        hint.grid(row=3, column=0, columnspan=2, sticky='nw', padx=2, pady=2)
+
+        self._toggle_origin_opts()
+
         
         
         # =============================
@@ -97,7 +155,7 @@ class cal_gui(object):
         
             
         status_label = LabelFrame(self.root, padx=10, pady=4, width=30)
-        status_label.grid(row=1, column=0, padx=(10), pady=4, sticky='nsew')
+        status_label.grid(row=2, column=0, padx=(10), pady=4, sticky='nsew')
         
         self.status = Label(status_label, text='Status:', padx=2, pady=2)
         self.status.grid(row=0, column=0, rowspan=1, sticky='nw', padx=2, pady=2)
@@ -127,7 +185,7 @@ class cal_gui(object):
         
         
         dashboard = LabelFrame(self.root, padx=10, pady=10, width=100)
-        dashboard.grid(row=2, column=0, padx=(10), pady=10, sticky='nsew')
+        dashboard.grid(row=3, column=0, padx=(10), pady=10, sticky='nsew')
         
         
         # err_Dashboard frame - where the error is shown
@@ -136,13 +194,27 @@ class cal_gui(object):
                           pady=10)
         
 
-        self.error = Label(err_dashboard, text='Error:', padx=2, pady=2)
+        self.error = Label(err_dashboard, text='Error [px]:', padx=2, pady=2)
         self.error.grid(row=1, column=0, rowspan=1, sticky='nw', padx=2, pady=2)
         self.error_input = Label(err_dashboard, text='0.0', padx=2, pady=2,
                                  width=14, bg='white')
         self.error_input.grid(row=1, column=1, rowspan=1, sticky='nw', padx=2, pady=2)
         err = self.calibrate_obj.mean_squared_err()
         self.error_input.config(text = '%.3e'%err)
+
+        # Ray (backward-model) error. Unlike "Error" above - which only
+        # measures the forward [A] projection and is therefore identical
+        # for every backward-model setting - this one actually responds to
+        # the variable-origin options, so use it to compare them.
+        self.ray_error = Label(err_dashboard, text='Ray err [lab]:',
+                               padx=2, pady=2)
+        self.ray_error.grid(row=2, column=0, rowspan=1, sticky='nw',
+                            padx=2, pady=2)
+        self.ray_error_input = Label(err_dashboard, text='--', padx=2, pady=2,
+                                     width=14, bg='white')
+        self.ray_error_input.grid(row=2, column=1, rowspan=1, sticky='nw',
+                                  padx=2, pady=2)
+        self._update_ray_err()
 
         
         #if self.calibrate_obj is not None:
@@ -154,13 +226,55 @@ class cal_gui(object):
         # ==============================
         # RUN 
         
-        # configure hte frames and run main loop
+        # configure the frames
         self.root.columnconfigure(0, weight=1)
-        self.root.rowconfigure(0, weight=1)
         button_label.rowconfigure(0, weight=1)
         button_label.columnconfigure(0, weight=1)
+
+        # Let every section keep its natural height, and give any EXTRA
+        # vertical space to the dashboard at the bottom rather than
+        # stretching the button block. (Previously row 0 alone had
+        # weight=1, so the buttons absorbed all the slack.)
+        for r in range(4):
+            self.root.rowconfigure(r, weight=0)
+        self.root.rowconfigure(3, weight=1)
+
+        # Ask Tk to compute how much room the widgets actually need, then
+        # open at exactly that size and refuse to shrink below it. This
+        # keeps every button reachable no matter the font/DPI/theme.
+        self.root.update_idletasks()
+        req_w = self.root.winfo_reqwidth()
+        req_h = self.root.winfo_reqheight()
+        self.root.minsize(req_w, req_h)
+        self.root.geometry('%dx%d' % (req_w, req_h))
         
         self.root.mainloop()
+
+
+
+    def _toggle_origin_opts(self):
+        '''
+        Greys out the origin-model / polynomial-order selectors when the
+        variable-origin model is switched off, since they have no effect
+        in that case.
+        '''
+        state = NORMAL if self.var_origin.get() else DISABLED
+        for w in [self.origin_model_lbl, self.origin_model_menu,
+                  self.c_order_lbl, self.c_order_menu]:
+            w.config(state=state)
+
+
+
+    def _update_ray_err(self):
+        '''
+        Refreshes the ray-error readout. Before a calibration has been run
+        the inlier lists don't exist yet, so this is a no-op then.
+        '''
+        try:
+            rerr = self.calibrate_obj.mean_ray_err()
+            self.ray_error_input.config(text='%.3e'%rerr)
+        except Exception:
+            self.ray_error_input.config(text='--')
         
         
         
@@ -170,15 +284,33 @@ class cal_gui(object):
         self.status_show.configure(fg='red', 
                                    text='minimizing external parameters...')
         self.root.update()
+
+        use_var = bool(self.var_origin.get())
+        kwargs = {'variable_origin': use_var}
+        if use_var:
+            kwargs['c_order'] = int(self.c_order.get())
+            kwargs['origin_model'] = self.origin_model.get()
+
+        print('calibrating with:', kwargs)
+
+        # NOTE: deliberately NOT wrapped in a bare try/except that silently
+        # falls back to a fixed-origin calibration. Such a fallback hides
+        # real failures (too few surviving rays, bad correspondences, an
+        # unsupported option) behind a normal-looking result, so you can
+        # end up comparing settings that were never actually applied.
+        # Failures are surfaced here instead.
         try:
-            self.calibrate_obj.calibrate(variable_origin=True, 
-                                         c_order=2,
-                                         origin_model='plane')
-        except:
-            self.calibrate_obj.calibrate()
+            self.calibrate_obj.calibrate(**kwargs)
+        except Exception as e:
+            print('\nCALIBRATION FAILED: %s\n'%e)
+            self.status_show.configure(fg='red',
+                                       text='calibration FAILED - see console')
+            return
+
         err = self.calibrate_obj.mean_squared_err()
         print('\n','calibration error: %.3f pixels'%(err),'\n')
         self.error_input.config(text = '%.3e'%err)
+        self._update_ray_err()
         self.status_show.configure(fg='green', text='done! waiting for action')
     
     
@@ -226,6 +358,3 @@ class cal_gui(object):
 
 if __name__ == '__main__':
     gui = cal_gui()
-
-
-
