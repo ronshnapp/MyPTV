@@ -230,6 +230,49 @@ class workflow(object):
     
     
     
+    def get_param_optional(self, act, param, default=None):
+        '''
+        Same as get_param, but returns `default` instead of raising when
+        the action or the parameter is missing from the parameters file.
+        This keeps older parameter files working when new optional
+        parameters are introduced.
+        '''
+        try:
+            val = self.get_param(act, param)
+        except ValueError:
+            return default
+
+        # an explicitly empty / None-valued entry also means "use default"
+        if val is None:
+            return default
+        if isinstance(val, str) and val.strip().lower() in ('none', ''):
+            return default
+
+        return val
+    
+    
+    
+    @staticmethod
+    def _as_bool(val, default=False):
+        '''
+        Interprets a parameters-file value as a boolean. Accepts real
+        booleans as well as the usual textual spellings.
+        '''
+        if val is None:
+            return default
+        if isinstance(val, bool):
+            return val
+        if isinstance(val, (int, float)):
+            return bool(val)
+        s = str(val).strip().lower()
+        if s in ('true', 'yes', '1'):
+            return True
+        if s in ('false', 'no', '0'):
+            return False
+        raise ValueError('Could not interpret "%s" as True/False.'%val)
+    
+    
+    
     
     def initial_calibration(self):
         '''
@@ -472,6 +515,14 @@ class workflow(object):
                                       'min_traj_len')
         max_point_number = self.get_param('calibration_with_particles',
                                       'max_point_number')
+        vo_param = self.get_param_optional('calibration_with_particles',
+                                            'variable_origin', None)
+        c_order_param = self.get_param_optional('calibration_with_particles',
+                                                 'c_order', None)
+        origin_model_param = self.get_param_optional(
+            'calibration_with_particles', 'origin_model', None)
+        freeze_C_param = self.get_param_optional('calibration_with_particles',
+                                                  'freeze_C', None)
 
         print('\n', 'starting calibration with particles')
         
@@ -538,12 +589,56 @@ class workflow(object):
             
             # run the final calibration gui
             print('calibrating...\n')
-            cal.calibrate()
+
+            if vo_param is None:
+                # inherit whatever the camera was calibrated with
+                model_settings = cwp.get_model_settings()
+                source = 'camera file'
+
+                if model_settings.get('variable_origin'):
+                    model_settings['freeze_C'] = True
+
+            else:
+                # Explicit override from the parameters file.
+                use_vo = self._as_bool(vo_param)
+                model_settings = {'variable_origin': use_vo}
+                source = 'parameters file'
+
+                if use_vo:
+                    model_settings['c_order'] = int(
+                        c_order_param if c_order_param is not None else 1)
+                    model_settings['origin_model'] = str(
+                        origin_model_param
+                        if origin_model_param is not None else 'plane')
+                        
+                    cam_has_C = getattr(cam.camera, 'variable_origin', False)
+                    if freeze_C_param is None:
+                        model_settings['freeze_C'] = cam_has_C
+                    else:
+                        want_freeze = self._as_bool(freeze_C_param)
+                        if want_freeze and not cam_has_C:
+                            raise ValueError(
+                                'calibration_with_particles: freeze_C is '
+                                'True but camera "%s" was calibrated '
+                                'without a variable origin, so it has no '
+                                '[C] to freeze. Set freeze_C: False to fit '
+                                '[C] from the particle data.'%camera_name)
+                        model_settings['freeze_C'] = want_freeze
+
+            print('backward-model settings (from %s): %s\n'
+                  %(source, model_settings))
+            cal.calibrate(**model_settings)
             
             p = cwp.get_particle_disparity()
             err = [sum(pi**2)**0.5 for pi in p]
-            print('mean disparity before: %.4f px'%(mean(err)))
-            print('max disparity before: %.4f px\n'%(max(err)))
+            print('mean disparity after: %.4f px'%(mean(err)))
+            print('max disparity after: %.4f px\n'%(max(err)))
+            
+            try:
+                print('mean ray err: %.4f (lab units)\n'
+                      %(cal.mean_ray_err()))
+            except Exception as e:
+                print('could not compute ray error: %s\n'%e)
             
             
             usr_input = input('save results? (1=yes, other=no)')

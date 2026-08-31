@@ -95,6 +95,10 @@
     blobs_fname: 'blobs_cam1'
     min_traj_len: 4
     max_point_number: 1000
+    variable_origin: False
+    c_order: 2
+    origin_model: plane
+    freeze_C: False
 
 - smoothing:
     trajectory_file: trajectories
