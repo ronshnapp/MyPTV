@@ -17,6 +17,37 @@ from pandas import read_csv
 
 
 
+
+def get_epipolar_line(cam, eta, zeta):
+    '''
+    Returns the epipolar line (origin, direction) of a pixel, as a pair of
+    3D vectors.
+
+    This must NOT be built as (cam.O, cam.get_r(...)): that pairs the ray
+    direction with a single fixed camera centre, which is only correct for
+    3D models where every epipolar line really does pass through one
+    point. For an extendedZolof camera calibrated with a variable origin,
+    the origin is a function of the pixel, cam.O is not on the ray at all,
+    and the resulting line is wrong - which here would place every tracked
+    particle at the wrong lab position.
+
+    camera_wrapper.get_epipolarline() already resolves this correctly for
+    every model, so it is used when available. The remaining branches
+    cover a raw camera object (get_ray) and older camera classes that
+    offer neither (fixed origin only).
+
+    Note the direction need not be normalized: the caller scales it by
+    a factor `a`, so its magnitude cancels.
+    '''
+    if hasattr(cam, 'get_epipolarline'):
+        return cam.get_epipolarline(eta, zeta)
+
+    if hasattr(cam, 'get_ray'):
+        return cam.get_ray(eta, zeta)
+
+    return array(cam.O), array(cam.get_r(eta, zeta))
+
+
 class track_2D(tracker_four_frames):
     '''
     A class used to perform particle tracking in 2D using images from a single
@@ -118,12 +149,11 @@ class track_2D(tracker_four_frames):
             
         else:
             if self.reverse_eta_zeta==False:
-                r = self.cam.get_r(eta, zeta)
+                O, r = get_epipolar_line(self.cam, eta, zeta)
             
             else:
-                r = self.cam.get_r(zeta, eta)
+                O, r = get_epipolar_line(self.cam, zeta, eta)
             
-            O = self.cam.O
             a = (self.z_particles - O[2])/r[2]
             
             x, y = O[:2]+r[:2]*a
@@ -263,12 +293,11 @@ class track_2D_multiframe(tracker_multiframe):
             
         else:
             if self.reverse_eta_zeta==False:
-                r = self.cam.get_r(eta, zeta)
+                O, r = get_epipolar_line(self.cam, eta, zeta)
             
             else:
-                r = self.cam.get_r(zeta, eta)
+                O, r = get_epipolar_line(self.cam, zeta, eta)
             
-            O = self.cam.O
             a = (self.z_particles - O[2])/r[2]
             
             x, y = O[:2]+r[:2]*a
@@ -328,5 +357,3 @@ if __name__=='__main__':
                               reverse_eta_zeta=True)
     
     t2d.blobs_to_particles()
-
-

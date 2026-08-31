@@ -22,16 +22,32 @@ class cal_gui(object):
     '''
     
     
-    def __init__(self, calibrate_obj=None, cal_image=None):
+    def __init__(self, calibrate_obj=None, cal_image=None, save_dir='.',
+                 title=None, initial_settings=None):
         '''
         input: 
         
         calibrate_obj - An instance of the calibrate class, ready to perform
                         calibration.
         
+        cal_image     - optional path to a calibration image to draw the
+                        projections over.
+        
+        save_dir      - directory the Save button writes the camera to.
+        
+        initial_settings - optional dict of calibrate() keyword arguments
+                        used to preset the controls, overriding the values
+                        read from the camera. Lets a parameters file seed
+                        the GUI while still leaving the user free to
+                        change anything before calibrating.
+        
+        title         - optional window title, e.g. to distinguish a
+                        target calibration from a particle-based one.
         '''
         self.calibrate_obj = calibrate_obj
         self.cal_image = cal_image
+        self.save_dir = save_dir
+        self.initial_settings = initial_settings or {}
         
         # set the window
         self.root = Tk()
@@ -42,7 +58,7 @@ class cal_gui(object):
         # widgets' own requested size at the end of __init__, and that
         # size is enforced as a minimum so nothing can ever be cut off.
         self.root.resizable(True, True)
-        self.root.title('MyPTV: Extended Zolof calibration GUI')
+        self.root.title(title or 'MyPTV: Extended Zolof calibration GUI')
 
 
         # =============================
@@ -187,13 +203,29 @@ class cal_gui(object):
         self.c_order_menu.config(width=12)
         self.c_order_menu.grid(row=3, column=1, sticky='nw', padx=2, pady=2)
 
+        # -- freeze C --
+        # Only meaningful when the camera ALREADY carries a [C]: it keeps
+        # those per-pixel origins and refits only the ray directions.
+        # That matters when recalibrating against particles, whose 3D
+        # positions were triangulated with the current model and are
+        # selected for agreeing with it - refitting [C] on them tends to
+        # reinforce its own bias rather than correct it.
+        self.freeze_C = IntVar(value=0)
+        self.freeze_C_check = Checkbutton(
+            opts_label, text='Keep existing O(x), refit only r(x)',
+            variable=self.freeze_C, padx=2, pady=2, anchor='w')
+        self.freeze_C_check.grid(row=4, column=0, columnspan=2,
+                                 sticky='nw', padx=2, pady=2)
+
         # -- hint --
         hint = Label(opts_label, anchor='w', justify='left', fg='gray25',
                      text=('lower order = less overfitting.\n'
                            '1=linear, 2=quadratic, 3=cubic\n'
                            '(3 for [B] reproduces the classic model)'))
-        hint.grid(row=4, column=0, columnspan=2, sticky='nw', padx=2, pady=2)
+        hint.grid(row=5, column=0, columnspan=2, sticky='nw', padx=2, pady=2)
 
+        self._init_from_camera()
+        self._apply_initial_settings()
         self._toggle_origin_opts()
 
         
@@ -300,6 +332,91 @@ class cal_gui(object):
 
 
 
+    def _camera_has_C(self):
+        '''True if the camera already carries a fitted [C] to freeze.'''
+        try:
+            return bool(getattr(self.calibrate_obj.cam,
+                                'variable_origin', False))
+        except Exception:
+            return False
+
+
+    def _init_from_camera(self):
+        '''
+        Seeds the controls from the camera's CURRENT model, so the GUI
+        opens showing what the camera was actually calibrated with rather
+        than generic defaults. Anything unreadable falls back silently to
+        the default already set on the widget.
+        '''
+        cam = getattr(self.calibrate_obj, 'cam', None)
+        if cam is None:
+            return
+
+        try:
+            ox, oy, oz = cam.a_order
+            self.a_order_x.set(str(ox))
+            self.a_order_y.set(str(oy))
+            self.a_order_z.set(str(oz))
+        except Exception:
+            pass
+
+        try:
+            self.b_order.set(str(cam.b_order))
+        except Exception:
+            pass
+
+        if getattr(cam, 'variable_origin', False):
+            self.var_origin.set(1)
+            try:
+                self.c_order.set(str(cam.c_order))
+            except Exception:
+                pass
+            try:
+                self.origin_model.set(getattr(cam, 'origin_mode', 'plane'))
+            except Exception:
+                pass
+
+
+    def _apply_initial_settings(self):
+        '''
+        Applies caller-supplied defaults on top of the camera-derived
+        ones. Unknown or malformed entries are ignored rather than
+        raising, so a stale parameters file cannot stop the GUI opening.
+        '''
+        s = self.initial_settings
+        if not s:
+            return
+
+        if 'a_order' in s:
+            try:
+                ox, oy, oz = s['a_order']
+                self.a_order_x.set(str(int(ox)))
+                self.a_order_y.set(str(int(oy)))
+                self.a_order_z.set(str(int(oz)))
+            except Exception:
+                pass
+
+        for key, var in [('b_order', self.b_order),
+                         ('c_order', self.c_order)]:
+            if key in s:
+                try:
+                    var.set(str(int(s[key])))
+                except Exception:
+                    pass
+
+        if 'origin_model' in s:
+            try:
+                self.origin_model.set(str(s['origin_model']))
+            except Exception:
+                pass
+
+        if 'variable_origin' in s:
+            self.var_origin.set(1 if s['variable_origin'] else 0)
+
+        if s.get('freeze_C') and self._camera_has_C():
+            self.freeze_C.set(1)
+
+
     def _toggle_origin_opts(self):
         '''
         Greys out the origin-model / polynomial-order selectors when the
@@ -311,18 +428,29 @@ class cal_gui(object):
                   self.c_order_lbl, self.c_order_menu]:
             w.config(state=state)
 
+        # freezing [C] additionally requires the camera to HAVE a [C]
+        # already; there is nothing to keep otherwise.
+        if self.var_origin.get() and self._camera_has_C():
+            self.freeze_C_check.config(state=NORMAL)
+        else:
+            self.freeze_C_check.config(state=DISABLED)
+            self.freeze_C.set(0)
+
 
 
     def _update_ray_err(self):
         '''
-        Refreshes the ray-error readout. Before a calibration has been run
-        the inlier lists don't exist yet, so this is a no-op then.
+        Refreshes the ray-error readout and returns the value, or None if
+        it isn't available yet (before any calibration has been run the
+        inlier lists don't exist).
         '''
         try:
             rerr = self.calibrate_obj.mean_ray_err()
             self.ray_error_input.config(text='%.3e'%rerr)
+            return rerr
         except Exception:
             self.ray_error_input.config(text='--')
+            return None
         
         
         
@@ -342,6 +470,8 @@ class cal_gui(object):
         if use_var:
             kwargs['c_order'] = int(self.c_order.get())
             kwargs['origin_model'] = self.origin_model.get()
+            if self.freeze_C.get() and self._camera_has_C():
+                kwargs['freeze_C'] = True
 
         print('calibrating with:', kwargs)
 
@@ -359,10 +489,33 @@ class cal_gui(object):
                                        text='calibration FAILED - see console')
             return
 
+        # Report the same two quantities as the on-screen readouts, with
+        # the same labels, but at higher precision: the compact GUI fields
+        # are limited to 3 decimals, which is not enough to see small
+        # differences between settings (raising an axis order by one can
+        # move the forward error in the 4th significant digit). The
+        # terminal is the place to compare runs, so it prints more digits.
+        #
+        # The forward error alone is misleading here - it depends only on
+        # [A], so it does NOT move when the backward-model settings
+        # change, and printing it by itself invites the conclusion that
+        # nothing happened.
         err = self.calibrate_obj.mean_squared_err()
-        print('\n','calibration error: %.3f pixels'%(err),'\n')
         self.error_input.config(text = '%.3e'%err)
-        self._update_ray_err()
+        rerr = self._update_ray_err()
+
+        print('')
+        print('  Error [px]    : %.8f   (forward model [A])'%err)
+        if rerr is None:
+            print('  Ray err [lab] : --           '
+                  '(backward model O/[B]/[C])')
+        else:
+            print('  Ray err [lab] : %.8f   '
+                  '(backward model O/[B]/[C])'%rerr)
+        print('')
+        # the camera may have gained (or lost) its [C] in this run, which
+        # changes whether freezing is available next time round.
+        self._toggle_origin_opts()
         self.status_show.configure(fg='green', text='done! waiting for action')
     
     
@@ -395,7 +548,7 @@ class cal_gui(object):
         '''save the calibrated camera'''
         self.status_show.configure(fg='red', text='saving results...')
         self.root.update()
-        self.calibrate_obj.cam.save('.')
+        self.calibrate_obj.cam.save(self.save_dir)
         self.status_show.configure(fg='green', text='done! waiting for action')
         
         
