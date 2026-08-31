@@ -113,20 +113,6 @@ class calibrate_extendedZolof(camera_extendedZolof):
                           Requires an already variable-origin camera.
         '''
         # 1) finding the A coefficients - 
-        #if self.quadratic==False:
-        #    XColumns = [self.cam.get_XCol(Xi) for Xi in self.X_list]
-        
-        #elif self.quadratic==True:
-        #    XColumns = []
-        #    for Xi in self.X_list:
-        #        Xcol_i = self.cam.get_XCol(Xi)
-                # (Here, -9 is for quadratic, and -15 is linear)
-        #        for i in range(-9,0): Xcol_i[i] = 0  
-        #        XColumns.append(Xcol_i)
-        
-        #res = lstsq(XColumns, self.x_list, rcond=None)
-        #self.A = res[0]
-        
         self.A, A_mask = fit_A_robust(
             self.cam, self.X_list, self.x_list,
             quadratic=self.quadratic,
@@ -136,28 +122,13 @@ class calibrate_extendedZolof(camera_extendedZolof):
         self.A_mask = A_mask  # keep for diagnostics/plotting
         self.x_inlayers = array(self.x_list)[A_mask]
         self.X_inlayers = array(self.X_list)[A_mask]
-
-        # IMPORTANT: update the camera's forward model *now*, not at the
-        # end. Steps 2 (camera-center estimate) and the variable-origin fit
-        # below both call self.cam.projection(), which uses self.cam.A
-        # internally - if we don't set it here they would use a stale A
-        # (whatever the camera object held before this calibration call).
         self.cam.A = self.A
         
         # 2) finding the best camera center -
-        #line_list = []
-        #for i in range(0, len(self.X_list)):
-        #    O, e = self.get_ray_from_x(self.x_list[i], X0=self.X_list[i])
-        #    line_list.append(line(O, e)) 
-        #self.O = get_nearest_line_crossing(line_list)
         
         from myptv.extendedZolof.calibrate_step2_improved import step2_estimate_camera_center
 
         if variable_origin and freeze_C:
-            # Do NOT re-estimate O here. With a frozen [C] in 'plane' mode
-            # the origins are offsets measured from cam.O along the stored
-            # plane axes, so moving cam.O would silently shift every
-            # frozen origin. Keep the camera's own center.
             self.O = array(self.cam.O, dtype=float)
         else:
             self.O = step2_estimate_camera_center(
@@ -171,12 +142,12 @@ class calibrate_extendedZolof(camera_extendedZolof):
         if not variable_origin:
             # 3) finding the unit vector for each X (fixed-origin model) -
             r_list = []
-            for Xi in self.X_inlayers: #self.X_list:
+            for Xi in self.X_inlayers:
                 r = (Xi - self.O)/norm(Xi - self.O)
                 r_list.append(r)
 
             # 4) finding the B coefficients -
-            xColumns = [self.cam.get_xCol(xi) for xi in self.x_inlayers] #self.x_list]
+            xColumns = [self.cam.get_xCol(xi) for xi in self.x_inlayers]
             res = lstsq(xColumns, r_list, rcond=None)
             self.B = res[0]
 
@@ -206,15 +177,10 @@ class calibrate_extendedZolof(camera_extendedZolof):
             self.cam.B = self.B
             self.cam.px_center = self.px_center
             self.cam.px_scale = self.px_scale
-            # use the RESOLVED model, not the requested one: with
-            # freeze_C=True the camera's own model wins, and stamping the
-            # requested one here would leave the camera labelled
-            # inconsistently with its own [C].
             self.cam.origin_mode = resolved_origin_model
 
             if self.plane is not None:
-                # the plane passes through O0; keep cam.O consistent with
-                # it, since get_ray() builds O(x) relative to cam.O.
+                # the plane passes through O0
                 self.O = self.plane['O0']
                 self.cam.O = self.O
                 self.cam.plane_u = self.plane['u']
@@ -308,8 +274,6 @@ class calibrate_extendedZolof(camera_extendedZolof):
         if ax == None:
             fig, ax = plt.subplots()
         
-        #imc = array(self.x_list)
-        #z_lst = array([self.cam.projection(x) for x in self.X_list])
         try:
             imc = array(self.x_inlayers)
         except:

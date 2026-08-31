@@ -143,26 +143,18 @@ class camera_extendedZolof(object):
         
         self.name = name
         self.O = zeros(3) + 1.     # camera location (fixed-origin model)
-        #self.A = array([[0.0 for i in range(17)] for j in [0,1]]).T
         self.A = array([[0.0 for i in range(19)] for j in [0,1]]).T
         self.B = array([[0.0 for i in range(10)] for j in [0, 1, 2]]).T
-
-        # per-pixel origin coefficients (variable-origin extension).
-        # Same shape/basis as B: 10 terms of G(x), one column per lab
-        # dimension (X, Y, Z).
         self.C = array([[0.0 for i in range(10)] for j in [0, 1, 2]]).T
 
         # Whether get_ray() should use the per-pixel origin O(x) = [C]G(x)
-        # (True) or the single fixed origin self.O (False, default and
-        # backwards-compatible behavior).
+        # (True) 
         self.variable_origin = False
 
         # Pixel-coordinate normalization used ONLY when variable_origin is
         # True: get_xCol_scaled() centers/scales (eta,zeta) before building
-        # the polynomial basis, so that fitting [C] (which predicts
-        # unbounded lab-space coordinates, unlike [B]'s bounded unit
-        # direction) is numerically well-conditioned and doesn't
-        # extrapolate wildly for pixels far from the calibration points.
+        # the polynomial basis, so that fitting [C] is numerically 
+        # well-conditioned.
         # Set by fit_variable_origin_model(); identity (no-op) by default.
         self.px_center = array([0.0, 0.0])
         self.px_scale = array([1.0, 1.0])
@@ -444,8 +436,7 @@ class camera_extendedZolof(object):
             i, j = int(v[1]), int(v[2])
             self.B[i][j] = float(v[-1])
 
-        # C coefficients - only present for cameras calibrated with the
-        # variable-origin extension.
+        # C coefficients - only for variable-origin
         C_vals = list(filter(lambda l: len(l)>0 and l[0]=='C', lines))
         if len(C_vals) > 0:
             Cshape = (int(max(C_vals, key=lambda x: float(x[1]))[1])+1,
@@ -455,10 +446,6 @@ class camera_extendedZolof(object):
                 i, j = int(v[1]), int(v[2])
                 self.C[i][j] = float(v[-1])
 
-        # pixel normalization used by the variable-origin extension -
-        # absent in files saved before this feature existed (or for
-        # fixed-origin cameras), so default to the identity transform
-        # (center=0, scale=1) for backwards compatibility.
         PXC_vals = list(filter(lambda l: len(l)>0 and l[0]=='PXC', lines))
         if len(PXC_vals) > 0:
             for v in PXC_vals:
@@ -469,9 +456,6 @@ class camera_extendedZolof(object):
             for v in PXS_vals:
                 self.px_scale[int(v[1])] = float(v[-1])
 
-        # origin parameterization - absent in files saved before the
-        # plane-constrained mode existed, so default to 'free' (the
-        # original variable-origin behavior).
         OM_vals = list(filter(lambda l: len(l)>0 and l[0]=='ORIGIN_MODE',
                                lines))
         if len(OM_vals) > 0:
