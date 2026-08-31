@@ -66,7 +66,7 @@
 
 \begin{minipage}{14cm}
 	{\small \sffamily
-	Version: 1.3.13 \\
+	Version: 1.3.14 \\
 	Last updated: \today \\
 	Github repository: \url{https://github.com/ronshnapp/MyPTV} \\
 	Get help \& interact with our community: \url{https://github.com/ronshnapp/MyPTV/discussions}\\
@@ -251,94 +251,143 @@ Here, $[E]$ is a $3\times5$ matrix that holds the coefficients of the correction
 
 
 
-
-\subsection{The extended Zolof model} 
-
-
-
-The extended Zolof model is used for the transformation between 3D lab-space and 2D image space. 
-Here, the transformation from lab-space to image-space does not involve any physical assumption about how cameras perceive the world--it is purely mathematical. However, a physical assumption is used in the transformation back from image-space to lab-space. 
-
-
+\subsection{The extended Zolof model}
+The extended Zolof model is used for the transformation between 3D lab-space and 2D image space.
+Here, the transformation from lab-space to image-space does not involve any physical assumption about how cameras perceive the world---it is purely mathematical. However, a physical assumption is used in the transformation back from image-space to lab-space.
 The projection of 3D lab-space coordinates into the 2D image-space is achieved using interpolating functions
 %
 \begin{equation}
-\left[ 
-\begin{matrix}
-\eta \\[.2cm]
-\zeta
-\end{matrix}
-\right]
-=
-\left[ 
-\begin{matrix}
-P_\eta(\vec{r}) \\[.2cm]
-P_\zeta(\vec{r})
-\end{matrix}
-\right]\,\, .
+	\left[
+	\begin{matrix}
+		\eta \\[.2cm]
+		\zeta
+	\end{matrix}
+	\right]
+	=
+	\left[
+	\begin{matrix}
+		P_\eta(\vec{r}) \\[.2cm]
+		P_\zeta(\vec{r})
+	\end{matrix}
+	\right]\,\, .
 \end{equation}
 %
-In MyPTV, $P_\eta$ and $P_\zeta$ are polynomial functions of the $\vec{r}=(x,y,z)$ coordinates defined as the product 
+In MyPTV, $P_\eta$ and $P_\zeta$ are polynomial functions of the $\vec{r}=(x,y,z)$ coordinates defined as the product
 \begin{equation}
-\left[ 
-\begin{matrix}
-P_\eta(\vec{r}) \\[.2cm]
-P_\zeta(\vec{r})
-\end{matrix}
-\right] = S \, A^{\top}
+	\left[
+	\begin{matrix}
+		P_\eta(\vec{r}) \\[.2cm]
+		P_\zeta(\vec{r})
+	\end{matrix}
+	\right] = S \, A^{\top}
 \end{equation}
-where $S$ is the 19 polynomial components
+where $S$ collects the polynomial components, listed in order of ascending degree,
 %
 \begin{align}
-\label{eq:SoloffVector}
-\begin{split}
-S\left(x,y,z\right) = [\,&1,\,x,\,y,\,z,\,x^2,\,y^2,\,z^2,\,xy,\,yz,\,xz,\\
-&x^3,\,y^3,\,xyz,\,x^2y,\,x^2z,\,xy^2,\,y^2z,\,xz^2,\,yz^2\,]
-\end{split}
+	\label{eq:SoloffVector}
+	\begin{split}
+		S\left(x,y,z\right) = [\,&1,\;x,\,y,\,z,\;x^2,\,y^2,\,z^2,\,xy,\,yz,\,xz,\\
+		&xyz,\,xy^2,\,xz^2,\,x^2y,\,yz^2,\,x^2z,\,y^2z,\,x^3,\,y^3\,]
+	\end{split}
 \end{align}
 %
-and $A$ is the polynomial coefficients matrix 
+and $A$ is the polynomial coefficients matrix
 %
 \begin{align}
-\label{eq:SoloffVector2}
-A =
-\begin{bmatrix}
-a^\eta_{0},\, a^\eta_{0},\, \ldots , a^\eta_{18} \\[.2cm]
-a^\zeta_{0},\, a^\zeta_{1},\, \ldots , a^\zeta_{18}
-\end{bmatrix}\,\,.
+	\label{eq:SoloffVector2}
+	A =
+	\begin{bmatrix}
+		a^\eta_{0},\, a^\eta_{1},\, \ldots , a^\eta_{18} \\[.2cm]
+		a^\zeta_{0},\, a^\zeta_{1},\, \ldots , a^\zeta_{18}
+	\end{bmatrix}\,\,.
 \end{align}
 
+\subsubsection{Choosing the order of the forward polynomial}
+The 19 terms of Eq.~\eqref{eq:SoloffVector} are not a complete cubic polynomial in three variables: the depth coordinate $z$ appears at most quadratically, while $x$ and $y$ reach degree three. This asymmetry reflects the geometry of a typical PTV experiment, in which the two in-plane directions are considerably more distorted than the depth direction.
 
-
-For the transformation from image-space to lab-space a we use a unified approach, utilizing a pinhole model in which the direction vector is obtained for each 2D image point via a polynomial of degree 3. Specifically, intrinsic to this model is the assumption that each 2D camera position $(\eta,\, \zeta)$ is associated with a (straight) line of sight and that all the lines of sight cross at some points in the 3D physical world at the camera position $\vec{O}_i$ of camera $i$. Therefore, each 3D line of sight for image coordinates from camera $i$ is given as
+MyPTV allows this choice to be made explicitly. The user selects a triplet of per-axis orders $(o_x,\,o_y,\,o_z)$, each between 1 and 3, and the basis is then the set of monomials
 %
 \begin{equation}
-\vec l_i(x_i, \, y_i) = \vec{O}_i + \mu\,\vec{U}_i(x_i, \, y_i) 
+	\label{eq:AorderRule}
+	x^{i} y^{j} z^{k}
+	\quad \text{such that} \quad
+	i \le o_x, \;\; j \le o_y, \;\; k \le o_z,
+	\;\; \text{and} \;\; i+j+k \le 3 \,\, .
+\end{equation}
+%
+The cap on the total degree is separate from the per-axis caps, and both are required. In particular, $(2,2,2)$ retains mixed cubic terms such as $x^2y$ while excluding every pure cube, which recovers the 17-term basis used in MyPTV versions 1.3.5 and earlier; $(3,3,2)$ recovers the 19 terms of Eq.~\eqref{eq:SoloffVector} and is the default; and $(3,3,3)$ gives the complete 3D cubic with 20 terms. The number of coefficients per camera is $2 n_A$, where $n_A$ is the number of monomials selected by Eq.~\eqref{eq:AorderRule}.
+
+It is worth noting that raising a single axis from order 2 to order 3 adds exactly one term to the basis, namely the corresponding pure cube, since the total-degree cap excludes every other possibility. The effect of such a change on the calibration error is therefore usually small. Lowering an axis to order 1, by contrast, removes several terms at once and changes the model appreciably.
+
+\subsubsection{The backward transformation}
+For the transformation from image-space to lab-space we use a unified approach, utilizing a pinhole model in which the direction vector is obtained for each 2D image point via a polynomial. Specifically, intrinsic to this model is the assumption that each 2D camera position $(\eta,\,\zeta)$ is associated with a (straight) line of sight and that all the lines of sight cross at some point in the 3D physical world at the camera position $\vec{O}_i$ of camera $i$. Therefore, each 3D line of sight for image coordinates from camera $i$ is given as
+%
+\begin{equation}
+	\label{eq:losFixedOrigin}
+	\vec l_i(\eta, \, \zeta) = \vec{O}_i + \mu\,\vec{U}_i(\eta, \, \zeta)
 \end{equation}
 %
 where $\mu$ is a free parameter and $\vec{U}_i$ represents the unit vector associated with each 2D image coordinate of camera $i$, defined as
 %
 \begin{align}
-\label{Eq::extendedSoloff_backwards}
-\vec{U}_i(x_i, \, y_i) = \mathbf{B}_i \cdot u(\eta, \, \zeta)^\top
+	\label{Eq::extendedSoloff_backwards}
+	\vec{U}_i(\eta, \, \zeta) = \mathbf{B}_i \cdot u(\eta, \, \zeta)^\top \,\, .
 \end{align}
 %
-Here, the matrix $\mathbf{B}_i$ stores of the polynomials coefficients of camera $i$ and vector $\vec{u}$ defines the polynomial over the 2D camera coordinates.
+Here, the matrix $\mathbf{B}_i$ stores the polynomial coefficients of camera $i$, and the vector $u$ defines the polynomial over the 2D camera coordinates,
 \begin{align}
-\mathbf{B}_i = 
-\begin{bmatrix}
-b^{(i)}_{0x} & b^{(i)}_{1x} & b^{(i)}_{2x} &  \cdots & b^{(i)}_{9x}\\[2pt]
-b^{(i)}_{0y} & b^{(i)}_{1y} & b^{(i)}_{2y} &  \ldots & b^{(i)}_{9y}\\[2pt]
-b^{(i)}_{0z} & b^{(i)}_{1z} & b^{(i)}_{2z} &  \ldots & b^{(i)}_{9z}
-\end{bmatrix}
-\end{align} 
-%
-\begin{align}
-u(\eta, \, \zeta) = \left[1, \eta,\,  \zeta,\, \eta^2,\, \zeta^2,\, \eta \zeta,\, \eta^3,\, \zeta^3,\, \eta^2 \zeta,\, \eta \zeta^2\right]
+	\mathbf{B}_i =
+	\begin{bmatrix}
+		b^{(i)}_{0x} & b^{(i)}_{1x} & b^{(i)}_{2x} &  \cdots & b^{(i)}_{9x}\\[2pt]
+		b^{(i)}_{0y} & b^{(i)}_{1y} & b^{(i)}_{2y} &  \ldots & b^{(i)}_{9y}\\[2pt]
+		b^{(i)}_{0z} & b^{(i)}_{1z} & b^{(i)}_{2z} &  \ldots & b^{(i)}_{9z}
+	\end{bmatrix}
 \end{align}
 %
-All in all, each camera in the unified polynomial calibration method is characterized using $19\times 2$ coefficients stored in matrix $\mathbf{A}_i$ for the projection from 3D to 2D, plus three coordinates of the 3D camera position ($\vec{O}_i$), plus $10\times 3$ coefficients stored in matrix $\mathbf{B}_i$ of the backward projection, giving a total of 71 parameters per camera. 
+\begin{align}
+	\label{eq:uVector}
+	u(\eta, \, \zeta) = \left[1,\, \eta,\,  \zeta,\, \eta^2,\, \zeta^2,\, \eta \zeta,\, \eta^2 \zeta,\, \eta \zeta^2,\, \eta^3,\, \zeta^3\right] \,\, .
+\end{align}
 
+As with the forward transformation, the degree of this polynomial may be chosen by the user. The terms of Eq.~\eqref{eq:uVector} are ordered by ascending degree, so a polynomial of order $n$ is obtained simply by retaining the first $n_B = (n+1)(n+2)/2$ terms: the first three terms give a linear model, the first six a quadratic one, and all ten the cubic model used by default. The matrix $\mathbf{B}_i$ then has $3 n_B$ coefficients.
+
+\subsubsection{The variable origin extension}
+Equation~\eqref{eq:losFixedOrigin} assumes that every line of sight of a given camera passes through a single point $\vec{O}_i$, that is, that the camera behaves as an ideal pinhole. Real lens systems depart from this assumption, and MyPTV therefore offers an extension in which the origin of the line of sight is itself allowed to vary across the sensor,
+%
+\begin{equation}
+	\label{eq:losVariableOrigin}
+	\vec l_i(\eta, \, \zeta) = \vec{O}_i(\eta, \, \zeta) + \mu\,\vec{U}_i(\eta, \, \zeta) \,\, ,
+\end{equation}
+%
+where the origin is written as a polynomial in the image coordinates using the same basis $u$,
+%
+\begin{equation}
+	\label{eq:Cfree}
+	\vec{O}_i(\eta, \, \zeta) = \mathbf{C}_i \cdot u(\eta, \, \zeta)^\top \,\, .
+\end{equation}
+%
+The order of this polynomial is selected independently of that of $\mathbf{B}_i$, so that the origin may be modelled more stiffly than the direction. This matters in practice: $\mathbf{C}_i$ predicts an unbounded position in lab-space, whereas $\mathbf{B}_i$ predicts a bounded unit vector, which makes the former considerably more prone to overfitting the calibration data.
+
+Two parameterizations of $\vec{O}_i$ are available. In the \emph{free} form, Eq.~\eqref{eq:Cfree} is used directly and $\mathbf{C}_i$ holds $3 n_C$ coefficients. This form carries a redundancy, however: displacing an origin along its own line of sight leaves the line unchanged, so one of the three components is not determined by the calibration data and is fixed only by the smoothness of the polynomial.
+
+The \emph{plane} form removes this redundancy. The origins are constrained to a fixed plane that passes through the mean camera position $\vec{O}_i$, whose normal is directed along the line joining $\vec{O}_i$ to the centroid of the calibration points---that is, a plane facing the measurement volume. Writing $\hat{u}_i$ and $\hat{v}_i$ for two orthonormal axes spanning that plane,
+%
+\begin{equation}
+	\label{eq:Cplane}
+	\vec{O}_i(\eta, \, \zeta) = \vec{O}_i + \hat{u}_i \, \alpha_i(\eta,\zeta) + \hat{v}_i \, \beta_i(\eta,\zeta) \,\, ,
+	\qquad
+	\begin{bmatrix} \alpha_i \\ \beta_i \end{bmatrix}
+	= \mathbf{C}_i \cdot u(\eta, \, \zeta)^\top \,\, ,
+\end{equation}
+%
+so that $\mathbf{C}_i$ holds only $2 n_C$ coefficients. Because the plane normal is close to the mean viewing direction, the two in-plane axes span precisely those displacements of the origin that actually alter the line of sight, while the discarded out-of-plane direction is the redundant one identified above. The plane form is therefore both better conditioned and lower in dimension, and it is the recommended choice.
+
+In both forms the image coordinates are centred and scaled before the polynomial is evaluated, which keeps the higher-degree terms of $u$ of order unity across the sensor and prevents the fitted origin from extrapolating wildly outside the region covered by the calibration points.
+
+\subsubsection{Parameter count}
+Each camera is characterized by $2 n_A$ coefficients in $\mathbf{A}_i$ for the projection from 3D to 2D, the three coordinates of the camera position $\vec{O}_i$, and $3 n_B$ coefficients in $\mathbf{B}_i$ for the backward projection. With the default choices $(o_x,o_y,o_z) = (3,3,2)$ and a cubic direction polynomial, this gives $19\times2 + 3 + 10\times3 = 71$ parameters per camera. When the variable origin is used, a further $2 n_C$ coefficients (plane form) or $3 n_C$ coefficients (free form) are added, together with the orientation of the plane in the former case; a linear origin polynomial in the plane form, for instance, adds six coefficients.
+
+Since all of these orders are free to be chosen, the appropriate values depend on the number and distribution of the available calibration points. A higher order will always reduce the residual on the points used for the fit, but not necessarily the accuracy elsewhere in the measurement volume. It is therefore advisable to compare candidate settings on points held out of the calibration, rather than on the fitted residual alone.
 
 
 

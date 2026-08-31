@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023/Debian) (preloaded format=pdflatex 2026.4.26)  23 AUG 2026 12:20
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023/Debian) (preloaded format=pdflatex 2026.4.26)  31 AUG 2026 16:13
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -524,7 +524,7 @@ Package hyperref Info: Link coloring ON on input line 50.
 \@outlinefile=\write3
 \openout3 = `user_manual.out'.
 
-<./figs/logo.png, id=257, 695.7192pt x 152.0079pt>
+<./figs/logo.png, id=273, 695.7192pt x 152.0079pt>
 File: ./figs/logo.png Graphic file (type png)
 <use ./figs/logo.png>
 Package pdftex.def Info: ./figs/logo.png  used on input line 57.
@@ -554,7 +554,7 @@ LaTeX Font Info:    Trying to load font information for U+msb on input line 57.
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
-<./figs/traj_image.jpg, id=259, 474.8139pt x 435.7881pt>
+<./figs/traj_image.jpg, id=275, 474.8139pt x 435.7881pt>
 File: ./figs/traj_image.jpg Graphic file (type jpg)
 <use ./figs/traj_image.jpg>
 Package pdftex.def Info: ./figs/traj_image.jpg  used on input line 62.
@@ -570,25 +570,25 @@ File: t1cmtt.fd 2023/04/13 v2.5m Standard LaTeX font definitions
 dvips/cm-super/cm-super-t1.enc} <./figs/logo.png> <./figs/traj_image.jpg>] (./u
 ser_manual.toc
 LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <10> not available
-(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 40.
+(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 44.
 
 [2])
 \tf@toc=\write4
 \openout4 = `user_manual.toc'.
 
  [1]
-<./figs/3D_PTV_acquisition.pdf, id=352, 285.7208pt x 142.99469pt>
+<./figs/3D_PTV_acquisition.pdf, id=372, 285.7208pt x 142.99469pt>
 File: ./figs/3D_PTV_acquisition.pdf Graphic file (type pdf)
 <use ./figs/3D_PTV_acquisition.pdf>
 Package pdftex.def Info: ./figs/3D_PTV_acquisition.pdf  used on input line 112.
 
 (pdftex.def)             Requested size: 184.9429pt x 92.55705pt.
-<./figs/pinhole_model.pdf, id=353, 305.83075pt x 132.51534pt>
+<./figs/pinhole_model.pdf, id=373, 305.83075pt x 132.51534pt>
 File: ./figs/pinhole_model.pdf Graphic file (type pdf)
 <use ./figs/pinhole_model.pdf>
 Package pdftex.def Info: ./figs/pinhole_model.pdf  used on input line 116.
 (pdftex.def)             Requested size: 184.9429pt x 80.1346pt.
-<./figs/steps.pdf, id=355, 351.73837pt x 150.82877pt>
+<./figs/steps.pdf, id=375, 351.73837pt x 150.82877pt>
 File: ./figs/steps.pdf Graphic file (type pdf)
 <use ./figs/steps.pdf>
 Package pdftex.def Info: ./figs/steps.pdf  used on input line 129.
@@ -615,201 +615,201 @@ been already used, duplicate ignored
 l.164 \clearpage
                  [2] [3
 
-] [4] [5
+] [4] [5] [6] [7
 
 ]
-Underfull \hbox (badness 10000) in paragraph at lines 504--504
+Underfull \hbox (badness 10000) in paragraph at lines 553--553
 []|\T1/cmr/m/n/10 Path of the cal-i-bra-tion im-age (for ex-am-ple
  []
 
-<./figs/initial_calibration.pdf, id=447, 1348.39464pt x 764.22066pt>
+<./figs/initial_calibration.pdf, id=486, 1348.39464pt x 764.22066pt>
 File: ./figs/initial_calibration.pdf Graphic file (type pdf)
 <use ./figs/initial_calibration.pdf>
-Package pdftex.def Info: ./figs/initial_calibration.pdf  used on input line 526
+Package pdftex.def Info: ./figs/initial_calibration.pdf  used on input line 575
 .
 (pdftex.def)             Requested size: 483.69687pt x 274.1397pt.
-[6]
-<./figs/calibration_gui.png, id=458, 393.47pt x 533.995pt>
+[8]
+<./figs/calibration_gui.png, id=497, 393.47pt x 533.995pt>
 File: ./figs/calibration_gui.png Graphic file (type png)
 <use ./figs/calibration_gui.png>
-Package pdftex.def Info: ./figs/calibration_gui.png  used on input line 556.
+Package pdftex.def Info: ./figs/calibration_gui.png  used on input line 605.
 (pdftex.def)             Requested size: 193.47578pt x 262.57242pt.
- [7 <./figs/initial_calibration.pdf>] [8 <./figs/calibration_gui.png>]
-<./figs/Cam_pos_examples.pdf, id=489, 411.68683pt x 156.09958pt>
+ [9 <./figs/initial_calibration.pdf>] [10 <./figs/calibration_gui.png>]
+<./figs/Cam_pos_examples.pdf, id=528, 411.68683pt x 156.09958pt>
 File: ./figs/Cam_pos_examples.pdf Graphic file (type pdf)
 <use ./figs/Cam_pos_examples.pdf>
-Package pdftex.def Info: ./figs/Cam_pos_examples.pdf  used on input line 617.
+Package pdftex.def Info: ./figs/Cam_pos_examples.pdf  used on input line 666.
 (pdftex.def)             Requested size: 386.95897pt x 146.73361pt.
-<./figs/cal_point_file.pdf, id=490, 354.32378pt x 277.69666pt>
+<./figs/cal_point_file.pdf, id=529, 354.32378pt x 277.69666pt>
 File: ./figs/cal_point_file.pdf Graphic file (type pdf)
 <use ./figs/cal_point_file.pdf>
-Package pdftex.def Info: ./figs/cal_point_file.pdf  used on input line 631.
+Package pdftex.def Info: ./figs/cal_point_file.pdf  used on input line 680.
 (pdftex.def)             Requested size: 199.16928pt x 156.09804pt.
-<./figs/target_file.pdf, id=491, 404.7084pt x 179.83281pt>
+<./figs/target_file.pdf, id=530, 404.7084pt x 179.83281pt>
 File: ./figs/target_file.pdf Graphic file (type pdf)
 <use ./figs/target_file.pdf>
-Package pdftex.def Info: ./figs/target_file.pdf  used on input line 634.
+Package pdftex.def Info: ./figs/target_file.pdf  used on input line 683.
 (pdftex.def)             Requested size: 256.0748pt x 113.79192pt.
-<./figs/match_target_file.jpeg, id=492, 534.0753pt x 469.0323pt>
+<./figs/match_target_file.jpeg, id=531, 534.0753pt x 469.0323pt>
 File: ./figs/match_target_file.jpeg Graphic file (type jpg)
 <use ./figs/match_target_file.jpeg>
-Package pdftex.def Info: ./figs/match_target_file.jpeg  used on input line 637.
+Package pdftex.def Info: ./figs/match_target_file.jpeg  used on input line 686.
 
 (pdftex.def)             Requested size: 170.71652pt x 149.92879pt.
 
-[9 <./figs/Cam_pos_examples.pdf>]
-<./figs/Cal_error_analysis.pdf, id=511, 786.72594pt x 462.17949pt>
+[11 <./figs/Cam_pos_examples.pdf>]
+<./figs/Cal_error_analysis.pdf, id=550, 786.72594pt x 462.17949pt>
 File: ./figs/Cal_error_analysis.pdf Graphic file (type pdf)
 <use ./figs/Cal_error_analysis.pdf>
-Package pdftex.def Info: ./figs/Cal_error_analysis.pdf  used on input line 690.
+Package pdftex.def Info: ./figs/Cal_error_analysis.pdf  used on input line 739.
 
 (pdftex.def)             Requested size: 387.45581pt x 227.62204pt.
 
 
 LaTeX Warning: `!h' float specifier changed to `!ht'.
 
-<./figs/cal_image.jpg, id=512, 351.3125pt x 306.14375pt>
+<./figs/cal_image.jpg, id=551, 351.3125pt x 306.14375pt>
 File: ./figs/cal_image.jpg Graphic file (type jpg)
 <use ./figs/cal_image.jpg>
-Package pdftex.def Info: ./figs/cal_image.jpg  used on input line 705.
+Package pdftex.def Info: ./figs/cal_image.jpg  used on input line 754.
 (pdftex.def)             Requested size: 195.90276pt x 170.71652pt.
-<./figs/cal_error.pdf, id=513, 550.58505pt x 503.26839pt>
+<./figs/cal_error.pdf, id=552, 550.58505pt x 503.26839pt>
 File: ./figs/cal_error.pdf Graphic file (type pdf)
 <use ./figs/cal_error.pdf>
-Package pdftex.def Info: ./figs/cal_error.pdf  used on input line 709.
+Package pdftex.def Info: ./figs/cal_error.pdf  used on input line 758.
 (pdftex.def)             Requested size: 186.75957pt x 170.71652pt.
 
 LaTeX Warning: `!h' float specifier changed to `!ht'.
 
-[10 <./figs/cal_point_file.pdf> <./figs/target_file.pdf
+[12 <./figs/cal_point_file.pdf> <./figs/target_file.pdf
 
 pdfTeX warning: /usr/bin/pdflatex (file ./figs/target_file.pdf): PDF inclusion:
  multiple pdfs with page group included in a single page
-> <./figs/match_target_file.jpeg>] [11 <./figs/Cal_error_analysis.pdf> <./figs/
+> <./figs/match_target_file.jpeg>] [13 <./figs/Cal_error_analysis.pdf> <./figs/
 cal_image.jpg> <./figs/cal_error.pdf
 
 pdfTeX warning: /usr/bin/pdflatex (file ./figs/cal_error.pdf): PDF inclusion: m
 ultiple pdfs with page group included in a single page
 >]
-Overfull \hbox (27.62885pt too wide) in paragraph at lines 734--735
+Overfull \hbox (27.62885pt too wide) in paragraph at lines 783--784
 []\T1/cmr/m/n/10 After fin-ish-ing the pre-vi-ous step, for each cal-i-bra-tion
  im-age you should have a file called "XXXXX_i_cal_points"
  []
 
 
-Overfull \hbox (4.80109pt too wide) in paragraph at lines 736--737
+Overfull \hbox (4.80109pt too wide) in paragraph at lines 785--786
 []\T1/cmr/m/n/10 Make a new empty file called as the base name of the pre-vi-ou
 s files (the "XXXXX" part of the "XXXXX_i");
  []
 
 
-LaTeX Warning: Reference `sec:fibers' on page 12 undefined on input line 771.
+LaTeX Warning: Reference `sec:fibers' on page 14 undefined on input line 820.
 
 
-Overfull \hbox (20.24542pt too wide) in paragraph at lines 754--813
+Overfull \hbox (20.24542pt too wide) in paragraph at lines 803--862
  [][] 
  []
 
-[12] [13]
-<./figs/image_preprocessing.pdf, id=587, 612.55272pt x 317.28973pt>
+[14] [15]
+<./figs/image_preprocessing.pdf, id=626, 612.55272pt x 317.28973pt>
 File: ./figs/image_preprocessing.pdf Graphic file (type pdf)
 <use ./figs/image_preprocessing.pdf>
-Package pdftex.def Info: ./figs/image_preprocessing.pdf  used on input line 868
+Package pdftex.def Info: ./figs/image_preprocessing.pdf  used on input line 917
 .
 (pdftex.def)             Requested size: 483.69687pt x 250.54962pt.
-<./figs/Labeling_vs_Dilation.pdf, id=589, 478.0878pt x 263.99626pt>
+<./figs/Labeling_vs_Dilation.pdf, id=628, 478.0878pt x 263.99626pt>
 File: ./figs/Labeling_vs_Dilation.pdf Graphic file (type pdf)
 <use ./figs/Labeling_vs_Dilation.pdf>
-Package pdftex.def Info: ./figs/Labeling_vs_Dilation.pdf  used on input line 88
-9.
+Package pdftex.def Info: ./figs/Labeling_vs_Dilation.pdf  used on input line 93
+8.
 (pdftex.def)             Requested size: 256.0748pt x 141.40779pt.
 
 
 LaTeX Warning: `!h' float specifier changed to `!ht'.
 
-[14{/usr/share/texmf/fonts/enc/dvips/cm-super/cm-super-ts1.enc} <./figs/image_p
+[16{/usr/share/texmf/fonts/enc/dvips/cm-super/cm-super-ts1.enc} <./figs/image_p
 reprocessing.pdf>]
-<./figs/filters_effect.pdf, id=619, 1115.71849pt x 756.45815pt>
+<./figs/filters_effect.pdf, id=658, 1115.71849pt x 756.45815pt>
 File: ./figs/filters_effect.pdf Graphic file (type pdf)
 <use ./figs/filters_effect.pdf>
-Package pdftex.def Info: ./figs/filters_effect.pdf  used on input line 915.
+Package pdftex.def Info: ./figs/filters_effect.pdf  used on input line 964.
 (pdftex.def)             Requested size: 341.43306pt x 231.48698pt.
- [15 <./figs/Labeling_vs_Dilation.pdf> <./figs/filters_effect.pdf
+ [17 <./figs/Labeling_vs_Dilation.pdf> <./figs/filters_effect.pdf
 
 pdfTeX warning: /usr/bin/pdflatex (file ./figs/filters_effect.pdf): PDF inclusi
 on: multiple pdfs with page group included in a single page
 >]
-<./figs/fiber_pca.jpg, id=659, 710.436pt x 377.994pt>
+<./figs/fiber_pca.jpg, id=698, 710.436pt x 377.994pt>
 File: ./figs/fiber_pca.jpg Graphic file (type jpg)
 <use ./figs/fiber_pca.jpg>
-Package pdftex.def Info: ./figs/fiber_pca.jpg  used on input line 936.
+Package pdftex.def Info: ./figs/fiber_pca.jpg  used on input line 985.
 (pdftex.def)             Requested size: 341.43306pt x 181.66576pt.
- [16 <./figs/fiber_pca.jpg>] [17] [18] [19]
-<./figs/2D_tracking_setup.pdf, id=707, 359.69543pt x 273.00352pt>
+ [18 <./figs/fiber_pca.jpg>] [19] [20] [21]
+<./figs/2D_tracking_setup.pdf, id=746, 359.69543pt x 273.00352pt>
 File: ./figs/2D_tracking_setup.pdf Graphic file (type pdf)
 <use ./figs/2D_tracking_setup.pdf>
-Package pdftex.def Info: ./figs/2D_tracking_setup.pdf  used on input line 1230.
+Package pdftex.def Info: ./figs/2D_tracking_setup.pdf  used on input line 1279.
 
 (pdftex.def)             Requested size: 227.62204pt x 172.76378pt.
- [20 <./figs/2D_tracking_setup.pdf>]
-<./figs/man_match.pdf, id=734, 597.50786pt x 845.04686pt>
+ [22 <./figs/2D_tracking_setup.pdf>]
+<./figs/man_match.pdf, id=773, 597.50786pt x 845.04686pt>
 File: ./figs/man_match.pdf Graphic file (type pdf)
 <use ./figs/man_match.pdf>
-Package pdftex.def Info: ./figs/man_match.pdf  used on input line 1310.
+Package pdftex.def Info: ./figs/man_match.pdf  used on input line 1359.
 (pdftex.def)             Requested size: 341.43306pt x 482.88089pt.
-<./figs/fiber_epipolar_planes.jpg, id=742, 805.044pt x 501.729pt>
+<./figs/fiber_epipolar_planes.jpg, id=781, 805.044pt x 501.729pt>
 File: ./figs/fiber_epipolar_planes.jpg Graphic file (type jpg)
 <use ./figs/fiber_epipolar_planes.jpg>
 Package pdftex.def Info: ./figs/fiber_epipolar_planes.jpg  used on input line 1
-333.
+382.
 (pdftex.def)             Requested size: 341.43306pt x 212.7918pt.
- [21] [22 <./figs/man_match.pdf>] [23 <./figs/fiber_epipolar_planes.jpg>]
-<./figs/trajectory_plot.pdf, id=779, 459.96844pt x 392.96812pt>
+ [23] [24 <./figs/man_match.pdf>] [25 <./figs/fiber_epipolar_planes.jpg>]
+<./figs/trajectory_plot.pdf, id=817, 459.96844pt x 392.96812pt>
 File: ./figs/trajectory_plot.pdf Graphic file (type pdf)
 <use ./figs/trajectory_plot.pdf>
-Package pdftex.def Info: ./figs/trajectory_plot.pdf  used on input line 1401.
+Package pdftex.def Info: ./figs/trajectory_plot.pdf  used on input line 1450.
 (pdftex.def)             Requested size: 227.62204pt x 194.46884pt.
 
-[24 <./figs/trajectory_plot.pdf>]
+[26 <./figs/trajectory_plot.pdf>]
 LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <14.4> not available
-(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 1469.
+(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 1518.
 LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <12> not available
-(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 1476.
-<./figs/camera_files.pdf, id=801, 508.10204pt x 141.02348pt>
+(Font)              Font shape `T1/cmtt/m/n' tried instead on input line 1525.
+<./figs/camera_files.pdf, id=839, 508.10204pt x 141.02348pt>
 File: ./figs/camera_files.pdf Graphic file (type pdf)
 <use ./figs/camera_files.pdf>
-Package pdftex.def Info: ./figs/camera_files.pdf  used on input line 1506.
+Package pdftex.def Info: ./figs/camera_files.pdf  used on input line 1555.
 (pdftex.def)             Requested size: 483.69687pt x 134.25128pt.
- [25
+ [27
 
- <./figs/camera_files.pdf>] [26] [27]
-<./figs/blob_file.pdf, id=883, 223.10614pt x 155.32921pt>
+ <./figs/camera_files.pdf>] [28] [29]
+<./figs/blob_file.pdf, id=922, 223.10614pt x 155.32921pt>
 File: ./figs/blob_file.pdf Graphic file (type pdf)
 <use ./figs/blob_file.pdf>
-Package pdftex.def Info: ./figs/blob_file.pdf  used on input line 1705.
+Package pdftex.def Info: ./figs/blob_file.pdf  used on input line 1754.
 (pdftex.def)             Requested size: 284.52756pt x 198.10016pt.
 
-[28 <./figs/blob_file.pdf>]
-<./figs/particle_file.pdf, id=909, 390.14703pt x 291.52518pt>
+[30 <./figs/blob_file.pdf>]
+<./figs/particle_file.pdf, id=948, 390.14703pt x 291.52518pt>
 File: ./figs/particle_file.pdf Graphic file (type pdf)
 <use ./figs/particle_file.pdf>
-Package pdftex.def Info: ./figs/particle_file.pdf  used on input line 1782.
+Package pdftex.def Info: ./figs/particle_file.pdf  used on input line 1831.
 (pdftex.def)             Requested size: 341.43306pt x 255.13727pt.
- [29] [30 <./figs/particle_file.pdf>]
-<./figs/trajectory_files.pdf, id=948, 470.98941pt x 297.17282pt>
+ [31] [32 <./figs/particle_file.pdf>]
+<./figs/trajectory_files.pdf, id=986, 470.98941pt x 297.17282pt>
 File: ./figs/trajectory_files.pdf Graphic file (type pdf)
 <use ./figs/trajectory_files.pdf>
-Package pdftex.def Info: ./figs/trajectory_files.pdf  used on input line 1853.
+Package pdftex.def Info: ./figs/trajectory_files.pdf  used on input line 1902.
 (pdftex.def)             Requested size: 284.52756pt x 179.52937pt.
-<./figs/smoothed_trajfile.pdf, id=954, 514.2885pt x 471.065pt>
+<./figs/smoothed_trajfile.pdf, id=992, 514.2885pt x 471.065pt>
 File: ./figs/smoothed_trajfile.pdf Graphic file (type pdf)
 <use ./figs/smoothed_trajfile.pdf>
-Package pdftex.def Info: ./figs/smoothed_trajfile.pdf  used on input line 1899.
+Package pdftex.def Info: ./figs/smoothed_trajfile.pdf  used on input line 1948.
 
 (pdftex.def)             Requested size: 341.43306pt x 312.73677pt.
- [31 <./figs/trajectory_files.pdf>] (./user_manual.bbl [32 <./figs/smoothed_tra
+ [33 <./figs/trajectory_files.pdf>] (./user_manual.bbl [34 <./figs/smoothed_tra
 jfile.pdf>])
-[33] (./user_manual.aux)
+[35] (./user_manual.aux)
  ***********
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2024-01-22>
@@ -822,13 +822,13 @@ LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 LaTeX Warning: There were undefined references.
 
 Package rerunfilecheck Info: File `user_manual.out' has not changed.
-(rerunfilecheck)             Checksum: D43774B8ACB955D40618FE8E17399B4F;13127.
+(rerunfilecheck)             Checksum: DEBD8E7D2D4C7A28747D410BBAAEAFFC;14010.
  ) 
 Here is how much of TeX's memory you used:
- 15148 strings out of 476173
- 239873 string characters out of 5795295
+ 15168 strings out of 476173
+ 240188 string characters out of 5795295
  1946975 words of memory out of 5000000
- 36665 multiletter control sequences out of 15000+600000
+ 36675 multiletter control sequences out of 15000+600000
  585958 words of font info for 102 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
  69i,14n,79p,1200b,591s stack positions out of 10000i,1000n,20000p,200000b,200000s
@@ -852,10 +852,10 @@ er/sfti1000.pfb></usr/share/texmf/fonts/type1/public/cm-super/sftt0800.pfb></us
 r/share/texmf/fonts/type1/public/cm-super/sftt0900.pfb></usr/share/texmf/fonts/
 type1/public/cm-super/sftt1000.pfb></usr/share/texmf/fonts/type1/public/cm-supe
 r/sftt1200.pfb></usr/share/texmf/fonts/type1/public/cm-super/sftt1440.pfb>
-Output written on user_manual.pdf (36 pages, 6622402 bytes).
+Output written on user_manual.pdf (38 pages, 6632996 bytes).
 PDF statistics:
- 1165 PDF objects out of 1200 (max. 8388607)
- 980 compressed objects within 10 object streams
- 262 named destinations out of 1000 (max. 500000)
- 640 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 1209 PDF objects out of 1440 (max. 8388607)
+ 1021 compressed objects within 11 object streams
+ 272 named destinations out of 1000 (max. 500000)
+ 672 words of extra memory for PDF output out of 10000 (max. 10000000)
 
