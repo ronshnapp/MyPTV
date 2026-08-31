@@ -112,6 +112,178 @@ from numpy.linalg import norm
 import os
 
 
+# ----------------------------------------------------------------------
+# 2D polynomial basis for the camera-space polynomials G(x)
+# ----------------------------------------------------------------------
+#
+# Terms are ordered by ASCENDING DEGREE, so the basis for order n is
+# always a PREFIX of the basis for any higher order. That is what lets a
+# single generated basis serve [B] and [C] at different orders (just
+# slice it), and what lets the order be recovered from a stored
+# coefficient matrix's row count alone - no extra field in the camera
+# file.
+#
+# The exponent order within degrees 0-3 is fixed to reproduce the
+# original hard-coded 10-term basis
+#     [1, x, y, x^2, y^2, x*y, x^2*y, x*y^2, x^3, y^3]
+# exactly, so cameras calibrated before variable orders existed keep
+# working unchanged. Degrees >= 4 are generated systematically.
+
+_LEGACY_EXPONENTS = {
+    0: [(0, 0)],
+    1: [(1, 0), (0, 1)],
+    2: [(2, 0), (0, 2), (1, 1)],
+    3: [(2, 1), (1, 2), (3, 0), (0, 3)],
+}
+
+
+def xcol_exponents(order):
+    '''
+    Returns the list of (i,j) exponent pairs for a complete 2D polynomial
+    of the given order, in ascending-degree order.
+
+    A complete polynomial of order n has (n+1)(n+2)/2 terms:
+    order 1 -> 3, order 2 -> 6, order 3 -> 10, order 4 -> 15, order 5 -> 21.
+    '''
+    if order < 1:
+        raise ValueError('polynomial order must be >= 1, got %s' % order)
+
+    terms = []
+    for d in range(order + 1):
+        if d in _LEGACY_EXPONENTS:
+            terms += _LEGACY_EXPONENTS[d]
+        else:
+            terms += [(d, 0), (0, d)] + [(d - k, k) for k in range(1, d)]
+    return terms
+
+
+def n_terms_for_order(order):
+    '''Number of terms in a complete 2D polynomial of the given order.'''
+    return (order + 1) * (order + 2) // 2
+
+
+def order_from_n_terms(n):
+    '''
+    Inverse of n_terms_for_order. Raises if n is not a complete
+    polynomial size.
+    '''
+    order = 1
+    while n_terms_for_order(order) < n:
+        order += 1
+    if n_terms_for_order(order) != n:
+        raise ValueError(
+            '%d is not a complete 2D polynomial size; expected one of %s'
+            % (n, [n_terms_for_order(o) for o in range(1, 7)]))
+    return order
+
+
+def build_xCol(x1, x2, n):
+    '''
+    Evaluates the first n basis terms at the camera-space point (x1, x2).
+    n must be a complete polynomial size (3, 6, 10, 15, ...).
+    '''
+    exps = xcol_exponents(order_from_n_terms(n))
+    return [float(x1)**i * float(x2)**j for (i, j) in exps]
+
+
+# ----------------------------------------------------------------------
+# 3D polynomial basis for the lab-space polynomial P(X)  ([A])
+# ----------------------------------------------------------------------
+#
+# Unlike G(x), the lab-space basis is NOT a complete polynomial: each
+# coordinate may carry a different maximum degree. The original MyPTV
+# basis uses degree 3 in X1 and X2 but only degree 2 in X3, which suits
+# the usual PTV geometry where the depth direction is far less distorted
+# than the in-plane ones.
+#
+# The general rule used here is:
+#
+#     include X1^i X2^j X3^k  iff  i <= ox, j <= oy, k <= oz
+#                                  and i + j + k <= 3
+#
+# The total-degree cap is separate from the per-axis caps, and both are
+# needed: it is what makes (2,2,2) give the historical 17-term basis
+# (which keeps degree-3 MIXED terms like X1^2*X2 while allowing no pure
+# cube) rather than a plain quadratic.
+#
+# _XCOL3D_CANONICAL below lists the monomials in the exact order of the
+# original hard-coded basis, with the one remaining cubic term (X3^3)
+# appended. Any (ox,oy,oz) selection is a FILTER of this list, preserving
+# relative order, so:
+#     (2,2,2) -> the legacy 17-term basis, exactly
+#     (3,3,2) -> the legacy 19-term basis, exactly
+#     (3,3,3) -> the complete 3D cubic, 20 terms
+# and previously calibrated cameras keep working untouched.
+#
+# NOTE: unlike [B] and [C], the term COUNT does not identify the order -
+# e.g. 19 terms could be (3,3,2), (2,3,3) or (3,2,3). The order triple is
+# therefore written to the camera file. Files saved before this existed
+# carry no triple and are inferred from their size (17 -> (2,2,2),
+# 19 -> (3,3,2)), which is unambiguous.
+
+_XCOL3D_CANONICAL = [
+    (0, 0, 0),
+    (1, 0, 0), (0, 1, 0), (0, 0, 1),
+    (2, 0, 0), (0, 2, 0), (0, 0, 2),
+    (1, 1, 0), (0, 1, 1), (1, 0, 1),
+    (1, 1, 1),
+    (1, 2, 0), (1, 0, 2), (2, 1, 0), (0, 1, 2), (2, 0, 1), (0, 2, 1),
+    (3, 0, 0), (0, 3, 0),
+    (0, 0, 3),
+]
+
+_A_TOTAL_DEGREE_CAP = 3
+
+
+def xcol3d_exponents(a_order, max_total_degree=None):
+    '''
+    Returns the (i,j,k) exponent triples for the lab-space basis with
+    per-axis orders a_order = (ox, oy, oz).
+
+    max_total_degree - overall degree cap; defaults to 3, which is what
+                       reproduces the historical bases.
+    '''
+    ox, oy, oz = (int(v) for v in a_order)
+    for v, nm in zip((ox, oy, oz), 'XYZ'):
+        if not (1 <= v <= 3):
+            raise ValueError('%s order must be between 1 and 3, got %s'
+                             % (nm, v))
+
+    cap = _A_TOTAL_DEGREE_CAP if max_total_degree is None \
+        else max_total_degree
+
+    return [t for t in _XCOL3D_CANONICAL
+            if t[0] <= ox and t[1] <= oy and t[2] <= oz and sum(t) <= cap]
+
+
+def n_terms_for_a_order(a_order):
+    '''Number of [A] basis terms for the given per-axis order triple.'''
+    return len(xcol3d_exponents(a_order))
+
+
+def a_order_from_n_terms(n):
+    '''
+    Best-effort recovery of the order triple from a term count, used only
+    for camera files saved before the order was stored. Only the two
+    historical sizes are unambiguous.
+    '''
+    if n == 17:
+        return (2, 2, 2)
+    if n == 19:
+        return (3, 3, 2)
+    if n == 20:
+        return (3, 3, 3)
+    raise ValueError(
+        'Cannot infer the [A] order triple from %d terms; the camera file '
+        'should record it explicitly.' % n)
+
+
+def build_XCol(X1, X2, X3, exps):
+    '''Evaluates the lab-space basis given a list of exponent triples.'''
+    return [float(X1)**i * float(X2)**j * float(X3)**k
+            for (i, j, k) in exps]
+
+
 
 
 
@@ -143,18 +315,29 @@ class camera_extendedZolof(object):
         
         self.name = name
         self.O = zeros(3) + 1.     # camera location (fixed-origin model)
+        #self.A = array([[0.0 for i in range(17)] for j in [0,1]]).T
         self.A = array([[0.0 for i in range(19)] for j in [0,1]]).T
+        # per-axis polynomial orders of [A]: (X order, Y order, Z order).
+        # (3,3,2) is the historical MyPTV basis.
+        self.A_order = (3, 3, 2)
         self.B = array([[0.0 for i in range(10)] for j in [0, 1, 2]]).T
+
+        # per-pixel origin coefficients (variable-origin extension).
+        # Same shape/basis as B: 10 terms of G(x), one column per lab
+        # dimension (X, Y, Z).
         self.C = array([[0.0 for i in range(10)] for j in [0, 1, 2]]).T
 
         # Whether get_ray() should use the per-pixel origin O(x) = [C]G(x)
-        # (True) 
+        # (True) or the single fixed origin self.O (False, default and
+        # backwards-compatible behavior).
         self.variable_origin = False
 
         # Pixel-coordinate normalization used ONLY when variable_origin is
         # True: get_xCol_scaled() centers/scales (eta,zeta) before building
-        # the polynomial basis, so that fitting [C] is numerically 
-        # well-conditioned.
+        # the polynomial basis, so that fitting [C] (which predicts
+        # unbounded lab-space coordinates, unlike [B]'s bounded unit
+        # direction) is numerically well-conditioned and doesn't
+        # extrapolate wildly for pixels far from the calibration points.
         # Set by fit_variable_origin_model(); identity (no-op) by default.
         self.px_center = array([0.0, 0.0])
         self.px_scale = array([1.0, 1.0])
@@ -197,52 +380,76 @@ class camera_extendedZolof(object):
     
     
     
-    def get_XCol(self, X):
+    def get_XCol(self, X, a_order=None):
         '''
-        Given a point in 3D lab-space, this method returns its 17 P(X) 
+        Given a point in 3D lab-space, this method returns its P(X)
         polynomial terms.
+
+        a_order - (ox, oy, oz) per-axis orders. Defaults to self.A_order,
+                  which is (3,3,2) for the historical basis. Cameras
+                  loaded from files written before per-axis orders existed
+                  get their triple inferred from the number of [A] terms
+                  (17 -> (2,2,2), 19 -> (3,3,2)), so old files behave
+                  exactly as they always did.
         '''
-        X1,X2,X3 = X[0],X[1],X[2]
-        mx = max(array(self.A).shape)
-        if mx==17: # compatibility with v1.3.5 and lower
-            XColumn = [1.0, X1, X2, X3,
-                       X1**2, X2**2, X3**2, X1*X2, X2*X3, X3*X1, X1*X2*X3,
-                       X1*X2**2, X1*X3**2, X2*X1**2, X2*X3**2, X3*X1**2, X3*X2**2]
-        elif mx==19: # for v1.3.6 and above
-            XColumn = [1.0, X1, X2, X3,
-                       X1**2, X2**2, X3**2, X1*X2, X2*X3, X3*X1, X1*X2*X3,
-                       X1*X2**2, X1*X3**2, X2*X1**2, X2*X3**2, X3*X1**2, X3*X2**2,
-                       X1**3, X2**3]
-        return XColumn
+        if a_order is None:
+            a_order = getattr(self, 'A_order', None)
+            if a_order is None:
+                a_order = a_order_from_n_terms(array(self.A).shape[0])
+        exps = xcol3d_exponents(a_order)
+        return build_XCol(X[0], X[1], X[2], exps)
+
+
+    @property
+    def a_order(self):
+        '''The per-axis polynomial orders of [A], as (ox, oy, oz).'''
+        return tuple(getattr(self, 'A_order', (3, 3, 2)))
     
 
 
-    def get_xCol(self, x):
+    def get_xCol(self, x, n=None):
         '''
-        Given a point in 2D camera-space, this method returns its 10 G(x) 
-        polynomial terms
+        Given a point in 2D camera-space, this method returns its G(x) 
+        polynomial terms.
+
+        n - number of basis terms to return. Defaults to the number of
+            rows of self.B, i.e. the order [B] was calibrated with, so
+            existing callers keep working without change.
         '''
-        x1, x2 = x[0], x[1]
-        xColumn = [1.0, x1, x2, x1**2, x2**2, x1*x2,
-                   x1**2*x2, x2**2*x1, x1**3, x2**3]
-        return xColumn
+        if n is None:
+            n = array(self.B).shape[0]
+        return build_xCol(x[0], x[1], n)
 
 
 
-    def get_xCol_scaled(self, x):
+    def get_xCol_scaled(self, x, n=None):
         '''
-        Same 10-term polynomial basis as get_xCol(), but built from
-        pixel coordinates normalized by self.px_center / self.px_scale
-        first. Used for the variable-origin extension (both fitting [C]
-        and [B], and evaluating them in get_ray()) to keep the polynomial
-        well-conditioned; with the default px_center=[0,0], px_scale=[1,1]
-        this is identical to get_xCol().
+        Same basis as get_xCol(), but built from pixel coordinates
+        normalized by self.px_center / self.px_scale first. Used for the
+        variable-origin extension (both fitting [C]/[B] and evaluating
+        them in get_ray()) to keep the polynomial well-conditioned; with
+        the default px_center=[0,0], px_scale=[1,1] this is identical to
+        get_xCol().
         '''
+        if n is None:
+            n = array(self.B).shape[0]
         x1 = (x[0] - self.px_center[0]) / self.px_scale[0]
         x2 = (x[1] - self.px_center[1]) / self.px_scale[1]
-        xColumn = [1.0, x1, x2, x1**2, x2**2, x1*x2,
-                   x1**2*x2, x2**2*x1, x1**3, x2**3]
-        return xColumn
+        return build_xCol(x1, x2, n)
+
+
+
+    @property
+    def b_order(self):
+        '''The polynomial order of [B], recovered from its row count.'''
+        return order_from_n_terms(array(self.B).shape[0])
+
+
+
+    @property
+    def c_order(self):
+        '''The polynomial order of [C], recovered from its row count.'''
+        return order_from_n_terms(array(self.C).shape[0])
     
     
     
@@ -290,13 +497,13 @@ class camera_extendedZolof(object):
             'plane' : O(x) = self.O + plane_u*a(x) + plane_v*b(x),
                       where (a,b) = [C] G_c(x),  [C] shape (n_c, 2)
 
-        [C] may also use a REDUCED polynomial order relative to [B] - see
-        calibrate_variable_origin.fit_variable_origin_model(c_order=...).
-        The basis terms are ordered by increasing degree
-        (1, x, y, x^2, y^2, xy, x^2y, xy^2, x^3, y^3), so the first
-        self.C.shape[0] terms of the full basis are exactly the reduced-
-        order basis [C] was fit against - no separate stored "order" is
-        needed, it's inferred from C's shape.
+        [B] and [C] may each use a different polynomial order - see
+        calibrate_extendedZolof.calibrate(b_order=..., c_order=...). The
+        basis terms are ordered by increasing degree, so the first
+        self.B.shape[0] / self.C.shape[0] terms of a long-enough basis
+        are exactly the reduced-order bases they were fit against. No
+        separate stored "order" field is needed: both are inferred from
+        the coefficient matrices' row counts.
 
         Otherwise (self.variable_origin is False), the single fixed camera
         center self.O is used with the raw-pixel basis (get_xCol), exactly
@@ -304,19 +511,25 @@ class camera_extendedZolof(object):
         '''
         x = [eta, zeta]
 
-        if self.variable_origin:
-            xColumn = array(self.get_xCol_scaled(x))
-        else:
-            xColumn = array(self.get_xCol(x))
+        n_b = array(self.B).shape[0]
+        n_c = array(self.C).shape[0] if self.variable_origin else 0
 
-        r = dot(xColumn, self.B)
+        # one basis long enough for whichever of [B]/[C] needs more terms;
+        # each is then evaluated against its own leading slice.
+        n_max = max(n_b, n_c)
+
+        if self.variable_origin:
+            xColumn = array(self.get_xCol_scaled(x, n=n_max))
+        else:
+            xColumn = array(self.get_xCol(x, n=n_max))
+
+        r = dot(xColumn[:n_b], self.B)
         e = array([r[0], r[1], r[2]])
         nrm = norm(e)
         if nrm > 0:
             e = e / nrm
 
         if self.variable_origin:
-            n_c = array(self.C).shape[0]   # C may use fewer basis terms than B
             coef = dot(xColumn[:n_c], self.C)
 
             if self.origin_mode == 'plane':
@@ -349,6 +562,7 @@ class camera_extendedZolof(object):
         
         S = ''
         S += 'variable_origin %s \n' % (self.variable_origin,)
+        S += 'A_order %s %s %s \n' % tuple(self.a_order)
 
         for i in range(len(self.O)):
             S += 'O %s \t %s \n'%(i, self.O[i])
@@ -420,6 +634,9 @@ class camera_extendedZolof(object):
             ind = int(v[1])
             self.O[ind] = float(v[-1])
         
+        AO_vals = list(filter(lambda l: len(l)>0 and l[0]=='A_order',
+                               lines))
+
         A_vals = list(filter(lambda l: len(l)>0 and l[0]=='A', lines))
         Ashape = (int(max(A_vals, key=lambda x: float(x[1]))[1])+1,
                   int(max(A_vals, key=lambda x: float(x[2]))[2])+1)
@@ -427,6 +644,14 @@ class camera_extendedZolof(object):
         for v in A_vals:
             i, j = int(v[1]), int(v[2])
             self.A[i][j] = float(v[-1])
+
+        # per-axis orders of [A]. Absent in files written before this
+        # existed, in which case the (unambiguous) historical sizes are
+        # used to infer it.
+        if len(AO_vals) > 0:
+            self.A_order = tuple(int(v) for v in AO_vals[0][1:4])
+        else:
+            self.A_order = a_order_from_n_terms(array(self.A).shape[0])
         
         B_vals = list(filter(lambda l: len(l)>0 and l[0]=='B', lines))
         Bshape = (int(max(B_vals, key=lambda x: float(x[1]))[1])+1,
@@ -436,7 +661,8 @@ class camera_extendedZolof(object):
             i, j = int(v[1]), int(v[2])
             self.B[i][j] = float(v[-1])
 
-        # C coefficients - only for variable-origin
+        # C coefficients - only present for cameras calibrated with the
+        # variable-origin extension.
         C_vals = list(filter(lambda l: len(l)>0 and l[0]=='C', lines))
         if len(C_vals) > 0:
             Cshape = (int(max(C_vals, key=lambda x: float(x[1]))[1])+1,
@@ -446,6 +672,10 @@ class camera_extendedZolof(object):
                 i, j = int(v[1]), int(v[2])
                 self.C[i][j] = float(v[-1])
 
+        # pixel normalization used by the variable-origin extension -
+        # absent in files saved before this feature existed (or for
+        # fixed-origin cameras), so default to the identity transform
+        # (center=0, scale=1) for backwards compatibility.
         PXC_vals = list(filter(lambda l: len(l)>0 and l[0]=='PXC', lines))
         if len(PXC_vals) > 0:
             for v in PXC_vals:
@@ -456,6 +686,9 @@ class camera_extendedZolof(object):
             for v in PXS_vals:
                 self.px_scale[int(v[1])] = float(v[-1])
 
+        # origin parameterization - absent in files saved before the
+        # plane-constrained mode existed, so default to 'free' (the
+        # original variable-origin behavior).
         OM_vals = list(filter(lambda l: len(l)>0 and l[0]=='ORIGIN_MODE',
                                lines))
         if len(OM_vals) > 0:

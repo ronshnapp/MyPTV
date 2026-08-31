@@ -42,19 +42,22 @@ import warnings
 from numpy import (array, cos, sin, dot, cross, hstack, mean, median,
                     sum as npsum, abs as npabs)
 from numpy.linalg import norm, lstsq
+from myptv.extendedZolof.camera import (build_xCol, n_terms_for_order,
+                                        order_from_n_terms)
 from scipy.optimize import minimize
 
 
-def _get_xCol_scaled(x, center, scale):
+def _get_xCol_scaled(x, center, scale, n=10):
     '''
     Standalone version of camera.get_xCol_scaled(), used during fitting
-    before px_center/px_scale are assigned to the camera object. Must stay
-    IN SYNC with camera_extendedZolof.get_xCol_scaled().
+    before px_center/px_scale are assigned to the camera object. Shares
+    build_xCol() with the camera class so the two cannot drift apart.
+
+    n - number of basis terms (3, 6, 10, 15, ...).
     '''
     x1 = (x[0] - center[0]) / scale[0]
     x2 = (x[1] - center[1]) / scale[1]
-    return [1.0, x1, x2, x1**2, x2**2, x1*x2,
-            x1**2*x2, x2**2*x1, x1**3, x2**3]
+    return build_xCol(x1, x2, n)
 
 
 def _get_ray_points(cam, Xi, xi):
@@ -174,12 +177,13 @@ def _dist_pt_to_line_batch(C, B, G_c, G_b, Xtrue):
 # order 1 (linear/affine) : 1, x, y                          -> 3 terms
 # order 2 (quadratic)     : + x^2, y^2, xy                    -> 6 terms
 # order 3 (full cubic)    : + x^2y, xy^2, x^3, y^3             -> 10 terms
-_ORDER_N_TERMS = {1: 3, 2: 6, 3: 10}
+_ORDER_N_TERMS = {o: n_terms_for_order(o) for o in range(1, 7)}
 
 
 def fit_variable_origin_model(cam, X_list, x_list, O_init=None,
                                thresh_pix=5.0, min_points=15, c_order=3,
-                               origin_model='free', freeze_C=False):
+                               origin_model='free', freeze_C=False,
+                               b_order=3):
     '''
     Fits the variable-origin epipolar model, replacing the fixed-origin
     assumption r(x) = [B]G(x), O = const.
@@ -261,7 +265,8 @@ def fit_variable_origin_model(cam, X_list, x_list, O_init=None,
             origin_model='free' it has 3 columns (X,Y,Z); for 'plane' it
             has 2 columns (the plane_u and plane_v offsets). Layout
             matches cam.C in both cases.
-    B     : ndarray, shape (10,3) - the fitted direction coefficients,
+    B     : ndarray, shape (n_b,3) with n_b set by b_order - the fitted
+            direction coefficients,
             same layout as cam.B. NOTE: both are fit against the
             NORMALIZED pixel basis (see px_center/px_scale below) - they
             are only meaningful together with that normalization, i.e.
@@ -290,6 +295,10 @@ def fit_variable_origin_model(cam, X_list, x_list, O_init=None,
     if origin_model not in ('free', 'plane'):
         raise ValueError("origin_model must be 'free' or 'plane' "
                           f'(got {origin_model!r}).')
+    if b_order not in _ORDER_N_TERMS:
+        raise ValueError(f'b_order must be one of {sorted(_ORDER_N_TERMS)} '
+                          f'(got {b_order!r}).')
+    n_b = _ORDER_N_TERMS[b_order]
 
     if freeze_C:
         # Reuse the camera's existing origin model wholesale. Everything
@@ -410,8 +419,13 @@ def fit_variable_origin_model(cam, X_list, x_list, O_init=None,
         px_range = x_kept.max(axis=0) - x_kept.min(axis=0)
         px_scale = array([s if s > 0 else 1.0 for s in px_range / 2.0])
 
-    G_b = array([_get_xCol_scaled(xi, px_center, px_scale) for xi in x_kept])  # (M,10)
-    G_c = G_b[:, :n_c]   # (M, n_c) -- leading terms = the reduced-order basis,
+    # one basis long enough for both, then sliced per matrix - the terms
+    # are in ascending-degree order so a prefix IS the lower-order basis.
+    n_max = max(n_b, n_c)
+    G_all = array([_get_xCol_scaled(xi, px_center, px_scale, n=n_max)
+                   for xi in x_kept])
+    G_b = G_all[:, :n_b]
+    G_c = G_all[:, :n_c]   # (M, n_c) -- leading terms = the reduced-order basis,
                          # since get_xCol_scaled's terms are ordered by
                          # increasing degree (see _ORDER_N_TERMS above).
 
@@ -429,23 +443,23 @@ def fit_variable_origin_model(cam, X_list, x_list, O_init=None,
             B0, *_ = lstsq(G_b, e_arr, rcond=None)
 
             def b_only_cost(b):
-                B_ = b.reshape(10, 3)
+                B_ = b.reshape(n_b, 3)
                 d = _dist_pt_to_line_batch(C, B_, G_c, G_b, X_kept)
                 return npsum(d ** 2)
 
             res = minimize(b_only_cost, B0.ravel(), method='BFGS')
-            B = res.x.reshape(10, 3)
+            B = res.x.reshape(n_b, 3)
         else:
             def indirect_cost(a):
                 C_ = a[:n_c * 3].reshape(n_c, 3)
-                B_ = a[n_c * 3:].reshape(10, 3)
+                B_ = a[n_c * 3:].reshape(n_b, 3)
                 d = _dist_pt_to_line_batch(C_, B_, G_c, G_b, X_kept)
                 return npsum(d ** 2)
 
             res = minimize(indirect_cost, a0, method='BFGS')
 
             C = res.x[:n_c * 3].reshape(n_c, 3)
-            B = res.x[n_c * 3:].reshape(10, 3)
+            B = res.x[n_c * 3:].reshape(n_b, 3)
 
         final_resid = _dist_pt_to_line_batch(C, B, G_c, G_b, X_kept)
         plane = None
@@ -513,13 +527,13 @@ def fit_variable_origin_model(cam, X_list, x_list, O_init=None,
             C = C_frozen
 
             def b_only_cost(b):
-                B_ = b.reshape(10, 3)
+                B_ = b.reshape(n_b, 3)
                 d = _dist_pt_to_line_plane(C, B_, G_c_g, G_b_g, X_g,
                                             O0, u_ax, v_ax)
                 return npsum(d ** 2)
 
             res = minimize(b_only_cost, B0.ravel(), method='BFGS')
-            B = res.x.reshape(10, 3)
+            B = res.x.reshape(n_b, 3)
         else:
             # (step 4) fit the in-plane deviations with the same normalized
             # polynomial basis used for the 'free' model, then jointly
@@ -530,7 +544,7 @@ def fit_variable_origin_model(cam, X_list, x_list, O_init=None,
 
             def indirect_cost(a):
                 C_ = a[:n_c * 2].reshape(n_c, 2)
-                B_ = a[n_c * 2:].reshape(10, 3)
+                B_ = a[n_c * 2:].reshape(n_b, 3)
                 d = _dist_pt_to_line_plane(C_, B_, G_c_g, G_b_g, X_g,
                                             O0, u_ax, v_ax)
                 return npsum(d ** 2)
@@ -538,7 +552,7 @@ def fit_variable_origin_model(cam, X_list, x_list, O_init=None,
             res = minimize(indirect_cost, a0, method='BFGS')
 
             C = res.x[:n_c * 2].reshape(n_c, 2)
-            B = res.x[n_c * 2:].reshape(10, 3)
+            B = res.x[n_c * 2:].reshape(n_b, 3)
 
         final_resid = _dist_pt_to_line_plane(C, B, G_c_g, G_b_g, X_g,
                                               O0, u_ax, v_ax)
@@ -576,7 +590,7 @@ def _mean_ray_err(ray_fn, X_arr, x_arr):
 
 def cross_validate_origin_models(cam, X_list, x_list, test_fraction=0.25,
                                   thresh_pix=5.0, seed=None, c_order=3,
-                                  origin_model='free'):
+                                  origin_model='free', b_order=3):
     '''
     Diagnostic: splits the (already forward-model-fit, inlier) calibration
     points into a random TRAIN/TEST split, fits BOTH the original
@@ -625,11 +639,12 @@ def cross_validate_origin_models(cam, X_list, x_list, test_fraction=0.25,
         thresh_pix=thresh_pix, refine=True)
 
     r_train = [(Xi - O_train) / norm(Xi - O_train) for Xi in X_train]
-    Gb = array([cam.get_xCol(xi) for xi in x_train])
+    n_b_cv = _ORDER_N_TERMS[b_order]
+    Gb = array([cam.get_xCol(xi, n=n_b_cv) for xi in x_train])
     B_train, *_ = lstsq(Gb, r_train, rcond=None)
 
     def fixed_ray(x):
-        xc = array(cam.get_xCol(x))
+        xc = array(cam.get_xCol(x, n=n_b_cv))
         e = dot(xc, B_train)
         e = e / norm(e)
         return O_train, e
@@ -643,13 +658,14 @@ def cross_validate_origin_models(cam, X_list, x_list, test_fraction=0.25,
         C_t, B_t, _, _, px_c, px_s, plane_t, _om = fit_variable_origin_model(
             cam, X_train, x_train, O_init=O_train, thresh_pix=thresh_pix,
             min_points=max(15, int(0.5 * len(train_idx))), c_order=c_order,
-            origin_model=origin_model)
+            origin_model=origin_model, b_order=b_order)
 
         n_c = C_t.shape[0]
 
         def var_ray(x):
-            xc = array(_get_xCol_scaled(x, px_c, px_s))
-            e = dot(xc, B_t)
+            xc = array(_get_xCol_scaled(x, px_c, px_s,
+                                        n=max(B_t.shape[0], C_t.shape[0])))
+            e = dot(xc[:B_t.shape[0]], B_t)
             e = e / norm(e)
             coef = dot(xc[:n_c], C_t)
             if origin_model == 'plane':
@@ -677,7 +693,8 @@ def cross_validate_origin_models(cam, X_list, x_list, test_fraction=0.25,
     print(f'  fixed-origin : train={fixed_train_err:.4f}  '
           f'test={fixed_test_err:.4f}')
     if var_train_err is not None:
-        print(f'  variable-origin ({origin_model}, c_order={c_order}) : '
+        print(f'  variable-origin ({origin_model}, c_order={c_order}, '
+              f'b_order={b_order}) : '
               f'train={var_train_err:.4f}  test={var_test_err:.4f}')
         if var_test_err > fixed_test_err:
             print('  -> variable-origin generalizes WORSE than fixed-origin '

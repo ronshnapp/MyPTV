@@ -35,6 +35,12 @@ class cal_gui(object):
         
         # set the window
         self.root = Tk()
+        # NOTE: no hard-coded geometry() here on purpose. A fixed pixel
+        # size clips the lower widgets whenever the actual required size
+        # is larger than assumed - which happens with different fonts,
+        # DPI/scaling, or Tk themes. Instead the window is sized from the
+        # widgets' own requested size at the end of __init__, and that
+        # size is enforced as a minimum so nothing can ever be cut off.
         self.root.resizable(True, True)
         self.root.title('MyPTV: Extended Zolof calibration GUI')
 
@@ -89,10 +95,64 @@ class cal_gui(object):
         
         
         # =============================
+        # FORWARD-MODEL OPTIONS:
+        #
+        # [A] maps lab coordinates to pixels. Its three lab axes take
+        # independent polynomial orders, because the depth direction is
+        # usually far less distorted than the two in-plane ones. The
+        # default (3,3,2) is the historical MyPTV basis.
+
+        fwd_label = LabelFrame(self.root, text='Forward model [A] (lab -> pixels)',
+                               padx=10, pady=4)
+        fwd_label.grid(row=1, column=0, padx=(10), pady=4, sticky='nsew')
+
+        self.a_order_x = StringVar(value='3')
+        self.a_order_y = StringVar(value='3')
+        self.a_order_z = StringVar(value='2')
+
+        for col, (lbl, var) in enumerate([('X order:', self.a_order_x),
+                                          ('Y order:', self.a_order_y),
+                                          ('Z order:', self.a_order_z)]):
+            Label(fwd_label, text=lbl, padx=2, pady=2).grid(
+                row=0, column=2*col, sticky='nw', padx=2, pady=2)
+            m = OptionMenu(fwd_label, var, '1', '2', '3')
+            m.config(width=3)
+            m.grid(row=0, column=2*col+1, sticky='nw', padx=2, pady=2)
+
+        Label(fwd_label, anchor='w', justify='left', fg='gray25',
+              text=('default (3,3,2) = the standard model.\n'
+                    'the depth axis usually needs a lower order.')
+              ).grid(row=1, column=0, columnspan=6, sticky='nw',
+                     padx=2, pady=2)
+
+        # =============================
         # BACKWARD-MODEL OPTIONS:
+        #
+        # These control how the camera-to-lab (epipolar line) model is
+        # fit. The forward (lab-to-camera, [A]) model is unaffected by
+        # them - which is why the "Error" readout below, which measures
+        # only the forward projection, does NOT respond to these settings.
+        # Watch "Ray err" instead when comparing them.
+
         opts_label = LabelFrame(self.root, text='Backward model (epipolar lines)',
                                 padx=10, pady=4)
-        opts_label.grid(row=1, column=0, padx=(10), pady=4, sticky='nsew')
+        opts_label.grid(row=2, column=0, padx=(10), pady=4, sticky='nsew')
+
+        # -- polynomial order of B (ray directions) --
+        # This applies to BOTH the fixed- and variable-origin models, so
+        # it sits above the variable-origin checkbox and is never greyed.
+        b_lbl = Label(opts_label, text='r(x) poly. order [B]:', padx=2, pady=2)
+        b_lbl.grid(row=0, column=0, sticky='nw', padx=2, pady=2)
+
+        self.b_order = StringVar(value='3')
+        # order 4 is supported by calibrate(b_order=4) but deliberately
+        # NOT offered here: with typical calibration point counts it
+        # overfits badly, and the GUI should not hand that to a user who
+        # has no reason to expect it.
+        self.b_order_menu = OptionMenu(opts_label, self.b_order,
+                                       '1', '2', '3')
+        self.b_order_menu.config(width=12)
+        self.b_order_menu.grid(row=0, column=1, sticky='nw', padx=2, pady=2)
 
         # -- variable origin on/off --
         self.var_origin = IntVar(value=0)
@@ -100,38 +160,39 @@ class cal_gui(object):
             opts_label, text='Use variable origin O(x)',
             variable=self.var_origin, command=self._toggle_origin_opts,
             padx=2, pady=2, anchor='w')
-        self.var_origin_check.grid(row=0, column=0, columnspan=2,
+        self.var_origin_check.grid(row=1, column=0, columnspan=2,
                                    sticky='nw', padx=2, pady=2)
 
         # -- origin model: free / plane --
         self.origin_model_lbl = Label(opts_label, text='Origin model:',
                                       padx=2, pady=2)
-        self.origin_model_lbl.grid(row=1, column=0, sticky='nw',
+        self.origin_model_lbl.grid(row=2, column=0, sticky='nw',
                                    padx=2, pady=2)
 
         self.origin_model = StringVar(value='plane')
         self.origin_model_menu = OptionMenu(opts_label, self.origin_model,
                                             'plane', 'free')
         self.origin_model_menu.config(width=12)
-        self.origin_model_menu.grid(row=1, column=1, sticky='nw',
+        self.origin_model_menu.grid(row=2, column=1, sticky='nw',
                                     padx=2, pady=2)
 
         # -- polynomial order of C --
-        self.c_order_lbl = Label(opts_label, text='O(x) poly. order:',
+        self.c_order_lbl = Label(opts_label, text='O(x) poly. order [C]:',
                                  padx=2, pady=2)
-        self.c_order_lbl.grid(row=2, column=0, sticky='nw', padx=2, pady=2)
+        self.c_order_lbl.grid(row=3, column=0, sticky='nw', padx=2, pady=2)
 
         self.c_order = StringVar(value='1')
         self.c_order_menu = OptionMenu(opts_label, self.c_order,
                                        '1', '2', '3')
         self.c_order_menu.config(width=12)
-        self.c_order_menu.grid(row=2, column=1, sticky='nw', padx=2, pady=2)
+        self.c_order_menu.grid(row=3, column=1, sticky='nw', padx=2, pady=2)
 
         # -- hint --
         hint = Label(opts_label, anchor='w', justify='left', fg='gray25',
                      text=('lower order = less overfitting.\n'
-                           '1=linear, 2=quadratic, 3=cubic'))
-        hint.grid(row=3, column=0, columnspan=2, sticky='nw', padx=2, pady=2)
+                           '1=linear, 2=quadratic, 3=cubic\n'
+                           '(3 for [B] reproduces the classic model)'))
+        hint.grid(row=4, column=0, columnspan=2, sticky='nw', padx=2, pady=2)
 
         self._toggle_origin_opts()
 
@@ -142,7 +203,7 @@ class cal_gui(object):
         
             
         status_label = LabelFrame(self.root, padx=10, pady=4, width=30)
-        status_label.grid(row=2, column=0, padx=(10), pady=4, sticky='nsew')
+        status_label.grid(row=3, column=0, padx=(10), pady=4, sticky='nsew')
         
         self.status = Label(status_label, text='Status:', padx=2, pady=2)
         self.status.grid(row=0, column=0, rowspan=1, sticky='nw', padx=2, pady=2)
@@ -172,7 +233,7 @@ class cal_gui(object):
         
         
         dashboard = LabelFrame(self.root, padx=10, pady=10, width=100)
-        dashboard.grid(row=3, column=0, padx=(10), pady=10, sticky='nsew')
+        dashboard.grid(row=4, column=0, padx=(10), pady=10, sticky='nsew')
         
         
         # err_Dashboard frame - where the error is shown
@@ -188,7 +249,11 @@ class cal_gui(object):
         self.error_input.grid(row=1, column=1, rowspan=1, sticky='nw', padx=2, pady=2)
         err = self.calibrate_obj.mean_squared_err()
         self.error_input.config(text = '%.3e'%err)
-        
+
+        # Ray (backward-model) error. Unlike "Error" above - which only
+        # measures the forward [A] projection and is therefore identical
+        # for every backward-model setting - this one actually responds to
+        # the variable-origin options, so use it to compare them.
         self.ray_error = Label(err_dashboard, text='Ray err [lab]:',
                                padx=2, pady=2)
         self.ray_error.grid(row=2, column=0, rowspan=1, sticky='nw',
@@ -213,11 +278,18 @@ class cal_gui(object):
         self.root.columnconfigure(0, weight=1)
         button_label.rowconfigure(0, weight=1)
         button_label.columnconfigure(0, weight=1)
-        
-        for r in range(4):
+
+        # Let every section keep its natural height, and give any EXTRA
+        # vertical space to the dashboard at the bottom rather than
+        # stretching the button block. (Previously row 0 alone had
+        # weight=1, so the buttons absorbed all the slack.)
+        for r in range(5):
             self.root.rowconfigure(r, weight=0)
-        self.root.rowconfigure(3, weight=1)
-        
+        self.root.rowconfigure(4, weight=1)
+
+        # Ask Tk to compute how much room the widgets actually need, then
+        # open at exactly that size and refuse to shrink below it. This
+        # keeps every button reachable no matter the font/DPI/theme.
         self.root.update_idletasks()
         req_w = self.root.winfo_reqwidth()
         req_h = self.root.winfo_reqheight()
@@ -262,13 +334,23 @@ class cal_gui(object):
         self.root.update()
 
         use_var = bool(self.var_origin.get())
-        kwargs = {'variable_origin': use_var}
+        kwargs = {'variable_origin': use_var,
+                  'b_order': int(self.b_order.get()),
+                  'a_order': (int(self.a_order_x.get()),
+                              int(self.a_order_y.get()),
+                              int(self.a_order_z.get()))}
         if use_var:
             kwargs['c_order'] = int(self.c_order.get())
             kwargs['origin_model'] = self.origin_model.get()
 
         print('calibrating with:', kwargs)
-        
+
+        # NOTE: deliberately NOT wrapped in a bare try/except that silently
+        # falls back to a fixed-origin calibration. Such a fallback hides
+        # real failures (too few surviving rays, bad correspondences, an
+        # unsupported option) behind a normal-looking result, so you can
+        # end up comparing settings that were never actually applied.
+        # Failures are surfaced here instead.
         try:
             self.calibrate_obj.calibrate(**kwargs)
         except Exception as e:

@@ -18,7 +18,11 @@ from scipy.optimize import minimize
 from numpy import median, abs as npabs
 import warnings
 
-from myptv.extendedZolof.camera import camera_extendedZolof
+from myptv.extendedZolof.camera import (camera_extendedZolof,
+                                        n_terms_for_order,
+                                        order_from_n_terms,
+                                        xcol3d_exponents,
+                                        n_terms_for_a_order)
 from myptv.utils import line, get_nearest_line_crossing
 
 from pandas import read_csv
@@ -58,7 +62,8 @@ class calibrate_extendedZolof(camera_extendedZolof):
         
     
     def calibrate(self, variable_origin=False, thresh_pix=5.0, c_order=3,
-                  origin_model='free', freeze_C=False):
+                  origin_model='free', freeze_C=False, b_order=3,
+                  a_order=None):
         '''
         Given a list of points, x and X, this function attempts to determine
         the A, B (and O) coefficients, or A, B, C (and O) coefficients if
@@ -111,8 +116,45 @@ class calibrate_extendedZolof(camera_extendedZolof):
                           and are selected for consistency with it, so
                           refitting [C] tends to reinforce its own bias.
                           Requires an already variable-origin camera.
+
+        b_order           - polynomial order of [B], the ray DIRECTION
+                          model r(x). 1=linear (3 terms), 2=quadratic
+                          (6), 3=cubic (10, the historical default),
+                          4=quartic (15), and so on. Lower orders are
+                          stiffer and less prone to overfitting; higher
+                          orders can capture stronger lens distortion but
+                          need more, better-distributed points.
+
+        a_order           - (ox, oy, oz), the per-axis polynomial orders
+                          of the FORWARD model [A], each between 1 and 3.
+                          Unlike [B]/[C] the three lab axes are set
+                          independently, because the depth direction
+                          usually needs a lower order than the two
+                          in-plane ones. (3,3,2) is the historical
+                          default; (2,2,2) reproduces the older 17-term
+                          basis; (3,3,3) is the complete 3D cubic. If
+                          None, the camera's existing A_order is kept.
         '''
         # 1) finding the A coefficients - 
+        #if self.quadratic==False:
+        #    XColumns = [self.cam.get_XCol(Xi) for Xi in self.X_list]
+        
+        #elif self.quadratic==True:
+        #    XColumns = []
+        #    for Xi in self.X_list:
+        #        Xcol_i = self.cam.get_XCol(Xi)
+                # (Here, -9 is for quadratic, and -15 is linear)
+        #        for i in range(-9,0): Xcol_i[i] = 0  
+        #        XColumns.append(Xcol_i)
+        
+        #res = lstsq(XColumns, self.x_list, rcond=None)
+        #self.A = res[0]
+        
+        if a_order is not None:
+            # must be set BEFORE fitting, since get_XCol reads it to build
+            # the design matrix.
+            self.cam.A_order = tuple(int(v) for v in a_order)
+
         self.A, A_mask = fit_A_robust(
             self.cam, self.X_list, self.x_list,
             quadratic=self.quadratic,
@@ -122,13 +164,28 @@ class calibrate_extendedZolof(camera_extendedZolof):
         self.A_mask = A_mask  # keep for diagnostics/plotting
         self.x_inlayers = array(self.x_list)[A_mask]
         self.X_inlayers = array(self.X_list)[A_mask]
+
+        # IMPORTANT: update the camera's forward model *now*, not at the
+        # end. Steps 2 (camera-center estimate) and the variable-origin fit
+        # below both call self.cam.projection(), which uses self.cam.A
+        # internally - if we don't set it here they would use a stale A
+        # (whatever the camera object held before this calibration call).
         self.cam.A = self.A
         
         # 2) finding the best camera center -
+        #line_list = []
+        #for i in range(0, len(self.X_list)):
+        #    O, e = self.get_ray_from_x(self.x_list[i], X0=self.X_list[i])
+        #    line_list.append(line(O, e)) 
+        #self.O = get_nearest_line_crossing(line_list)
         
         from myptv.extendedZolof.calibrate_step2_improved import step2_estimate_camera_center
 
         if variable_origin and freeze_C:
+            # Do NOT re-estimate O here. With a frozen [C] in 'plane' mode
+            # the origins are offsets measured from cam.O along the stored
+            # plane axes, so moving cam.O would silently shift every
+            # frozen origin. Keep the camera's own center.
             self.O = array(self.cam.O, dtype=float)
         else:
             self.O = step2_estimate_camera_center(
@@ -142,12 +199,14 @@ class calibrate_extendedZolof(camera_extendedZolof):
         if not variable_origin:
             # 3) finding the unit vector for each X (fixed-origin model) -
             r_list = []
-            for Xi in self.X_inlayers:
+            for Xi in self.X_inlayers: #self.X_list:
                 r = (Xi - self.O)/norm(Xi - self.O)
                 r_list.append(r)
 
             # 4) finding the B coefficients -
-            xColumns = [self.cam.get_xCol(xi) for xi in self.x_inlayers]
+            n_b = n_terms_for_order(b_order)
+            xColumns = [self.cam.get_xCol(xi, n=n_b)
+                        for xi in self.x_inlayers] #self.x_list]
             res = lstsq(xColumns, r_list, rcond=None)
             self.B = res[0]
 
@@ -170,17 +229,23 @@ class calibrate_extendedZolof(camera_extendedZolof):
                     thresh_pix=thresh_pix,
                     c_order=c_order,
                     origin_model=origin_model,
-                    freeze_C=freeze_C
+                    freeze_C=freeze_C,
+                    b_order=b_order
                 )
 
             self.cam.C = self.C
             self.cam.B = self.B
             self.cam.px_center = self.px_center
             self.cam.px_scale = self.px_scale
+            # use the RESOLVED model, not the requested one: with
+            # freeze_C=True the camera's own model wins, and stamping the
+            # requested one here would leave the camera labelled
+            # inconsistently with its own [C].
             self.cam.origin_mode = resolved_origin_model
 
             if self.plane is not None:
-                # the plane passes through O0
+                # the plane passes through O0; keep cam.O consistent with
+                # it, since get_ray() builds O(x) relative to cam.O.
                 self.O = self.plane['O0']
                 self.cam.O = self.O
                 self.cam.plane_u = self.plane['u']
@@ -232,7 +297,11 @@ class calibrate_extendedZolof(camera_extendedZolof):
                           
 
         for i in range(len(X_lst)):
-            xProj = dot(self.get_XCol(X_lst[i]), self.cam.A)
+            # use the CAMERA's basis: calibrate_extendedZolof subclasses
+            # the camera but never runs its __init__, so it has no
+            # A_order of its own. The camera is the single source of
+            # truth for the polynomial layout.
+            xProj = dot(self.cam.get_XCol(X_lst[i]), self.cam.A)
             errorsSquard.append( norm(array(xProj)-array(x_lst[i]))**2 )
         
         return (sum(errorsSquard)/len(errorsSquard))**0.5
@@ -274,6 +343,8 @@ class calibrate_extendedZolof(camera_extendedZolof):
         if ax == None:
             fig, ax = plt.subplots()
         
+        #imc = array(self.x_list)
+        #z_lst = array([self.cam.projection(x) for x in self.X_list])
         try:
             imc = array(self.x_inlayers)
         except:
@@ -349,15 +420,20 @@ def fit_A_robust(cam, X_list, x_list, quadratic=False,
     Returns (A, mask) where mask is a boolean array marking which points
     were kept in the final fit.
     '''
-    # --- build the design matrix, same as the original code ---
+    # --- build the design matrix ---
     if quadratic == False:
         XColumns = [cam.get_XCol(Xi) for Xi in X_list]
     else:
+        # Zero every term of total degree > 2. The original code did this
+        # by blanking the last 9 columns, which silently assumed the
+        # 19-term layout; with per-axis orders the cubic terms are not at
+        # fixed positions any more, so select them by DEGREE instead.
+        exps = xcol3d_exponents(cam.a_order)
+        cubic_idx = [i for i, t in enumerate(exps) if sum(t) > 2]
         XColumns = []
         for Xi in X_list:
             Xcol_i = cam.get_XCol(Xi)
-            # (-9 is for quadratic, -15 is linear)
-            for i in range(-9, 0):
+            for i in cubic_idx:
                 Xcol_i[i] = 0
             XColumns.append(Xcol_i)
  
