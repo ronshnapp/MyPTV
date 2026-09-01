@@ -90,144 +90,165 @@
 \@writefile{lof}{\contentsline {subfigure}{\numberline{(b)}{\ignorespaces {}}}{13}{subfigure.8.2}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.7}How to perform calibration with several images (sometimes called multiplane calibration)}{13}{subsubsection.3.2.7}\protected@file@percent }
 \newlabel{sec:multiplane_cal}{{3.2.7}{13}{How to perform calibration with several images (sometimes called multiplane calibration)}{subsubsection.3.2.7}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Segmentation}{14}{subsection.3.3}\protected@file@percent }
-\newlabel{sec:workflow_segment}{{3.3}{14}{Segmentation}{subsection.3.3}{}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.3.1}How to segment in MyPTV}{14}{subsubsection.3.3.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.3.2}Image pre-processing}{14}{subsubsection.3.3.2}\protected@file@percent }
-\newlabel{sec:preprocessing}{{3.3.2}{14}{Image pre-processing}{subsubsection.3.3.2}{}}
+\citation{Geiger2012}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.8}Calibration from checkerboard images}{14}{subsubsection.3.2.8}\protected@file@percent }
+\newlabel{sec:checkerboard_cal}{{3.2.8}{14}{Calibration from checkerboard images}{subsubsection.3.2.8}{}}
+\@writefile{toc}{\contentsline {paragraph}{The experiment.}{14}{paragraph*.13}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{How the corners are found.}{14}{paragraph*.14}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{The orientation of the board.}{14}{paragraph*.15}\protected@file@percent }
 \@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces The \texttt  {params\_file.yml} parameters for the \textbf  {segmentation} step. All paths to files are relative to the \texttt  {workflow.py} script. }}{15}{table.caption.12}\protected@file@percent }
 \newlabel{tab:segment_params}{{4}{15}{The \texttt {params\_file.yml} parameters for the \textbf {segmentation} step. All paths to files are relative to the \texttt {workflow.py} script}{table.caption.12}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces Examples of background image, equalization map, original experimental image and the same image after background subtraction and intensity equalization.}}{16}{figure.caption.13}\protected@file@percent }
-\newlabel{fig:image_preprocessing}{{9}{16}{Examples of background image, equalization map, original experimental image and the same image after background subtraction and intensity equalization}{figure.caption.13}{}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.3.3}Two methods of segmentation}{16}{subsubsection.3.3.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.3.4}Segmentation filters}{16}{subsubsection.3.3.4}\protected@file@percent }
-\newlabel{sec:segment_filters}{{3.3.4}{16}{Segmentation filters}{subsubsection.3.3.4}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {10}{\ignorespaces An example showing that segmentation using the dilation method can be very useful when segmenting large objects as it can resolve overlap issues.}}{17}{figure.caption.14}\protected@file@percent }
-\newlabel{fig:Labeling_vs_Dilation}{{10}{17}{An example showing that segmentation using the dilation method can be very useful when segmenting large objects as it can resolve overlap issues}{figure.caption.14}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {11}{\ignorespaces The effect oft various image filters on the segmentation.}}{17}{figure.caption.15}\protected@file@percent }
-\newlabel{fig:image_filters}{{11}{17}{The effect oft various image filters on the segmentation}{figure.caption.15}{}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.3.5}Fiber segmentation}{17}{subsubsection.3.3.5}\protected@file@percent }
-\newlabel{sec:fibers_segmentation}{{3.3.5}{17}{Fiber segmentation}{subsubsection.3.3.5}{}}
+\citation{Zhang2000}
+\@writefile{toc}{\contentsline {paragraph}{Running it.}{16}{paragraph*.16}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.9}Calibration from a freely moved checkerboard}{16}{subsubsection.3.2.9}\protected@file@percent }
+\newlabel{sec:moving_board_cal}{{3.2.9}{16}{Calibration from a freely moved checkerboard}{subsubsection.3.2.9}{}}
+\@writefile{toc}{\contentsline {paragraph}{How it works.}{16}{paragraph*.18}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Which way round is the board?}{16}{paragraph*.19}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{The lab frame is a convention.}{16}{paragraph*.20}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces The \texttt  {params\_file.yml} parameters for the \texttt  {checkerboard\_calibration} step. All paths to files are relative to the \texttt  {workflow.py} script. }}{17}{table.caption.17}\protected@file@percent }
+\newlabel{tab:checkerboard_paramsfile}{{5}{17}{The \texttt {params\_file.yml} parameters for the \texttt {checkerboard\_calibration} step. All paths to files are relative to the \texttt {workflow.py} script}{table.caption.17}{}}
+\@writefile{toc}{\contentsline {paragraph}{Running it.}{18}{paragraph*.21}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{What to look at afterwards.}{18}{paragraph*.22}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Segmentation}{18}{subsection.3.3}\protected@file@percent }
+\newlabel{sec:workflow_segment}{{3.3}{18}{Segmentation}{subsection.3.3}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.3.1}How to segment in MyPTV}{18}{subsubsection.3.3.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces The \texttt  {params\_file.yml} parameters for the \texttt  {moving\_board\_calibration} step. }}{19}{table.caption.23}\protected@file@percent }
+\newlabel{tab:moving_paramsfile}{{6}{19}{The \texttt {params\_file.yml} parameters for the \texttt {moving\_board\_calibration} step}{table.caption.23}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.3.2}Image pre-processing}{20}{subsubsection.3.3.2}\protected@file@percent }
+\newlabel{sec:preprocessing}{{3.3.2}{20}{Image pre-processing}{subsubsection.3.3.2}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.3.3}Two methods of segmentation}{20}{subsubsection.3.3.3}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces Examples of background image, equalization map, original experimental image and the same image after background subtraction and intensity equalization.}}{21}{figure.caption.24}\protected@file@percent }
+\newlabel{fig:image_preprocessing}{{9}{21}{Examples of background image, equalization map, original experimental image and the same image after background subtraction and intensity equalization}{figure.caption.24}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {10}{\ignorespaces An example showing that segmentation using the dilation method can be very useful when segmenting large objects as it can resolve overlap issues.}}{21}{figure.caption.25}\protected@file@percent }
+\newlabel{fig:Labeling_vs_Dilation}{{10}{21}{An example showing that segmentation using the dilation method can be very useful when segmenting large objects as it can resolve overlap issues}{figure.caption.25}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.3.4}Segmentation filters}{21}{subsubsection.3.3.4}\protected@file@percent }
+\newlabel{sec:segment_filters}{{3.3.4}{21}{Segmentation filters}{subsubsection.3.3.4}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {11}{\ignorespaces The effect oft various image filters on the segmentation.}}{22}{figure.caption.26}\protected@file@percent }
+\newlabel{fig:image_filters}{{11}{22}{The effect oft various image filters on the segmentation}{figure.caption.26}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.3.5}Fiber segmentation}{22}{subsubsection.3.3.5}\protected@file@percent }
+\newlabel{sec:fibers_segmentation}{{3.3.5}{22}{Fiber segmentation}{subsubsection.3.3.5}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {12}{\ignorespaces (a) An example of the segmentation of fibers in image space with the PCA analysis. (b) Consecutive superimposed images of heavy fibers settling in turbulence, with $\texttt  {pca\_limit}=1.3$. As seen in the images, only fibers are segmented while particles in the background are left out. }}{22}{figure.caption.27}\protected@file@percent }
+\newlabel{fig:fibers_pca}{{12}{22}{(a) An example of the segmentation of fibers in image space with the PCA analysis. (b) Consecutive superimposed images of heavy fibers settling in turbulence, with $\texttt {pca\_limit}=1.3$. As seen in the images, only fibers are segmented while particles in the background are left out}{figure.caption.27}{}}
 \citation{Bourgoin2020}
-\@writefile{lof}{\contentsline {figure}{\numberline {12}{\ignorespaces (a) An example of the segmentation of fibers in image space with the PCA analysis. (b) Consecutive superimposed images of heavy fibers settling in turbulence, with $\texttt  {pca\_limit}=1.3$. As seen in the images, only fibers are segmented while particles in the background are left out. }}{18}{figure.caption.16}\protected@file@percent }
-\newlabel{fig:fibers_pca}{{12}{18}{(a) An example of the segmentation of fibers in image space with the PCA analysis. (b) Consecutive superimposed images of heavy fibers settling in turbulence, with $\texttt {pca\_limit}=1.3$. As seen in the images, only fibers are segmented while particles in the background are left out}{figure.caption.16}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}Matching}{18}{subsection.3.4}\protected@file@percent }
-\newlabel{sec:workflow_match}{{3.4}{18}{Matching}{subsection.3.4}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.5}Analyze disparity}{18}{subsection.3.5}\protected@file@percent }
-\newlabel{sec:workflow_analyze_disparity}{{3.5}{18}{Analyze disparity}{subsection.3.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}Matching}{23}{subsection.3.4}\protected@file@percent }
+\newlabel{sec:workflow_match}{{3.4}{23}{Matching}{subsection.3.4}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces The \texttt  {params\_file.yml} parameters for the \textbf  {matching} step. All paths to files are relative to the \texttt  {workflow.py} script.}}{23}{table.caption.28}\protected@file@percent }
+\newlabel{tab:matching}{{7}{23}{The \texttt {params\_file.yml} parameters for the \textbf {matching} step. All paths to files are relative to the \texttt {workflow.py} script}{table.caption.28}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5}Analyze disparity}{23}{subsection.3.5}\protected@file@percent }
+\newlabel{sec:workflow_analyze_disparity}{{3.5}{23}{Analyze disparity}{subsection.3.5}{}}
 \citation{Ouellette2006}
-\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces The \texttt  {params\_file.yml} parameters for the \textbf  {matching} step. All paths to files are relative to the \texttt  {workflow.py} script.}}{19}{table.caption.17}\protected@file@percent }
-\newlabel{tab:matching}{{5}{19}{The \texttt {params\_file.yml} parameters for the \textbf {matching} step. All paths to files are relative to the \texttt {workflow.py} script}{table.caption.17}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces The \texttt  {params\_file.yml} parameters for the \textbf  {analyze disparity} step. All paths to files are relative to the \texttt  {workflow.py} script.}}{19}{table.caption.18}\protected@file@percent }
-\newlabel{tab:analyze_disparity}{{6}{19}{The \texttt {params\_file.yml} parameters for the \textbf {analyze disparity} step. All paths to files are relative to the \texttt {workflow.py} script}{table.caption.18}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.6}Tracking}{19}{subsection.3.6}\protected@file@percent }
-\newlabel{sec:workflow_track}{{3.6}{19}{Tracking}{subsection.3.6}{}}
 \citation{Luthi2005}
-\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces The \texttt  {params\_file.yml} parameters for the \textbf  {tracking} step. All paths to files are relative to the \texttt  {workflow.py} script.}}{20}{table.caption.19}\protected@file@percent }
-\newlabel{tab:tracking_params}{{7}{20}{The \texttt {params\_file.yml} parameters for the \textbf {tracking} step. All paths to files are relative to the \texttt {workflow.py} script}{table.caption.19}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.7}Calibration with particles}{20}{subsection.3.7}\protected@file@percent }
-\newlabel{sec:workflow_calibration_with_particles}{{3.7}{20}{Calibration with particles}{subsection.3.7}{}}
 \citation{Xu2008}
-\@writefile{lot}{\contentsline {table}{\numberline {8}{\ignorespaces The \texttt  {params\_file.yml} parameters for the calibration with particles step.}}{21}{table.caption.20}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.8}Smoothing}{21}{subsection.3.8}\protected@file@percent }
-\newlabel{sec:workflow_smooth}{{3.8}{21}{Smoothing}{subsection.3.8}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {9}{\ignorespaces The \texttt  {params\_file.yml} parameters for the smoothing step. All paths to files are relative to the \texttt  {workflow.py} script.}}{21}{table.caption.21}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.9}Stitching}{21}{subsection.3.9}\protected@file@percent }
-\newlabel{sec:workflow_stitch}{{3.9}{21}{Stitching}{subsection.3.9}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {10}{\ignorespaces The \texttt  {params\_file.yml} parameters for the \texttt  {stitching} command. All paths to files are relative to the \texttt  {workflow.py} script.}}{21}{table.caption.22}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.10}2D tracking guide}{21}{subsection.3.10}\protected@file@percent }
-\newlabel{sec:2D_tracking}{{3.10}{21}{2D tracking guide}{subsection.3.10}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {13}{\ignorespaces An example for experimental setup for 2D tracking. Note that the camera doesn't have to be perpendicular to the particles' plane and that the particles don't have to be at $z=0$. }}{22}{figure.caption.23}\protected@file@percent }
-\newlabel{fig:2D_tracking}{{13}{22}{An example for experimental setup for 2D tracking. Note that the camera doesn't have to be perpendicular to the particles' plane and that the particles don't have to be at $z=0$}{figure.caption.23}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {11}{\ignorespaces The \texttt  {params\_file.yml} parameters for 2D tracking. All paths to files are relative to the \texttt  {workflow.py} script. }}{22}{table.caption.24}\protected@file@percent }
-\newlabel{tab:2d_tracking}{{11}{22}{The \texttt {params\_file.yml} parameters for 2D tracking. All paths to files are relative to the \texttt {workflow.py} script}{table.caption.24}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.11}Manual Matching GUI}{22}{subsection.3.11}\protected@file@percent }
-\newlabel{sec:man_match}{{3.11}{22}{Manual Matching GUI}{subsection.3.11}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {8}{\ignorespaces The \texttt  {params\_file.yml} parameters for the \textbf  {analyze disparity} step. All paths to files are relative to the \texttt  {workflow.py} script.}}{24}{table.caption.29}\protected@file@percent }
+\newlabel{tab:analyze_disparity}{{8}{24}{The \texttt {params\_file.yml} parameters for the \textbf {analyze disparity} step. All paths to files are relative to the \texttt {workflow.py} script}{table.caption.29}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.6}Tracking}{24}{subsection.3.6}\protected@file@percent }
+\newlabel{sec:workflow_track}{{3.6}{24}{Tracking}{subsection.3.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.7}Calibration with particles}{24}{subsection.3.7}\protected@file@percent }
+\newlabel{sec:workflow_calibration_with_particles}{{3.7}{24}{Calibration with particles}{subsection.3.7}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.8}Smoothing}{24}{subsection.3.8}\protected@file@percent }
+\newlabel{sec:workflow_smooth}{{3.8}{24}{Smoothing}{subsection.3.8}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.9}Stitching}{24}{subsection.3.9}\protected@file@percent }
+\newlabel{sec:workflow_stitch}{{3.9}{24}{Stitching}{subsection.3.9}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.10}2D tracking guide}{24}{subsection.3.10}\protected@file@percent }
+\newlabel{sec:2D_tracking}{{3.10}{24}{2D tracking guide}{subsection.3.10}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {9}{\ignorespaces The \texttt  {params\_file.yml} parameters for the \textbf  {tracking} step. All paths to files are relative to the \texttt  {workflow.py} script.}}{25}{table.caption.30}\protected@file@percent }
+\newlabel{tab:tracking_params}{{9}{25}{The \texttt {params\_file.yml} parameters for the \textbf {tracking} step. All paths to files are relative to the \texttt {workflow.py} script}{table.caption.30}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {10}{\ignorespaces The \texttt  {params\_file.yml} parameters for the calibration with particles step.}}{25}{table.caption.31}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {11}{\ignorespaces The \texttt  {params\_file.yml} parameters for the smoothing step. All paths to files are relative to the \texttt  {workflow.py} script.}}{26}{table.caption.32}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {12}{\ignorespaces The \texttt  {params\_file.yml} parameters for the \texttt  {stitching} command. All paths to files are relative to the \texttt  {workflow.py} script.}}{26}{table.caption.33}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.11}Manual Matching GUI}{26}{subsection.3.11}\protected@file@percent }
+\newlabel{sec:man_match}{{3.11}{26}{Manual Matching GUI}{subsection.3.11}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {13}{\ignorespaces An example for experimental setup for 2D tracking. Note that the camera doesn't have to be perpendicular to the particles' plane and that the particles don't have to be at $z=0$. }}{26}{figure.caption.34}\protected@file@percent }
+\newlabel{fig:2D_tracking}{{13}{26}{An example for experimental setup for 2D tracking. Note that the camera doesn't have to be perpendicular to the particles' plane and that the particles don't have to be at $z=0$}{figure.caption.34}{}}
 \citation{Bounoua2018}
-\@writefile{lot}{\contentsline {table}{\numberline {12}{\ignorespaces The \texttt  {params\_file.yml} parameters for the manual matching operation. All paths to files are relative to the \texttt  {workflow.py} script. }}{23}{table.caption.25}\protected@file@percent }
-\newlabel{tab:man_match}{{12}{23}{The \texttt {params\_file.yml} parameters for the manual matching operation. All paths to files are relative to the \texttt {workflow.py} script}{table.caption.25}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.12}Fiber tracking}{23}{subsection.3.12}\protected@file@percent }
-\newlabel{sec:fiber_tracking}{{3.12}{23}{Fiber tracking}{subsection.3.12}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {14}{\ignorespaces Instructions of how to use the manual matching GUI }}{24}{figure.caption.26}\protected@file@percent }
-\newlabel{fig:man_match}{{14}{24}{Instructions of how to use the manual matching GUI}{figure.caption.26}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {13}{\ignorespaces The \texttt  {params\_file.yml} parameters for 2D tracking. All paths to files are relative to the \texttt  {workflow.py} script. }}{27}{table.caption.35}\protected@file@percent }
+\newlabel{tab:2d_tracking}{{13}{27}{The \texttt {params\_file.yml} parameters for 2D tracking. All paths to files are relative to the \texttt {workflow.py} script}{table.caption.35}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {14}{\ignorespaces The \texttt  {params\_file.yml} parameters for the manual matching operation. All paths to files are relative to the \texttt  {workflow.py} script. }}{27}{table.caption.36}\protected@file@percent }
+\newlabel{tab:man_match}{{14}{27}{The \texttt {params\_file.yml} parameters for the manual matching operation. All paths to files are relative to the \texttt {workflow.py} script}{table.caption.36}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.12}Fiber tracking}{27}{subsection.3.12}\protected@file@percent }
+\newlabel{sec:fiber_tracking}{{3.12}{27}{Fiber tracking}{subsection.3.12}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {14}{\ignorespaces Instructions of how to use the manual matching GUI }}{28}{figure.caption.37}\protected@file@percent }
+\newlabel{fig:man_match}{{14}{28}{Instructions of how to use the manual matching GUI}{figure.caption.37}{}}
 \citation{Luthi2005}
 \citation{Xu2008}
-\@writefile{lof}{\contentsline {figure}{\numberline {15}{\ignorespaces Schematic description of two epipolar planes spanned by the two camera centers. Their intersection generates the symmetry axis $\textbf  {p} = [p_x, p_y, p_z]$ of the fiber in laboratory coordinates. To define a plane, two points of a fiber in image space are here defined using the centroid, $X$, and the same point shifted with the 2D orientation vector, $B$. Figure adapted from Fabian Müller's Master thesis. }}{25}{figure.caption.27}\protected@file@percent }
-\newlabel{fig:fiber_planes}{{15}{25}{Schematic description of two epipolar planes spanned by the two camera centers. Their intersection generates the symmetry axis $\textbf {p} = [p_x, p_y, p_z]$ of the fiber in laboratory coordinates. To define a plane, two points of a fiber in image space are here defined using the centroid, $X$, and the same point shifted with the 2D orientation vector, $B$. Figure adapted from Fabian Müller's Master thesis}{figure.caption.27}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {13}{\ignorespaces The \texttt  {params\_file.yml} parameters for the \texttt  {fiber\_orientations} operation. All paths to files are relative to the \texttt  {workflow.py} script. }}{25}{table.caption.28}\protected@file@percent }
-\newlabel{tab:fibers}{{13}{25}{The \texttt {params\_file.yml} parameters for the \texttt {fiber\_orientations} operation. All paths to files are relative to the \texttt {workflow.py} script}{table.caption.28}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.13}Fiber smoothing}{25}{subsection.3.13}\protected@file@percent }
-\newlabel{sec:fibers_smoothing}{{3.13}{25}{Fiber smoothing}{subsection.3.13}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.14}Fiber stitching}{25}{subsection.3.14}\protected@file@percent }
-\newlabel{sec:fibers_stitching}{{3.14}{25}{Fiber stitching}{subsection.3.14}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {15}{\ignorespaces Schematic description of two epipolar planes spanned by the two camera centers. Their intersection generates the symmetry axis $\textbf  {p} = [p_x, p_y, p_z]$ of the fiber in laboratory coordinates. To define a plane, two points of a fiber in image space are here defined using the centroid, $X$, and the same point shifted with the 2D orientation vector, $B$. Figure adapted from Fabian Müller's Master thesis. }}{29}{figure.caption.38}\protected@file@percent }
+\newlabel{fig:fiber_planes}{{15}{29}{Schematic description of two epipolar planes spanned by the two camera centers. Their intersection generates the symmetry axis $\textbf {p} = [p_x, p_y, p_z]$ of the fiber in laboratory coordinates. To define a plane, two points of a fiber in image space are here defined using the centroid, $X$, and the same point shifted with the 2D orientation vector, $B$. Figure adapted from Fabian Müller's Master thesis}{figure.caption.38}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.13}Fiber smoothing}{29}{subsection.3.13}\protected@file@percent }
+\newlabel{sec:fibers_smoothing}{{3.13}{29}{Fiber smoothing}{subsection.3.13}{}}
 \citation{Shnapp2023}
 \citation{Shnapp2023}
-\@writefile{lof}{\contentsline {figure}{\numberline {16}{\ignorespaces Trajectory segments plotted using the workflow \texttt  {plot\_trajectories} command. A 30 frames long segment is shown from a turbulent flow dataset taken from Ref.~\cite  {Shnapp2023}. }}{26}{figure.caption.29}\protected@file@percent }
-\newlabel{fig:trajectory_plot}{{16}{26}{Trajectory segments plotted using the workflow \texttt {plot\_trajectories} command. A 30 frames long segment is shown from a turbulent flow dataset taken from Ref.~\cite {Shnapp2023}}{figure.caption.29}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.15}Plotting the results}{26}{subsection.3.15}\protected@file@percent }
-\newlabel{sec:plot_trajectories}{{3.15}{26}{Plotting the results}{subsection.3.15}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {14}{\ignorespaces The \texttt  {params\_file.yml} parameters for the \texttt  {plot\_trajectories} operation. All paths to files are relative to the \texttt  {workflow.py} script. }}{26}{table.caption.30}\protected@file@percent }
-\newlabel{tab:plotting_parameter}{{14}{26}{The \texttt {params\_file.yml} parameters for the \texttt {plot\_trajectories} operation. All paths to files are relative to the \texttt {workflow.py} script}{table.caption.30}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {15}{\ignorespaces The \texttt  {params\_file.yml} parameters for the \texttt  {plot\_trajectories} operation. All paths to files are relative to the \texttt  {workflow.py} script. }}{26}{table.caption.31}\protected@file@percent }
-\newlabel{tab:animation_parameter}{{15}{26}{The \texttt {params\_file.yml} parameters for the \texttt {plot\_trajectories} operation. All paths to files are relative to the \texttt {workflow.py} script}{table.caption.31}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {4}Imaging module - \texttt  {imaging\_mod.py}}{27}{section.4}\protected@file@percent }
-\newlabel{sec:image_mod}{{4}{27}{Imaging module - \texttt {imaging\_mod.py}}{section.4}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}The \texttt  {camera} object}{27}{subsection.4.1}\protected@file@percent }
-\newlabel{sec:camera}{{4.1}{27}{The \texttt {camera} object}{subsection.4.1}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {17}{\ignorespaces The structure of a camera file. The files are simple text files where each row corresponds to a specific parameter and the values in each row are separated by a white space. }}{27}{figure.caption.32}\protected@file@percent }
-\newlabel{fig:camfiles}{{17}{27}{The structure of a camera file. The files are simple text files where each row corresponds to a specific parameter and the values in each row are separated by a white space}{figure.caption.32}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}The \texttt  {imsys} object}{27}{subsection.4.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}The \texttt  {Cal\_image\_coord} object}{27}{subsection.4.3}\protected@file@percent }
-\newlabel{sec:calpointreader}{{4.3}{27}{The \texttt {Cal\_image\_coord} object}{subsection.4.3}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {5}Camera calibration - \texttt  {calibrate\_mod.py}}{28}{section.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}The \texttt  {calibrate} object}{28}{subsection.5.1}\protected@file@percent }
-\newlabel{sec:calibrate_obj}{{5.1}{28}{The \texttt {calibrate} object}{subsection.5.1}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}The \texttt  {calibrate\_with\_particles} object}{28}{subsection.5.2}\protected@file@percent }
-\newlabel{sec:calibrate_with_particles_obj}{{5.2}{28}{The \texttt {calibrate\_with\_particles} object}{subsection.5.2}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.3}The \texttt  {gui\_final\_cal.py} file}{29}{subsection.5.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.4}The \texttt  {gui\_initial\_cal.py} file}{29}{subsection.5.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {6}Particle segmentation - \texttt  {segmentation\_mod.py}}{29}{section.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.1}The \texttt  {particle\_segmentation} object}{29}{subsection.6.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.2}The \texttt  {loop\_segmentation} object}{30}{subsection.6.2}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {18}{\ignorespaces An example of a text file holding the segmentation resuls and the description of the different columns. }}{30}{figure.caption.33}\protected@file@percent }
-\newlabel{fig:blobfile}{{18}{30}{An example of a text file holding the segmentation resuls and the description of the different columns}{figure.caption.33}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {7}Particle matching - \texttt  {particle\_matching\_mod.py}}{30}{section.7}\protected@file@percent }
-\newlabel{sec:matching}{{7}{30}{Particle matching - \texttt {particle\_matching\_mod.py}}{section.7}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {7.1}The \texttt  {matching\_with\_marching\_particles\_algorithm} object}{30}{subsection.7.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {7.2}The \texttt  {match\_blob\_files} object (Legacy)}{31}{subsection.7.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {7.3}The \texttt  {matching} object (Legacy)}{31}{subsection.7.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {7.4}The \texttt  {matching\_using\_time} object (Legacy)}{31}{subsection.7.4}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {15}{\ignorespaces The \texttt  {params\_file.yml} parameters for the \texttt  {fiber\_orientations} operation. All paths to files are relative to the \texttt  {workflow.py} script. }}{30}{table.caption.39}\protected@file@percent }
+\newlabel{tab:fibers}{{15}{30}{The \texttt {params\_file.yml} parameters for the \texttt {fiber\_orientations} operation. All paths to files are relative to the \texttt {workflow.py} script}{table.caption.39}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {16}{\ignorespaces Trajectory segments plotted using the workflow \texttt  {plot\_trajectories} command. A 30 frames long segment is shown from a turbulent flow dataset taken from Ref.~\cite  {Shnapp2023}. }}{30}{figure.caption.40}\protected@file@percent }
+\newlabel{fig:trajectory_plot}{{16}{30}{Trajectory segments plotted using the workflow \texttt {plot\_trajectories} command. A 30 frames long segment is shown from a turbulent flow dataset taken from Ref.~\cite {Shnapp2023}}{figure.caption.40}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.14}Fiber stitching}{30}{subsection.3.14}\protected@file@percent }
+\newlabel{sec:fibers_stitching}{{3.14}{30}{Fiber stitching}{subsection.3.14}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.15}Plotting the results}{30}{subsection.3.15}\protected@file@percent }
+\newlabel{sec:plot_trajectories}{{3.15}{30}{Plotting the results}{subsection.3.15}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {16}{\ignorespaces The \texttt  {params\_file.yml} parameters for the \texttt  {plot\_trajectories} operation. All paths to files are relative to the \texttt  {workflow.py} script. }}{31}{table.caption.41}\protected@file@percent }
+\newlabel{tab:plotting_parameter}{{16}{31}{The \texttt {params\_file.yml} parameters for the \texttt {plot\_trajectories} operation. All paths to files are relative to the \texttt {workflow.py} script}{table.caption.41}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {17}{\ignorespaces The \texttt  {params\_file.yml} parameters for the \texttt  {plot\_trajectories} operation. All paths to files are relative to the \texttt  {workflow.py} script. }}{31}{table.caption.42}\protected@file@percent }
+\newlabel{tab:animation_parameter}{{17}{31}{The \texttt {params\_file.yml} parameters for the \texttt {plot\_trajectories} operation. All paths to files are relative to the \texttt {workflow.py} script}{table.caption.42}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4}Imaging module - \texttt  {imaging\_mod.py}}{32}{section.4}\protected@file@percent }
+\newlabel{sec:image_mod}{{4}{32}{Imaging module - \texttt {imaging\_mod.py}}{section.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}The \texttt  {camera} object}{32}{subsection.4.1}\protected@file@percent }
+\newlabel{sec:camera}{{4.1}{32}{The \texttt {camera} object}{subsection.4.1}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {17}{\ignorespaces The structure of a camera file. The files are simple text files where each row corresponds to a specific parameter and the values in each row are separated by a white space. }}{32}{figure.caption.43}\protected@file@percent }
+\newlabel{fig:camfiles}{{17}{32}{The structure of a camera file. The files are simple text files where each row corresponds to a specific parameter and the values in each row are separated by a white space}{figure.caption.43}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}The \texttt  {imsys} object}{32}{subsection.4.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}The \texttt  {Cal\_image\_coord} object}{32}{subsection.4.3}\protected@file@percent }
+\newlabel{sec:calpointreader}{{4.3}{32}{The \texttt {Cal\_image\_coord} object}{subsection.4.3}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5}Camera calibration - \texttt  {calibrate\_mod.py}}{33}{section.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}The \texttt  {calibrate} object}{33}{subsection.5.1}\protected@file@percent }
+\newlabel{sec:calibrate_obj}{{5.1}{33}{The \texttt {calibrate} object}{subsection.5.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}The \texttt  {calibrate\_with\_particles} object}{33}{subsection.5.2}\protected@file@percent }
+\newlabel{sec:calibrate_with_particles_obj}{{5.2}{33}{The \texttt {calibrate\_with\_particles} object}{subsection.5.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.3}The \texttt  {gui\_final\_cal.py} file}{34}{subsection.5.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.4}The \texttt  {gui\_initial\_cal.py} file}{34}{subsection.5.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {6}Particle segmentation - \texttt  {segmentation\_mod.py}}{34}{section.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.1}The \texttt  {particle\_segmentation} object}{34}{subsection.6.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.2}The \texttt  {loop\_segmentation} object}{35}{subsection.6.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {18}{\ignorespaces An example of a text file holding the segmentation resuls and the description of the different columns. }}{35}{figure.caption.44}\protected@file@percent }
+\newlabel{fig:blobfile}{{18}{35}{An example of a text file holding the segmentation resuls and the description of the different columns}{figure.caption.44}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {7}Particle matching - \texttt  {particle\_matching\_mod.py}}{35}{section.7}\protected@file@percent }
+\newlabel{sec:matching}{{7}{35}{Particle matching - \texttt {particle\_matching\_mod.py}}{section.7}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.1}The \texttt  {matching\_with\_marching\_particles\_algorithm} object}{35}{subsection.7.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.2}The \texttt  {match\_blob\_files} object (Legacy)}{36}{subsection.7.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.3}The \texttt  {matching} object (Legacy)}{36}{subsection.7.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.4}The \texttt  {matching\_using\_time} object (Legacy)}{36}{subsection.7.4}\protected@file@percent }
 \citation{Ouellette2006}
 \citation{Ouellette2006}
-\@writefile{lof}{\contentsline {figure}{\numberline {19}{\ignorespaces An example of a text file holding the triangulated particles' resuls and the description of the different columns. In this example there were three cameras. The blob number columns give the index of the blobs corresponding to any particle at the this specific frame number; a value of -1 in one of the rows means that no blob was used to stereo-match the particle in this row for this particular camera. }}{32}{figure.caption.34}\protected@file@percent }
-\newlabel{fig:particlefile}{{19}{32}{An example of a text file holding the triangulated particles' resuls and the description of the different columns. In this example there were three cameras. The blob number columns give the index of the blobs corresponding to any particle at the this specific frame number; a value of -1 in one of the rows means that no blob was used to stereo-match the particle in this row for this particular camera}{figure.caption.34}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {7.5}The \texttt  {initiate\_time\_matching} object (Legacy)}{32}{subsection.7.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {8}Tracking in 3D - \texttt  {tracking\_mod.py}}{32}{section.8}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {8.1}The \texttt  {tracker\_four\_frames} object}{32}{subsection.8.1}\protected@file@percent }
-\newlabel{sec:four_frames}{{8.1}{32}{The \texttt {tracker\_four\_frames} object}{subsection.8.1}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {19}{\ignorespaces An example of a text file holding the triangulated particles' resuls and the description of the different columns. In this example there were three cameras. The blob number columns give the index of the blobs corresponding to any particle at the this specific frame number; a value of -1 in one of the rows means that no blob was used to stereo-match the particle in this row for this particular camera. }}{37}{figure.caption.45}\protected@file@percent }
+\newlabel{fig:particlefile}{{19}{37}{An example of a text file holding the triangulated particles' resuls and the description of the different columns. In this example there were three cameras. The blob number columns give the index of the blobs corresponding to any particle at the this specific frame number; a value of -1 in one of the rows means that no blob was used to stereo-match the particle in this row for this particular camera}{figure.caption.45}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.5}The \texttt  {initiate\_time\_matching} object (Legacy)}{37}{subsection.7.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {8}Tracking in 3D - \texttt  {tracking\_mod.py}}{37}{section.8}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.1}The \texttt  {tracker\_four\_frames} object}{37}{subsection.8.1}\protected@file@percent }
+\newlabel{sec:four_frames}{{8.1}{37}{The \texttt {tracker\_four\_frames} object}{subsection.8.1}{}}
 \citation{Luthi2005,Shnapp2019}
-\@writefile{lof}{\contentsline {figure}{\numberline {20}{\ignorespaces Example of a trajectory file and the column definitions. For Trajectory id being a non-negative integer, rows with the same Trajectory id correspond to the same trajectory; rows with Trajectory id being -1 are samples that could not be linked with the given tracking parameters. }}{33}{figure.caption.35}\protected@file@percent }
-\newlabel{fig:trajfile}{{20}{33}{Example of a trajectory file and the column definitions. For Trajectory id being a non-negative integer, rows with the same Trajectory id correspond to the same trajectory; rows with Trajectory id being -1 are samples that could not be linked with the given tracking parameters}{figure.caption.35}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {8.2}The \texttt  {tracker\_two\_frames} object}{33}{subsection.8.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {8.3}The \texttt  {tracker\_nearest\_neighbour} object}{33}{subsection.8.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {9}Trajectory smoothing - \texttt  {traj\_smoothing\_mod.py}}{33}{section.9}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {9.1}The \texttt  {smooth\_trajectories} object}{33}{subsection.9.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {20}{\ignorespaces Example of a trajectory file and the column definitions. For Trajectory id being a non-negative integer, rows with the same Trajectory id correspond to the same trajectory; rows with Trajectory id being -1 are samples that could not be linked with the given tracking parameters. }}{38}{figure.caption.46}\protected@file@percent }
+\newlabel{fig:trajfile}{{20}{38}{Example of a trajectory file and the column definitions. For Trajectory id being a non-negative integer, rows with the same Trajectory id correspond to the same trajectory; rows with Trajectory id being -1 are samples that could not be linked with the given tracking parameters}{figure.caption.46}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.2}The \texttt  {tracker\_two\_frames} object}{38}{subsection.8.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.3}The \texttt  {tracker\_nearest\_neighbour} object}{38}{subsection.8.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {9}Trajectory smoothing - \texttt  {traj\_smoothing\_mod.py}}{38}{section.9}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.1}The \texttt  {smooth\_trajectories} object}{38}{subsection.9.1}\protected@file@percent }
 \citation{Xu2008}
 \bibdata{bib_myPTV}
-\@writefile{lof}{\contentsline {figure}{\numberline {21}{\ignorespaces Example file holding the results of smoothed trajectories, and the description for each column. Note also the unsmoothed samples at the bottom of the file. }}{34}{figure.caption.36}\protected@file@percent }
-\newlabel{fig:smoothedfile}{{21}{34}{Example file holding the results of smoothed trajectories, and the description for each column. Note also the unsmoothed samples at the bottom of the file}{figure.caption.36}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {10}Trajectory stitching - \texttt  {traj\_stitching\_mod.py}}{34}{section.10}\protected@file@percent }
-\newlabel{sec:stitching}{{10}{34}{Trajectory stitching - \texttt {traj\_stitching\_mod.py}}{section.10}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {10.1}The \texttt  {traj\_stitching} object}{34}{subsection.10.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {21}{\ignorespaces Example file holding the results of smoothed trajectories, and the description for each column. Note also the unsmoothed samples at the bottom of the file. }}{39}{figure.caption.47}\protected@file@percent }
+\newlabel{fig:smoothedfile}{{21}{39}{Example file holding the results of smoothed trajectories, and the description for each column. Note also the unsmoothed samples at the bottom of the file}{figure.caption.47}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {10}Trajectory stitching - \texttt  {traj\_stitching\_mod.py}}{39}{section.10}\protected@file@percent }
+\newlabel{sec:stitching}{{10}{39}{Trajectory stitching - \texttt {traj\_stitching\_mod.py}}{section.10}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {10.1}The \texttt  {traj\_stitching} object}{39}{subsection.10.1}\protected@file@percent }
 \bibcite{Virant1997}{{1}{}{{}}{{}}}
 \bibcite{Maas1993}{{2}{}{{}}{{}}}
-\bibcite{Bourgoin2020}{{3}{}{{}}{{}}}
-\bibcite{Ouellette2006}{{4}{}{{}}{{}}}
-\bibcite{Luthi2005}{{5}{}{{}}{{}}}
-\bibcite{Xu2008}{{6}{}{{}}{{}}}
-\bibcite{Bounoua2018}{{7}{}{{}}{{}}}
-\bibcite{Shnapp2023}{{8}{}{{}}{{}}}
-\bibcite{Shnapp2019}{{9}{}{{}}{{}}}
+\bibcite{Geiger2012}{{3}{}{{}}{{}}}
+\bibcite{Zhang2000}{{4}{}{{}}{{}}}
+\bibcite{Bourgoin2020}{{5}{}{{}}{{}}}
+\bibcite{Ouellette2006}{{6}{}{{}}{{}}}
+\bibcite{Luthi2005}{{7}{}{{}}{{}}}
+\bibcite{Xu2008}{{8}{}{{}}{{}}}
+\bibcite{Bounoua2018}{{9}{}{{}}{{}}}
+\bibcite{Shnapp2023}{{10}{}{{}}{{}}}
+\bibcite{Shnapp2019}{{11}{}{{}}{{}}}
 \bibstyle{unsrt}
 \providecommand\NAT@force@numbers{}\NAT@force@numbers
-\gdef \@abspage@last{38}
+\gdef \@abspage@last{43}

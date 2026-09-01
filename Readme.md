@@ -19,19 +19,23 @@ MyPTV builds heavily on the well-proven mathematical framework developed in the 
 
 ## Who is MyPTV for?
 
-MyPTV is designed to be used by scientists and engineers who need to track the the three dimensional motion of objects in lab and field experiments. Applications range from fluid mechanics to biology, soft matter, or medicine.  
+MyPTV is designed to be used by scientists and engineers who need to track the the three dimensional motion of objects in lab and field experiments. Applications range from fluid mechanics to biology, soft matter, or medicine.
 
 ## What is MyPTV capable of?
 
 1) Combining images of particles from several orientations to give their 3D position
-2) Calibrating cameras based on given input imaeges
+2) Calibrating cameras based on given input images
 3) Locating and extracting the locations of particles in images
 4) Stereo-matching of numerous particles from 2D images
 5) Tracking particles in 3D 
 6) Tracking particles in 2D
 7) Smoothing particle trajectories while calculating their velocities and accelerations
 8) Re-connecting broken trajectories
-9) Measuring the orientations of anisotropic particles in 3D (new from version 7.0.0 and on)
+9) Measuring the orientations of anisotropic particles in 3D 
+10) Calibrating cameras from images of a checkerboard target, with the corners found automatically
+11) Calibrating several cameras at once from a checkerboard moved freely through the volume
+12) Generating synthetic images of particles and calibration targets
+13) Plotting and animating trajectories and related properties
 
 ## How to install?
 
