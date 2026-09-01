@@ -47,6 +47,8 @@ class workflow(object):
         
         self.allowed_actions = ['help', 'initial_calibration', 
                                 'final_calibration',
+                                'checkerboard_calibration',
+                                'moving_board_calibration',
                                 'analyze_calibration_error',
                                 'calibration_with_particles', 
                                 'matching', 'analyze_disparity',
@@ -80,6 +82,12 @@ class workflow(object):
                 
             elif action == 'final_calibration':
                 self.final_calibration()
+
+            elif action == 'checkerboard_calibration':
+                self.checkerboard_calibration()
+
+            elif action == 'moving_board_calibration':
+                self.moving_board_calibration()
                 
             elif action == 'analyze_calibration_error':
                 self.calibration_error_estimation()
@@ -398,11 +406,292 @@ class workflow(object):
             models = str(['Tsai', 'extendedZolof'])[1:-1]
             msg = 'Unknown 3D model; permisible model names are: '
             raise ValueError(msg + models)                                
+
+
+
+
+    def checkerboard_calibration(self):
+        '''
+        Locates the corners of a checkerboard target in a set of images and
+        writes them, together with their lab space coordinates, into a
+        calibration points file.
+
+        This is an alternative to picking the calibration points by hand with
+        the initial_calibration GUI and then matching them to a target file.
+        It does not replace the fitting of a camera model: the file that this
+        action writes is an ordinary MyPTV calibration points file, and the
+        model is fitted from it afterwards, with final_calibration, exactly as
+        it would be from a hand picked one. It therefore works with any of the
+        3D models.
+
+        The expected experiment is a checkerboard on a translation stage,
+        photographed by all the cameras at the same time at a number of known
+        stage positions.
+        '''
+        import os
+        from myptv.checkerboard.cal_points import checkerboard_cal_points
+
+        act = 'checkerboard_calibration'
+
+        def numbers(param, n=None):
+            '''parses a comma separated list of numbers from the params file'''
+            val = self.get_param(act, param)
+            if val is None:
+                return None
+            nums = [float(s) for s in str(val).split(',')]
+            if n is not None and len(nums) != n:
+                raise ValueError('%s -> %s should hold %d numbers, got %d'
+                                 %(act, param, n, len(nums)))
+            return nums
+
+        def optional(param, default):
+            '''fetches a parameter that need not be in the params file'''
+            try:
+                val = self.get_param(act, param)
+            except ValueError:
+                return default
+            return default if val is None else val
+
+        cam_name = self.get_param(act, 'camera_name')
+        images = self.get_param(act, 'images')
+
+        board_size = [int(s) for s in numbers('board_size', n=2)]
+        square_size = numbers('square_size')
+        square_size = square_size[0] if len(square_size) == 1 else square_size
+
+        origin = numbers('board_origin', n=3)
+        i_axis = numbers('board_i_axis', n=3)
+        j_axis = numbers('board_j_axis', n=3)
+
+        translations = numbers('translations')
+
+        origin_hint = numbers('origin_hint')
+        iaxis_hint = numbers('iaxis_hint')
+
+        sigma = float(optional('sigma', 2.0))
+        min_distance = int(optional('min_distance', 10))
+        min_score = float(optional('min_score', 0.7))
+        plot_result = optional('plot_result', True)
+
+        save_name = optional('save_name', cam_name + '_cal_points')
+
+        # the calibration folder, following the same convention as the other
+        # calibration actions
+        cal_folder = '.'
+        for fname in os.listdir('.'):
+            if fname in ['calibration', 'Calibration', 'cal', 'Cal']:
+                if os.path.isdir(os.path.join('.', fname)):
+                    cal_folder = os.path.join('.', fname)
+                    break
+
+        if not os.path.isabs(save_name) and os.path.dirname(save_name) == '':
+            save_name = os.path.join(cal_folder, save_name)
+
+        print('\nlooking for the checkerboard in the images of %s\n'%cam_name)
+
+        ch = checkerboard_cal_points(images,
+                                     board_size=board_size,
+                                     square_size=square_size,
+                                     origin=origin,
+                                     i_axis=i_axis,
+                                     j_axis=j_axis,
+                                     translations=translations,
+                                     origin_hint=origin_hint,
+                                     iaxis_hint=iaxis_hint,
+                                     sigma=sigma,
+                                     min_distance=min_distance,
+                                     min_score=min_score)
+
+        ch.process()
+        ch.save(save_name)
+
+        print('\nThe calibration points are ready. Fit the camera model to '
+              'them with the initial_calibration and final_calibration '
+              'actions, as for hand picked points.')
+
+        if plot_result:
+            from matplotlib.pyplot import show
+            print('\nCheck in the figure that the circled corner is the one '
+                  'you meant to be the origin of the board, and that it is '
+                  'the same physical corner in every camera.')
+            for e, res in enumerate(ch.results):
+                if res['ok']:
+                    ch.plot_detection(e)
+                    break
+            show()                                
             
     
     
     
     
+    def moving_board_calibration(self):
+        '''
+        Calibrates several cameras from images of a checkerboard that was
+        moved and turned about freely, so that where it was is not known and
+        has to be recovered from the images together with the cameras.
+
+        This is the counterpart of checkerboard_calibration, which needs the
+        board on a translation stage so that its position is read off the
+        stage. Use this one when the board was simply held in the volume and
+        turned about, which requires that the cameras were triggered
+        together, so that a given frame shows one pose of the board seen from
+        several directions.
+
+        It writes a calibration points file per camera, and, for the Tsai
+        model, a camera file as well, since the recovered parameters are a
+        good starting point and there is then no need for the initial
+        calibration GUI at all: go straight to final_calibration. For the
+        extendedZolof model there is no equivalent starting guess to recover
+        from the board poses, so an empty camera file is written instead
+        (as the initial_calibration GUI would produce), ready to be fitted
+        with final_calibration or calibration_with_particles.
+
+        Note that the lab frame this produces is anchored on one camera,
+        because nothing in the images says where the origin of the lab frame
+        is. Distances and shapes are right; the origin and the directions of
+        the axes are a convention. If the coordinates have to line up with
+        the apparatus, relate the frame to it afterwards.
+        '''
+        import os
+        from myptv.checkerboard.moving_board import moving_board_calibration \
+            as mbc
+
+        act = 'moving_board_calibration'
+
+        def numbers(param, n=None):
+            '''parses a comma separated list of numbers from the params file'''
+            val = self.get_param(act, param)
+            if val is None:
+                return None
+            nums = [float(s) for s in str(val).split(',')]
+            if n is not None and len(nums) != n:
+                raise ValueError('%s -> %s should hold %d numbers, got %d'
+                                 %(act, param, n, len(nums)))
+            return nums
+
+        def optional(param, default):
+            '''fetches a parameter that need not be in the params file'''
+            try:
+                val = self.get_param(act, param)
+            except ValueError:
+                return default
+            return default if val is None else val
+
+        cam_names = [s.strip() for s in
+                     str(self.get_param(act, 'camera_names')).split(',')]
+        pattern = str(self.get_param(act, 'images'))
+
+        board_size = [int(s) for s in numbers('board_size', n=2)]
+        square_size = numbers('square_size')[0]
+
+        model_name = str(optional('3D_model', 'Tsai'))
+        every = int(optional('every_nth_frame', 1))
+        max_frames = int(optional('max_frames', 60))
+        n_dist = int(optional('n_distortion', 2))
+        sigma = float(optional('sigma', 2.0))
+        min_distance = int(optional('min_distance', 10))
+        min_score = float(optional('min_score', 0.75))
+        max_iter = int(optional('max_iterations', 2000))
+        reference = optional('reference_camera', cam_names[0])
+        save_folder = str(optional('save_folder', None) or '.')
+
+        res = optional('resolution', None)
+        if res is not None:
+            res = [int(float(s)) for s in str(res).split(',')]
+
+        # the images of each camera, from a pattern in which {camera} stands
+        # for the camera's name
+        from glob import glob
+        images = {}
+        for c in cam_names:
+            pat = pattern.replace('{camera}', c)
+            fl = sorted(glob(pat))
+            if len(fl) == 0:
+                raise ValueError('the pattern "%s" matched no files'%pat)
+            images[c] = fl[::every]
+
+        print('\nrecovering %d cameras and the pose of the board in each '
+              'frame\n'%len(cam_names))
+
+        cal = mbc(images, board_size, square_size, sigma=sigma,
+                  min_distance=min_distance, min_score=min_score,
+                  n_dist=n_dist, reference_camera=reference,
+                  max_frames=max_frames)
+
+        cal.detect()
+        cal.solve(max_nfev=max_iter)
+        cal.report()
+
+        if not os.path.isdir(save_folder):
+            os.makedirs(save_folder)
+
+        print('\nwriting the calibration points')
+        cal.save_cal_points(save_folder)
+
+        if model_name == 'Tsai':
+            if res is None:
+                raise ValueError(
+                    'the resolution is needed to write Tsai camera files, '
+                    'since that model holds the principal point as an offset '
+                    'from the centre of the image. Add "resolution" to the '
+                    '%s parameters, or set 3D_model to extendedZolof.'%act)
+
+            from myptv.TsaiModel.camera import camera_Tsai
+            from myptv.TsaiModel.calibrate import calibrate_Tsai
+            from myptv.utils import Cal_image_coord
+            from numpy import zeros
+
+            print('\nfitting the Tsai model to them')
+            for c in cam_names:
+                p = cal.camera_parameters()[c]
+                cam = camera_Tsai(c)
+                cam.resolution = (res[0], res[1])
+                cam.O = p['O']
+                cam.theta = p['theta']
+                cam.f = p['f']
+                cam.xh = p['principal_point'][0] - res[0]/2.0
+                cam.yh = p['principal_point'][1] - res[1]/2.0
+                cam.E = zeros((3, 5))
+                cam.calc_R()
+
+                cic = Cal_image_coord(os.path.join(save_folder,
+                                                   c + '_cal_points'))
+                cl = calibrate_Tsai(cam, cic.lab_coords, cic.image_coords)
+                e0 = cl.mean_squared_err()
+                cl.searchCalibration(maxiter=3000, fix_f=False)
+                cl.fineCalibration(maxiter=2000)
+                e1 = cl.mean_squared_err()
+                cam.save('.')
+                print('   %s: %.3f -> %.3f px, saved as ./%s'
+                      %(c, e0, e1, c))
+
+            print('\nThe camera files are written, so the initial '
+                  'calibration GUI is not needed. Check the result with '
+                  'analyze_calibration_error, and refine further with '
+                  'final_calibration if you wish.')
+
+        elif model_name == 'extendedZolof':
+            from myptv.extendedZolof.camera import camera_extendedZolof
+
+            print('\nwriting empty extendedZolof camera files')
+            for c in cam_names:
+                cam = camera_extendedZolof(c)
+                cam.save('.')
+                print('   %s: empty camera file saved as ./%s'%(c, c))
+
+            print('\nThe camera files are written as empty placeholders, '
+                  'since the extendedZolof model is not fitted directly '
+                  'from the recovered board poses. Fit them with the '
+                  'final_calibration action (or calibration_with_particles).')
+
+        else:
+            print('\nThe calibration points are ready. Fit the model to them '
+                  'with the final_calibration action.')
+
+
+
+
+
     def calibration_error_estimation(self):
         '''
         Performs stereo matching of the calibration points and compares

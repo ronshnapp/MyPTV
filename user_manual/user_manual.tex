@@ -66,7 +66,7 @@
 
 \begin{minipage}{14cm}
 	{\small \sffamily
-	Version: 1.3.14 \\
+	Version: 1.3.15 \\
 	Last updated: \today \\
 	Github repository: \url{https://github.com/ronshnapp/MyPTV} \\
 	Get help \& interact with our community: \url{https://github.com/ronshnapp/MyPTV/discussions}\\
@@ -857,6 +857,161 @@ However, in some PTV systems another solution is taken such that the calibration
 		
 		\texttt{save\_name} & if \texttt{None} the results will not be saved in a file; if \texttt{path/to/file} will save the results in the given file name \\
 		
+		\hline
+	\end{tabular}
+\end{table}
+
+
+
+
+\subsubsection{Calibration from checkerboard images}\label{sec:checkerboard_cal}
+
+The calibration described so far obtains its calibration points by hand: the user clicks a number of points of the target in the initial calibration GUI, and the remaining points are then matched to the \texttt{target\_file} automatically. This subsection describes an alternative way of obtaining the same calibration points, from images of a checkerboard target, in which the points are found without any clicking.
+
+It is worth being clear about what this replaces. The checkerboard procedure produces an ordinary calibration points file, of exactly the form described in Sec.~\ref{sec:target_file}, holding the pixel coordinates of each point and its lab coordinates. It does not replace the fitting of a 3D model, and it makes no assumption about which model is used: once the file exists, the model is fitted from it with the \texttt{final\_calibration} action, exactly as it would be from a hand picked file, and equally well with the Tsai model or with the extended Zolof model. The checkerboard procedure therefore replaces the point picking, and nothing else.
+
+\paragraph{The experiment.} The procedure expects the arrangement that is usual in 3D-PTV. A checkerboard is mounted on a translation stage inside the measurement volume, oriented so that its two sides lie along known directions of the lab frame. It is then photographed by all the cameras simultaneously at a number of known positions of the stage, so that its corners between them span the depth of the volume. This is the same multiplane idea as in Sec.~\ref{sec:multiplane_cal}, and it has two useful consequences: because the cameras record the board at the same instant they share one lab frame by construction, and because the stage positions are known the depth coordinate of every corner is known to the accuracy of the stage, rather than having to be fitted.
+
+The board is described to the program by the number of its \textbf{internal} corners, by the physical spacing of those corners, and by its pose. Only the internal corners are used, since a corner on the outer boundary of the pattern is not surrounded by the board on all sides and cannot be located reliably; a board of $10 \times 7$ squares therefore has $9 \times 6$ internal corners, and \texttt{board\_size} would be \texttt{9, 6}.
+
+\paragraph{How the corners are found.} An internal corner of a checkerboard is a saddle point of the image intensity, and candidates are found as the maxima of $-\det(\mathsf{H})$, where $\mathsf{H}$ is the Hessian of the smoothed image. Each candidate is then refined to sub-pixel accuracy using the fact that at any pixel $p$ lying on one of the two edges through the corner $c$, the intensity gradient is perpendicular to $p - c$; minimizing the squared residuals of $g(p)\cdot(p-c) = 0$ over a window around the corner gives a small linear system for $c$. The two edge directions of each corner are recovered from a histogram of the gradient orientations around it, and are used both to reject candidates whose surroundings do not look like a checkerboard and, afterwards, as the local lattice directions.
+
+The refined corners are then assembled into an ordered grid by growing it outwards from a seed corner, in the spirit of Ref.~\cite{Geiger2012}: at each step the image position of a lattice site next to an already filled one is predicted from its filled neighbours, and the nearest unused corner is assigned to it if it falls close enough to the prediction. Growing the grid locally, rather than fitting a global model to it, means that the procedure follows perspective and lens distortion without having to know anything about either, and that it stops of its own accord at the edge of the board. Tested on synthetic images, the corners are recovered to within about a twentieth of a pixel of where the camera model projects them.
+
+\paragraph{The orientation of the board.} One point deserves attention, because getting it wrong produces a calibration that is badly wrong without any obvious symptom. The grid that comes out of the growth is indexed arbitrarily: which corner ended up being called $(0,0)$, and which side of the board was called the first axis, depend on where the growth happened to start. A grid can therefore be laid over the physical board in eight different ways. If two cameras resolve this differently, they assign different lab coordinates to the same physical corner, and the calibration silently fails.
+
+The ambiguity is resolved by the \texttt{origin\_hint} parameter, which is the approximate pixel position, in that camera, of the corner that the user has chosen to be the origin of the board. It need only be accurate to within a fraction of the corner spacing. For a board whose two sides have different numbers of corners this fixes the orientation completely; for a square board a second hint, \texttt{iaxis\_hint}, pointing along the first axis, is also needed. \textbf{The same physical corner must be hinted at in every camera.} It is worth looking at the figure that the action plots, in which the chosen origin is circled and the two axes labelled, once per camera, before going on to fit the models.
+
+\paragraph{Running it.} With the parameters of Tab.~\ref{tab:checkerboard_paramsfile} set, the points are found with
+
+\begin{verbatim}
+    python workflow.py params_file.yml checkerboard_calibration
+\end{verbatim}
+
+once per camera, after which the models are fitted with \texttt{initial\_calibration} and \texttt{final\_calibration} as usual. A set of synthetic checkerboard images can be generated from existing camera files with the script \texttt{synthetic\_data\_generation/checkerboard/checkerboard\_image\_generation.py}, which is a convenient way of becoming familiar with the parameters before relying on them.
+
+\begin{table}
+	\centering
+	\caption{The \texttt{params\_file.yml} parameters for the \texttt{checkerboard\_calibration} step. All paths to files are relative to the \texttt{workflow.py} script. \label{tab:checkerboard_paramsfile}}
+	\begin{tabular}{l m{10cm}}
+		\hline
+		Parameter & Description\\[.2cm]
+		\hline
+
+		\texttt{camera\_name} & The name of the camera whose images are being processed; for example \texttt{cam1}. \\[.2cm]
+
+		\texttt{images} & The images of the board for this camera, either as a list or as a pattern such as \texttt{./Calibration/cam1\_board\_*.tif}. A pattern is expanded in sorted order, so it is worth numbering the files with a fixed number of digits. \\[.2cm]
+
+		\texttt{board\_size} & The number of \textbf{internal} corners along the two sides of the board; for example \texttt{9, 6} for a board of $10 \times 7$ squares. \\[.2cm]
+
+		\texttt{square\_size} & The physical spacing of the corners, in the length units used for the lab coordinates. Two values may be given if the spacing differs along the two sides. \\[.2cm]
+
+		\texttt{board\_origin} & The lab coordinates of the corner $(0,0)$ of the board, for the board at zero translation; for example \texttt{7.0, 17.5, 0.0}. \\[.2cm]
+
+		\texttt{board\_i\_axis} & The lab space direction of the first side of the board; for example \texttt{1, 0, 0}. \\[.2cm]
+
+		\texttt{board\_j\_axis} & The lab space direction of the second side of the board; for example \texttt{0, 1, 0}. \\[.2cm]
+
+		\texttt{translations} & One value per image, giving the position of the translation stage when that image was taken, measured along the normal of the board; for example \texttt{-8.0, -4.0, 0.0, 4.0, 8.0}. \\[.2cm]
+
+		\texttt{origin\_hint} & The approximate pixel position, in this camera, of the corner chosen as the origin of the board; for example \texttt{339, 703}. This must be the same physical corner in every camera. \\[.2cm]
+
+		\texttt{iaxis\_hint} & The approximate pixel position of a corner along the first axis of the board. Needed only when the board is square, where the origin alone leaves two possibilities; \texttt{None} otherwise. \\[.2cm]
+
+		\texttt{sigma} & The smoothing scale of the corner detector, in pixels. It should be of the order of the blur of the edges of the board; 2.0 is a reasonable starting value. \\[.2cm]
+
+		\texttt{min\_distance} & The minimum separation of two corners, in pixels. It must be smaller than the spacing of the corners in the image, and also sets the size of the windows in which the corners are refined. \\[.2cm]
+
+		\texttt{min\_score} & Candidates whose surroundings match an ideal checkerboard corner less well than this are discarded. The default of 0.7 separates true internal corners, which score above about 0.85, from the spurious candidates found on the outer boundary of the pattern, which stay below about 0.55. \\[.2cm]
+
+		\texttt{plot\_result} & If \texttt{True}, plots the corners found in the first image with the chosen origin circled, which is the check that the orientation of the board came out as intended. \\[.2cm]
+
+		\texttt{save\_name} & The name of the calibration points file to write. If it has no directory part it is written into the calibration folder. \\[.2cm]
+
+		\hline
+	\end{tabular}
+\end{table}
+
+
+
+
+\subsubsection{Calibration from a freely moved checkerboard}\label{sec:moving_board_cal}
+
+The procedure of Sec.~\ref{sec:checkerboard_cal} needs the board on a translation stage, so that its position is read off the stage and the lab coordinates of every corner are known before any image is looked at. This subsection describes the other common way of using a checkerboard: the board is simply held in the measurement volume and turned about between exposures. Nothing is then known about where it was, and its pose in each frame has to be recovered from the images, together with the cameras themselves.
+
+What the procedure needs in exchange is two things. The cameras must be \textbf{triggered together}, so that a given frame shows one pose of the board seen from several directions at once; this is what ties the cameras into a single lab frame. And the board must genuinely be \textbf{turned about} between exposures, not merely slid around, because the internal parameters of each camera are recovered from the way the perspective changes with orientation, and images differing only by a translation carry the same information over and over.
+
+\paragraph{How it works.} The corners are found and ordered exactly as before (Sec.~\ref{sec:checkerboard_cal}). Then, for each camera separately, the homography of the board plane onto the image is fitted for every frame, and the internal parameters follow from the orthonormality constraints that Zhang~\cite{Zhang2000} derived; with the internal parameters known, each homography gives the pose of the board relative to that camera. Those per camera answers are noisy, however, and they are not consistent with one another, since each camera reconstructs the board on its own. The last step therefore adjusts everything together, minimizing the distance in pixels between the corners found and the corners the model predicts, over
+
+\begin{itemize}
+	\item the position, orientation and internal parameters of each camera, and
+	\item the pose of the board at each frame.
+\end{itemize}
+
+The essential point is that the board pose at a given frame is \emph{one} set of six numbers, shared by every camera that saw it. A corner is then no longer reconstructed separately by each camera but triangulated by all of them at once, and cameras placed well apart determine its depth far better than any one of them could alone.
+
+\paragraph{Which way round is the board?} The lattice that comes out of the corner ordering is indexed arbitrarily, and unlike the stage case there is no fixed pixel position to hint at, because the board moves. The ambiguity is resolved from the geometry instead. The shape of the board rules out interchanging its two sides unless it is square. Of the four remaining relabellings, two describe the board seen from behind, and they are recognised because the pose that comes out of them has the board's face turned away from the camera. The last two differ by a half turn about the board normal, and they are separated by requiring the transformation between any two cameras to come out the same at every frame, which it must, since the cameras do not move. That requirement is also a strong check on everything upstream of it, and the action reports how many frames agree.
+
+\paragraph{The lab frame is a convention.} This deserves emphasis, because it is easy to mistake for a fault. There is nothing in a set of images of a board being waved about that says where the origin of the lab frame lies or which way its axes point. The \emph{scale} is fixed, by the physical size of the squares, so distances, angles and shapes all come out right. The frame itself does not: the procedure simply declares one camera to be the origin. A user who measures an absolute coordinate against a ruler and finds it a few millimetres out has not found an error; the frame is elsewhere. If the coordinates must line up with something physical, a tank wall or a traverse, then either relate the recovered frame to the apparatus afterwards using a few measured points, or place the board deliberately for one exposure and adopt that as the reference.
+
+\paragraph{Running it.} With the parameters of Tab.~\ref{tab:moving_paramsfile} set,
+
+\begin{verbatim}
+    python workflow.py params_file.yml moving_board_calibration
+\end{verbatim}
+
+processes all the cameras at once, unlike the other calibration actions, since they have to be solved together. It writes a calibration points file per camera and, when the Tsai model is asked for, a camera file as well: the parameters that come out of the adjustment are already a good fit, so the initial calibration GUI of Sec.~\ref{sec:init_calibration} is not needed at all. Check the result with \texttt{analyze\_calibration\_error}, and refine further with \texttt{final\_calibration} if wished.
+
+A worked example is provided, of fourteen frames from four cameras of a real board being turned about, in \texttt{example/checkerboard\_moving\_example}. Its \texttt{README} lists the numbers it should reproduce, including the two that are independent of the choice of lab frame: the two pairs of cameras come out 246.1 mm and 245.1 mm apart, recovered independently of each other, and triangulating the corners back through \texttt{img\_system} returns the spacing of the board as 14.97 mm against its true 15 mm. Synthetic images for either procedure can also be generated from existing camera files with \texttt{synthetic\_data\_generation/checkerboard/checkerboard\_image\_generation.py}, choosing between them with its \texttt{mode} setting.
+
+\paragraph{What to look at afterwards.} The action prints several things worth reading rather than skipping.
+
+\begin{itemize}
+	\item The \emph{reprojection error}. It should approach the per view homography residual, which is also printed and which is the error of the corners themselves plus whatever lens distortion the model cannot absorb. On a real four camera set of an $8 \times 11$ target these were 0.14 px and 0.137 px respectively.
+
+	\item The \emph{worst views}. One view far worse than the others almost always means its corners were labelled the wrong way round. Drop that frame and solve again.
+
+	\item The \emph{distances between the cameras}. No choice of lab frame can change these, so they are a fair check. If two cameras are on a common mount whose separation is known, comparing it with the recovered value is a genuinely independent test. On the set mentioned above, two pairs of cameras came out 245.4 mm and 244.8 mm apart, recovered independently of each other.
+
+	\item The \emph{region the calibration points fill}. Outside it the calibration is extrapolation, and it should be checked against the intended measurement volume.
+\end{itemize}
+
+A further check, once the camera files are written, is to triangulate the calibration points back with \texttt{img\_system} and see whether the spacing of the board comes out at its physical value. This does not test the scale, which was set by declaring the square size, but it does test everything downstream of the adjustment. On the set above it returned $15.0009 \pm 0.0247$ mm for a 15 mm board.
+
+\begin{table}
+	\centering
+	\caption{The \texttt{params\_file.yml} parameters for the \texttt{moving\_board\_calibration} step. \label{tab:moving_paramsfile}}
+	\begin{tabular}{l m{10cm}}
+		\hline
+		Parameter & Description\\[.2cm]
+		\hline
+
+		\texttt{camera\_names} & All the cameras, which are calibrated together; for example \texttt{cam1, cam2, cam3, cam4}. At least two are needed, since a single camera cannot fix a lab frame. \\[.2cm]
+
+		\texttt{images} & Where the images are, with \texttt{\{camera\}} standing for the camera's name; for example \texttt{./Calibration/\{camera\}/*.tif}. The frames of different cameras are matched by their position in the sorted list, so each camera must have the same number of images, in the same order, and the exposures must correspond. \\[.2cm]
+
+		\texttt{resolution} & Camera resolution, needed only for the Tsai model, which holds the principal point as an offset from the centre of the image. \\[.2cm]
+
+		\texttt{3D\_model} & \texttt{Tsai}, in which case camera files are written as well as calibration points, or \texttt{extendedZolof}, in which case only the points are written and the model is fitted from them with \texttt{final\_calibration}. \\[.2cm]
+
+		\texttt{board\_size} & The number of \textbf{internal} corners along the two sides of the board; \texttt{8, 11} for a board of $9 \times 12$ squares. \\[.2cm]
+
+		\texttt{square\_size} & The physical spacing of the corners. This is what fixes the scale of the whole result, so it should be right. \\[.2cm]
+
+		\texttt{every\_nth\_frame} & Use only every $n$th image. A long sequence of a board being waved about contains far more views than a calibration needs, and detection is the slowest part. \\[.2cm]
+
+		\texttt{max\_frames} & How many frames to use in the adjustment, taken well spread through those that were usable. Ten to thirty views of the board in different orientations is ample; more only costs time. \\[.2cm]
+
+		\texttt{reference\_camera} & The camera whose position and orientation define the lab frame, and which is therefore held fixed. \\[.2cm]
+
+		\texttt{n\_distortion} & How many distortion coefficients to fit: 0, 2 (two radial terms) or 4 (two radial and two tangential). \\[.2cm]
+
+		\texttt{sigma}, \texttt{min\_distance}, \texttt{min\_score} & The corner detector, as in Tab.~\ref{tab:checkerboard_paramsfile}. \\[.2cm]
+
+		\texttt{max\_iterations} & The limit on iterations of the adjustment. \\[.2cm]
+
+		\texttt{save\_folder} & Where to write the calibration points files. \\[.2cm]
+
 		\hline
 	\end{tabular}
 \end{table}

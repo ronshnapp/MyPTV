@@ -1,4 +1,4 @@
-\begin{thebibliography}{1}
+\begin{thebibliography}{10}
 
 \bibitem{Virant1997}
 M.~Virant and T.~Dracos.
@@ -10,6 +10,18 @@ H.~G. Maas, D.~Gruen, and D.~Papantoniou.
 \newblock Particle tracking velocimetry in three-dimensional flows {Part I:
   Photogrammetric} determination of particle coordinates.
 \newblock {\em Experiments in Fluid}, 15:133--146, 1993.
+
+\bibitem{Geiger2012}
+Andreas Geiger, Frank Moosmann, {\"O}mer Car, and Bernhard Schuster.
+\newblock Automatic camera and range sensor calibration using a single shot.
+\newblock In {\em 2012 IEEE International Conference on Robotics and
+  Automation}, pages 3936--3943. IEEE, 2012.
+
+\bibitem{Zhang2000}
+Zhengyou Zhang.
+\newblock A flexible new technique for camera calibration.
+\newblock {\em IEEE Transactions on Pattern Analysis and Machine Intelligence},
+  22(11):1330--1334, 2000.
 
 \bibitem{Bourgoin2020}
 M.~Bourgoin and S.~G. Huisman.

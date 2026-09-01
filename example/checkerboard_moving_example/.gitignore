@@ -1,0 +1,7 @@
+# what running the example produces, anchored to this folder so that the
+# images/ folders of the same names are not caught as well
+/Calibration/
+/cam1
+/cam2
+/cam3
+/cam4

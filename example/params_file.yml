@@ -5,6 +5,41 @@
     calibration_image: ./Calibration/cal1.tif
     target_file: ./Calibration/target_file
 
+- checkerboard_calibration:
+    camera_name: cam1
+    images: ./Calibration/cam1_board_*.tif
+    board_size: 9, 6
+    square_size: 7.0
+    board_origin: 7.0, 17.5, 0.0
+    board_i_axis: 1, 0, 0
+    board_j_axis: 0, 1, 0
+    translations: -8.0, -4.0, 0.0, 4.0, 8.0
+    origin_hint: 339, 703
+    iaxis_hint: None
+    sigma: 2.0
+    min_distance: 12
+    min_score: 0.7
+    plot_result: True
+    save_name: cam1_cal_points
+
+# See a worked example, in ./checkerboard_moving_example; 
+- moving_board_calibration:
+    camera_names: cam1, cam2, cam3, cam4
+    images: ./Calibration/{camera}/*.tif
+    resolution: 3600, 2176
+    3D_model: Tsai  # Tsai or extendedZolof
+    board_size: 8, 11
+    square_size: 15.0
+    every_nth_frame: 1
+    max_frames: 40
+    reference_camera: cam1
+    n_distortion: 4
+    sigma: 2.5
+    min_distance: 20
+    min_score: 0.75
+    max_iterations: 1500
+    save_folder: ./Calibration
+
 - analyze_calibration_error:
     camera_names: cam1, cam2, cam3
     plot_histogram: True
