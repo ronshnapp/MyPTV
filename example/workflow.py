@@ -2019,13 +2019,19 @@ class workflow(object):
         Generates a synchronized multi-camera MP4 video (and GIF preview)
         following a particle or fiber trajectory using old or smart bounding box.
         '''
-        from myptv.makePlots.plot_trajectory_video import render_trajectory_video_from_params
-        
         p = self.get_action_params('trajectory_video')
         if not p:
             p = self.get_action_params('make_trajectory_video')
-            
-        render_trajectory_video_from_params(self.param_file_path, **p)
+        
+        print(p)
+        
+        #from myptv.makePlots.plot_trajectory_video import render_trajectory_video_from_params
+        #render_trajectory_video_from_params(self.param_file_path, **p)
+        
+        from myptv.makePlots.plot_trajectory_video import trajectory_video
+        tv = trajectory_video(**p)
+        tv.render()
+        
         print('\nTrajectory video rendering completed.')
         
         

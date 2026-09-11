@@ -190,6 +190,23 @@
     azimoth: 70
     rotation_rate: 0.2
     
+- trajectory_video:
+    trajectory_file: trajectories
+    camera_names: [cam1, cam2, cam3]
+    images_folder: ./
+    image_ext: 'tif'
+    blob_files: [blobs_cam1, blobs_cam2, blobs_cam3]
+    orientation_file: None
+    shape: 'particles'
+    traj_id: 5
+    out_mp4: traj5_anim.mp4
+    save_mp4: True
+    out_gif: traj5_anim.gif
+    save_gif: True
+    fps: 3
+    fps_gif: 3
+    pad: 60
+    
 - plot_unmatched_blobs:
     blob_files: blobs_cam1, blobs_cam2, blobs_cam3  
     particle_file: particles
