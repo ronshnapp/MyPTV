@@ -219,7 +219,7 @@ class trajectory_video(object):
         cam_files = {}
         cam_dirs = {}
         for i in range(self.num_cams):
-            candidate_names = ['Cam%d'%(i+1), 'cam%d'%(i+1), 'Camera_%d'%(i+1), 'camera_%d'%(i+1)]
+            candidate_names = ['Cam%d'%(i+1), 'cam%d'%(i+1), 'Camera_%d'%(i+1), 'camera_%d'%(i+1), 'Images_cam%d'%(i+1)]
             found_dir = None
             for cname in candidate_names:
                 p = os.path.join(base_folder, cname)
@@ -231,7 +231,8 @@ class trajectory_video(object):
                 if self.num_cams == 1:
                     found_dir = base_folder
                 else:
-                    raise FileNotFoundError('Could not find folder for Camera %d in %s' % (i+1, base_folder))
+                    raise FileNotFoundError(f'Could not find folder for Camera {i+1} in {base_folder}. '
+                                            f'Searching for folder names {candidate_names}')
 
             cam_dirs[i] = found_dir
             flist = sorted([
@@ -367,6 +368,9 @@ class trajectory_video(object):
         Renders the video frames and saves MP4 and GIF preview.
         '''
         import numpy as np
+        
+        if matplotlib.rcParams['text.usetex']:
+            matplotlib.rcParams['text.usetex'] = False
         
         # Determine frame indices
         if isinstance(self.traj_data, np.ndarray):
