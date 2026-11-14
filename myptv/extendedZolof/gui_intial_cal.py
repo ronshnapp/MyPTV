@@ -4,17 +4,19 @@ Created on April 23, 2022
 
 @author: Ron
 
-A gui for the initial calibration of a Tsai-model camera. 
+A gui for the initial calibration of an extended Zolof model camera. 
 """
 
 from myptv.extendedZolof.camera import camera_extendedZolof
 from myptv.extendedZolof.calibrate import calibrate_extendedZolof
 from myptv.segmentation_mod import particle_segmentation
 from myptv.utils import match_calibration_blobs_and_points
+from myptv.cal_point_matching_mod import grow_calibration_matches
+from myptv.cal_point_matching_mod import load_blobs_xy
 
 from PIL import Image, ImageTk
 from tkinter import Label, Canvas, LabelFrame, Entry, Tk, Scrollbar, Button
-from numpy import array, amax
+from numpy import array, amax, loadtxt
 import os
 
 
@@ -74,7 +76,7 @@ class initial_cal_gui(object):
         
         # set the window
         self.root = Tk()
-        self.root.geometry('1100x730+320+70')
+        self.root.geometry('1100x800+320+40')
         self.root.title('MyPTV: Initial Calibration GUI - Extended Zolof camera')
         #self.root.configure(background='#709eba')
 
@@ -326,7 +328,8 @@ class initial_cal_gui(object):
         button_frame.grid(row=0, column=0, columnspan=2, sticky='nwe', padx=2, 
                           pady=8)
         
-        msg = 'Marking 10 points\nis usually needed for\ninitial calibration!'
+        msg = ('Mark 3 neighbouring dots +\n1 dot on each other level,'
+               '\nthen click "Grow matching".')
         self.message = Label(button_frame, text=msg, padx=2, pady=4,anchor="e",
                              justify='left',font=("Arial", 10))
         self.message.grid(row=0, column=0, padx=2, pady=2, sticky='ew')
@@ -406,26 +409,38 @@ class initial_cal_gui(object):
         # sortgrid
         
         init_cal_frame = LabelFrame(Column3, text='4) sortgrid', 
-                                  padx=2, pady=8, width=100)
+                                  padx=2, pady=3, width=100)
         init_cal_frame.grid(row=1, column=0, columnspan=1, sticky='s', padx=2, 
-                          pady=8)
+                          pady=4)
         
         
         
+        # Option A - grow the matching outwards from the marked points. This
+        # needs only a few marked points and no initial calibration.
+        grow_match = Button(init_cal_frame, text='Grow matching', 
+                                command = self.growMatchTargetPoints, 
+                                padx=2, pady=2, height=1) 
+        grow_match.grid(row=0, column=0, padx=2, pady=1, sticky='new')
+        
+        self.grow_status = Label(init_cal_frame, text='- or -', padx=2, 
+                                 pady=0, justify='left', wraplength=160,
+                                 font=("Arial", 9))
+        self.grow_status.grid(row=1, column=0, padx=2, pady=0, sticky='ew')
+        
+        
+        # Option B - calibrate with the marked points and project the target
         init_cal = Button(init_cal_frame, text='Initial calibration', 
-                                command = self.calibrate, padx=2, pady=4, 
+                                command = self.calibrate, padx=2, pady=2, 
                                 height=1) 
-        init_cal.grid(row=0, column=0, padx=2, pady=2, sticky='new')
+        init_cal.grid(row=2, column=0, padx=2, pady=1, sticky='new')
         
         
         show_cal = Button(init_cal_frame, text='Show calibration', 
-                                command = self.show_calibration, padx=2, pady=4, 
+                                command = self.show_calibration, padx=2, pady=2, 
                                 height=1) 
-        show_cal.grid(row=1, column=0, padx=2, pady=2, sticky='new')
+        show_cal.grid(row=3, column=0, padx=2, pady=1, sticky='new')
         
         
-        err_lf = Label(init_cal_frame)
-        err_lf.grid(row=2, column=0)
         #self.error = Label(err_lf, text='Error:', padx=2, pady=2)
         #self.error.grid(row=1, column=0, rowspan=1, sticky='nw', padx=2, pady=2)
         #self.error_input = Label(err_lf, text='0.0', padx=2, pady=2,
@@ -438,15 +453,15 @@ class initial_cal_gui(object):
         #sortgrid.grid(row=3, column=0, pady=20)
         
         match_targets = Button(init_cal_frame, text='Match target file', 
-                                command = self.matchTargetPoints, padx=2, pady=4, 
+                                command = self.matchTargetPoints, padx=2, pady=2, 
                                 height=1) 
-        match_targets.grid(row=2, column=0, padx=2, pady=2, sticky='new')
+        match_targets.grid(row=4, column=0, padx=2, pady=1, sticky='new')
         
         
         save_cal_points = Button(init_cal_frame, text='Save cal points', 
-                                command = self.saveTargetPoints, padx=2, pady=4, 
+                                command = self.saveTargetPoints, padx=2, pady=2, 
                                 height=1) 
-        save_cal_points.grid(row=3, column=0, padx=2, pady=2, sticky='new')
+        save_cal_points.grid(row=5, column=0, padx=2, pady=1, sticky='new')
         
         
         
@@ -572,12 +587,161 @@ class initial_cal_gui(object):
         
       
             
+    def growMatchTargetPoints(self):
+        '''
+        Will match the target points to the segmented blobs by growing 
+        outwards from the marked points (see cal_point_matching_mod). Unlike
+        matchTargetPoints, this does not rely on an initial calibration, and 
+        so it needs only a few marked points and it is not limited by how 
+        well a model fitted to them describes the camera:
+            
+        - 3 neighbouring dots that are not on a single line, for the matching
+          to have where to start from;
+        - 1 dot on every other part of the target that is at a different 
+          depth (some of these are reached by themselves, so it is fine to 
+          run this, see which blobs were left unpaired, mark one of them and 
+          run again).
+          
+        Once the points are paired, the camera is calibrated using all of 
+        them, which replaces the "Initial calibration" step.
+        '''
+        
+        # 1) the marked points - those marked in this session, or else the 
+        #    ones that were saved previously
+        cpf = os.path.join(self.folder, self.cam_name+'_manualPoints')
+        if len(self.point_list) > 0:
+            marked = self.point_list
+        elif os.path.isfile(cpf):
+            marked = loadtxt(cpf, ndmin=2)
+            print('\nUsing the marked points saved in %s'%cpf)
+        else:
+            self.grow_status.configure(text='Mark points first.', fg='#b00020')
+            print('\nNo marked points found. Mark at least 3 points first.')
+            return None
+        
+        
+        # 2) the blobs - those segmented in this session, or else the ones 
+        #    that were saved previously
+        segmented_file = os.path.join(self.folder, self.cam_name+'_CalBlobs')
+        if (hasattr(self, 'particleSegment') and 
+                len(self.particleSegment.blobs) > 0):
+            blobs = array([(b[0][1], b[0][0]) 
+                           for b in self.particleSegment.blobs])
+        elif os.path.isfile(segmented_file):
+            blobs = load_blobs_xy(segmented_file)
+            print('Using the blobs saved in %s'%segmented_file)
+        else:
+            self.grow_status.configure(text='Segment the image first.', 
+                                       fg='#b00020')
+            print('\nNo blobs found. Segment the image first.')
+            return None
+        
+        
+        # 3) match
+        print('\nMatching the target file by growing from %d marked points...'
+              %(len(marked)))
+        try:
+            mtf = grow_calibration_matches(blobs, self.target_fname, marked)
+            mtf.pair_points()
+        except Exception as e:
+            self.grow_status.configure(text='Matching failed, see terminal.', 
+                                       fg='#b00020')
+            print('\nThe matching failed: %s'%str(e))
+            return None
+        self.mtf = mtf
+        
+        
+        # 4) calibrate the camera with all the points that were paired. This 
+        #    is what the projections that we plot are computed with.
+        n = len(mtf.point_pairs)
+        if n >= 20 and len(mtf.conflicts) == 0:
+            self.cam.image_points = [list(p[:2]) for p in mtf.point_pairs]
+            self.cam.lab_points = [list(p[2:]) for p in mtf.point_pairs]
+            try:
+                cal = calibrate_extendedZolof(self.cam, 
+                                              self.cam.image_points,
+                                              self.cam.lab_points,
+                                              quadratic=True)
+                cal.calibrate()
+                self.cam.save('.')
+                print('\nCamera calibrated with the %d paired points and '
+                      'saved; error: %.3f pixels.'%(n, cal.mean_squared_err()))
+            except Exception as e:
+                print('\nCould not calibrate with the paired points (%s).'
+                      %str(e))
+                print('This happens, e.g., if they are all on one plane.')
+        
+        
+        # 5) show the results
+        self.segmented = [(b[0], b[1], 8, 8) for b in blobs]
+        self.refresh_image()
+        self.plot_matched_point_pair()
+        self.mark_points()
+        
+        status = '%d of %d blobs paired.'%(n, len(blobs))
+        color = '#1a7f37'
+        if len(mtf.conflicts) > 0:
+            status += ' Check marked point %s (see terminal).'%(
+                        ', '.join(['%d'%c[0] for c in mtf.conflicts]))
+            color = '#b00020'
+        elif len(mtf.unmatched_blobs) > 0:
+            status += ' To add the rest (orange) mark one of them.'
+            color = '#9a6700'
+        self.grow_status.configure(text=status, fg=color)
+        
+        print()
+        if len(mtf.conflicts) > 0:
+            print('The camera was not calibrated. Fix the marked points that')
+            print('are circled in red ("Forget last point", or restart), and')
+            print('match again.')
+        else:
+            print('Check that the points are properly paired; unpaired blobs')
+            print('are marked in orange. If all is well, then you are done! ')
+            print('Click "Save cal points" and proceed to final calibration.')
+        
+        
+        
+    def refresh_image(self):
+        '''Redraws the calibration image at the current zoom level, which
+        clears everything that was plotted over it'''
+        image = Image.open(self.image_name).convert('F')
+        s = image.size
+        image = image.resize((int(s[0]*self.z),int(s[1]*self.z)),
+                             Image.LANCZOS)
+        new_bird = ImageTk.PhotoImage(Image.fromarray(image/amax(image)*255))
+        self.board.configure(image = new_bird)
+        self.board.image = new_bird
+        self.canvas.delete('all')
+        self.canvas.create_image(0, 0, image=new_bird, anchor='nw')
+        self.canvas.configure(scrollregion = self.canvas.bbox("all"))
+        self.point_markers = []
+        
+        
+            
     def plot_matched_point_pair(self):
         '''
         Will plot the pairs of calibration points (segmented and their 
         projections).
         '''
-        self.segmented = []
+        
+        # blobs that were left unpaired, and marked points that contradict
+        # each other (these are given only by the grow matching)
+        for x_, y_ in getattr(self.mtf, 'unmatched_blobs', []):
+            xImg = int(x_*self.z) - int(self.hbar.get()[1]) 
+            yImg = int(y_*self.z) - int(self.vbar.get()[1])
+            w = 4*self.z
+            self.canvas.create_rectangle(xImg-w, yImg-w, xImg+w, yImg+w, 
+                                         outline="#ff9d00", width=1)
+            
+        for conflict in getattr(self.mtf, 'conflicts', []):
+            xImg = int(conflict[2][0]*self.z) - int(self.hbar.get()[1]) 
+            yImg = int(conflict[2][1]*self.z) - int(self.vbar.get()[1])
+            w = 9*self.z
+            self.canvas.create_oval(xImg-w, yImg-w, xImg+w, yImg+w, 
+                                    outline="#ff0000", width=2)
+            self.canvas.create_text(xImg+w+2, yImg-w-2, anchor='sw',
+                                    text='%d ?'%conflict[0], fill="#ff0000")
+        
         for pair in self.mtf.point_pairs:
             # the segmented image space calibration points
             xImg = int(pair[0]*self.z) - int(self.hbar.get()[1]) 
@@ -701,6 +865,18 @@ class initial_cal_gui(object):
         
         print('Added to list: ', self.point_list[-1])
         print('%d marked points'%(len(self.point_list)))
+        
+        # a typing error in the lab coordinates is best caught right away
+        try:
+            targets = loadtxt(self.target_fname, ndmin=2)
+            d = ((targets - array([x_lab, y_lab, z_lab]))**2).sum(axis=1)**0.5
+            if d.min() > 1e-6 * max(abs(targets).max(), 1e-12):
+                print('Note: (%g, %g, %g) is not a point of the target file!'
+                      %(x_lab, y_lab, z_lab))
+                print('The nearest target point is: ', targets[d.argmin()])
+                print('If it is a typing error, click "Forget last point".')
+        except Exception:
+            pass
         self.xy_marked = (-1, -1)
         self.mark_points()
             

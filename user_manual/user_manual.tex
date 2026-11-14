@@ -66,7 +66,7 @@
 
 \begin{minipage}{14cm}
 	{\small \sffamily
-	Version: 1.3.15 \\
+	Version: 1.3.16 \\
 	Last updated: \today \\
 	Github repository: \url{https://github.com/ronshnapp/MyPTV} \\
 	Get help \& interact with our community: \url{https://github.com/ronshnapp/MyPTV/discussions}\\
@@ -587,13 +587,59 @@ Here are the details regarding each of the initial calibration steps:
 	
 	\item \texttt{image segmentation}: In this step we use MyPTV to detect the points on the calibration image and to store their pixel coordinates in a file. Choose and tweak the segmentation parameters until all the calibration points are detected (or at least most of them if the images are not ideal). Detected points are indicated by green squares on the image. Also, a reference for the segmentation parameters can be found in Section~\ref{sec:workflow_segment}. Once done, save the file using the \texttt{save} button.
 	
-	\item \texttt{mark image points}: Here, we start by choosing six points (at least) of the calibration target. The points should not be coplanar and it is best to choose them such that there is some asymmetry to reduce the chance of false convergence. For each point chosen, we mark it by clicking on it on the image and we write its' lab space coordinates in the \texttt{x lab}, \texttt{y lab}, \texttt{z lab} fields, and then click the \texttt{Mark point} button. The marked points will be shown as blue crosses on the image. After marking all the chosen points, we save their coordinates using the \texttt{Save points} button.
+	\item \texttt{mark image points}: Here, we start by choosing six points (at least) of the calibration target. The points should not be coplanar and it is best to choose them such that there is some asymmetry to reduce the chance of false convergence. For each point chosen, we mark it by clicking on it on the image and we write its' lab space coordinates in the \texttt{x lab}, \texttt{y lab}, \texttt{z lab} fields, and then click the \texttt{Mark point} button. The marked points will be shown as blue crosses on the image. After marking all the chosen points, we save their coordinates using the \texttt{Save points} button. If you intend to use the \texttt{Grow matching} option of step 4, different points should be chosen here, as explained in Section~\ref{sec:grow_matching}.
 	
-	\item \texttt{sortgrid}: In this last step, MyPTV tries to calibrate the camera using only the points we marked in step 3, and then to match the calibration points we segmented in step 2 to the points we gave in the target file. Thus, click the \texttt{initial calibration} button, make sure that the calibration error is low (aim for about 1.0), and click \texttt{show calibration}. If the results are good, click the \texttt{Match target file} button, and you should see the segmented points and the associated points from the target file paired by a red line on the image. Make sure that there are no errors in the pairing, and then save the results. If you detect errors or the initial calibration did not reach low enough error, it might be needed to generate an improved initial guess.  
+	\item \texttt{sortgrid}: In this last step, MyPTV tries to calibrate the camera using only the points we marked in step 3, and then to match the calibration points we segmented in step 2 to the points we gave in the target file. Thus, click the \texttt{initial calibration} button, make sure that the calibration error is low (aim for about 1.0), and click \texttt{show calibration}. If the results are good, click the \texttt{Match target file} button, and you should see the segmented points and the associated points from the target file paired by a red line on the image. Make sure that there are no errors in the pairing, and then save the results. If you detect errors or the initial calibration did not reach low enough error, it might be needed to generate an improved initial guess.  Alternatively, the \texttt{Grow matching} button of this panel matches the target file directly from the marked points, with no need for the initial calibration to succeed; this is described in Section~\ref{sec:grow_matching} and it is the recommended option when the above does not work well.
 		 
 \end{enumerate}
- 
+
+
 This concludes the initial calibration step.
+
+
+
+
+\subsubsection{Matching the target file from a few marked points: \texttt{Grow matching}}\label{sec:grow_matching}
+
+In the procedure described above, MyPTV matches the segmented calibration points to the \texttt{target\_file} by projecting the whole target on the image through a camera that was calibrated using only the marked points. For this to work, that rough camera has to be accurate to better than half the distance between neighbouring calibration points over the entire image. When the optics are complicated (for example, with strong lens distortion, when imaging through thick or curved windows, or when the cameras are close to the target) a camera fitted to a handful of points is often not that accurate, and one finds oneself marking more and more points, each with three coordinates to type in.
+
+The \texttt{Grow matching} button, found in the \texttt{sortgrid} panel of the initial calibration GUI of both the Tsai and the extended Zolof models (Fig.~\ref{fig:grow_matching}), does the matching in a different way that does not rely on a camera model. It is based on the observation that, to tell which calibration point is which, we do not need a model that is accurate everywhere: however complicated the optics are, the mapping from the target to the image is smooth, and so over the distance between two neighbouring calibration points it is very nearly linear. MyPTV therefore starts from the marked points and works its way outwards. A point of the target file that is next to points that were already matched is located on the image using only these matched neighbours, it is paired with the segmented point that is found there, and it then serves for locating the points beyond it. The procedure does not assume anything on the shape of the target: the calibration points do not need to form a regular grid, to be equally spaced, or to lie on planes.
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.9\textwidth]{grow_matching.png}
+	\caption{The initial calibration GUI (extended Zolof model) after using \texttt{Grow matching} on the calibration image of the example experiment. Four points were marked: three neighbours at the corner of the target and one on a raised ridge. All 421 segmented points were paired (green squares with the projections in red). \label{fig:grow_matching}}
+\end{figure}
+
+\paragraph{How to use it.} Follow steps 1 and 2 of the initial calibration as usual (with the Tsai model, see the note below regarding step 1). Then:
+
+\begin{enumerate}
+	\item \textbf{Mark points.} In step 3, mark three calibration points that are immediate neighbours of each other and are not on a single line, for example a corner point of the target and the two points next to it. If the target has parts that are at a different depth (e.g. the other levels of a stepped target), mark also one point on each of them. Usually not all of these are needed: a part that is close to two matched parts of different depths is reached without marking anything on it, because the two tell MyPTV the direction of the line of sight there. In the example experiment, whose target has ridges at three depths, four marked points are enough for each of the three cameras. It is thus fine to start with few points, and add more according to the results.
+	
+	\item \textbf{Click \texttt{Grow matching}.} The results are drawn on the image: paired points are shown with green squares, connected by a red line to the projection of their target point if the camera could be calibrated, and segmented points that were left unpaired are shown with orange squares. A one line summary is shown under the button and the details are printed in the terminal. If a part of the target was left unpaired, mark one of its points and click \texttt{Grow matching} again; if nothing grows from that point, which may happen when the image is strongly distorted, mark two more points next to it. 
+	
+	\item \textbf{Check.} Make sure that there are no errors in the pairing by examining the image, and read the messages regarding the marked points (see below).
+	
+	\item \textbf{Save.} Click \texttt{Save cal points} to save the calibration points file, and \texttt{Save points} if you wish to keep the marked points. Then, proceed to the final calibration.
+\end{enumerate}
+
+The marked points and the segmented points that are used are those of the current session; if there are none, the files saved previously in the calibration folder are used. Points that are spread over the target, such as the ones marked for the usual initial calibration, can be used as well, but only so long as the image is not strongly distorted; neighbouring points do not have this limitation and are therefore preferred.
+
+\paragraph{The camera file.} Once the points are paired, MyPTV calibrates the camera using all of them, which replaces the \texttt{Initial calibration} button. With the extended Zolof model this is always possible, as long as the paired points do not all lie on one plane. With the Tsai model the calibration is a minimization that starts from the initial guess given in step 1 (Section~\ref{sec:camera_external_params}), and so it might not converge; the camera file is then left unchanged and a message is printed. Importantly, the pairing itself does not use the camera, so with the Tsai model the calibration points file can be obtained and saved even with a poor initial guess, or with no camera file at all. A good initial guess is then needed only for the calibration itself. In both models, the camera file is not changed if the marked points were found to disagree with each other. 
+
+\paragraph{Protection against input errors.} Typing a wrong coordinate for a marked point is the most common reason for having to repeat the initial calibration, so the marked points are checked in three ways:
+\begin{itemize}
+	\item When clicking \texttt{Mark point}, a note is printed in the terminal if the coordinates that were typed are not those of a point in the \texttt{target\_file}. Such points are ignored by \texttt{Grow matching}.
+	
+	\item A marked point that is given the coordinates of another point of the target, typically those of the calibration point next to it, is more dangerous: on a periodic target it leads to a matching that looks perfectly fine and is wrong, since a regular grid looks the same when it is shifted by one period. To detect this, MyPTV leaves each marked point out in turn, repeats the matching with the others, and tests whether they assign the same segmented point to it. Marked points that fail this test are circled in red on the image with their serial number, and are listed in the terminal along with the image position that the other marked points give them. Note that a single wrong point makes the points that it contradicts be listed along with it. Correct the points (e.g. using \texttt{Forget last point}) and match again.
+	
+	\item A marked point can only be tested if the matching can reach it from the other marked points. The terminal lists the points that were not tested. When marking only the minimum number of points most of them cannot be tested, so it is a good practice to mark one or two more points than the minimum, for example one additional point on each part of the target, preferably far from the first one.
+\end{itemize}
+In rare cases with strongly distorted images, marked points may be reported to disagree although all of them are correct; marking another point next to each of the reported ones resolves this.
+
+\paragraph{Some details on the algorithm.} The matching alternates between three steps until nothing changes. (1) \textit{Local growth}: the image position of an unmatched target point is predicted from an affine map that is fitted to its nearest matched neighbours (eight by default), and it is paired with a free segmented point if one is found within 0.3 of the local distance between segmented points. Short steps are taken before long ones, and steps to a part of the target at a different depth are taken last and with half the tolerance; for those, the local direction of the line of sight is estimated first, since lens distortion acts on the image and hardly affects it. Predictions that are sensitive to noise in the positions of the neighbours, or that lean on neighbours that are far away, are not used. (2) \textit{Cleaning}: pairs that do not agree with their matched neighbours are removed, which gets rid of segmented points that are not calibration points (dust, reflections) and of badly segmented ones. (3) \textit{Global refit}: a polynomial of up to third order is fitted to all the pairs; pairs that disagree with it are removed and unmatched target points that are surrounded by matched ones are picked up through it. The polynomial is never extrapolated to parts of the target that were not reached, since an extrapolated model may be off by a whole period; such parts are left for the user to mark a point on. In general, the algorithm prefers leaving a point unpaired over taking the risk of a wrong pair. 
+
+The same algorithm can be used in scripts through the \texttt{grow\_calibration\_matches} class, see Section~\ref{sec:cal_point_matching_mod}.
 
 
 
@@ -1840,6 +1886,55 @@ The \texttt{gui\_final\_cal.py} script is used to launch a \texttt{tkinter} base
 \subsection{The \texttt{gui\_initial\_cal.py} file}
 
 The \texttt{gui\_initial\_cal.py} script is used to launch a \texttt{tkinter} based graphical user interface that is utilized to run various functionalities of the calibration process. The GUI is shown in  Fig.~\ref{fig:init_cal_gui} and it is explained in section~\ref{sec:init_calibration}.
+
+
+
+
+\subsection{The \texttt{cal\_point\_matching\_mod.py} file}\label{sec:cal_point_matching_mod}
+
+This module holds the algorithm behind the \texttt{Grow matching} button of the initial calibration GUIs (Section~\ref{sec:grow_matching}), which pairs segmented calibration points with the points of a target file by growing outwards from a few marked points. It does not depend on the 3D model, and it can be used directly in scripts, for example to process many calibration images.
+
+\paragraph{The \texttt{grow\_calibration\_matches} object.} 
+
+\underline{Inputs:}
+\begin{enumerate}
+	\item \texttt{blobs\_xy} - the segmented calibration points: either the path of a blob file, or an array of shape $(N,2)$ with their $(x,y)$ image coordinates.  
+	
+	\item \texttt{targets} - either the path of the target file, or an array of shape $(M,3)$ with the lab space coordinates of the target points.
+	
+	\item \texttt{marked\_points} - either the path of a file with the marked points (the \texttt{manualPoints} file of the initial calibration GUI), or a list in which each item is \texttt{[x\_image, y\_image, x\_lab, y\_lab, z\_lab]}. 
+	
+	\item \texttt{tol} - float (default 0.3), a segmented point is paired with a target point if its distance from the predicted position is smaller than \texttt{tol} times its distance to the nearest other segmented point. 
+	
+	\item \texttt{n\_neighbors} - int (default 8), the number of matched neighbours used in each local prediction. 
+	
+	\item \texttt{max\_reach} - float (default 3.0), a target point is predicted only if a matched point exists within this distance of it, in units of the local spacing of the target points. 
+	
+	\item \texttt{global\_tol} - float (default 0.25), same as \texttt{tol} for points paired through the global polynomial. 
+	
+	\item \texttt{max\_order} - int (default 3), the highest order of the global polynomial. 
+	
+	\item \texttt{verbose} - bool (default True), whether to print the messages. 
+\end{enumerate}
+
+\underline{Functionality:}
+\begin{enumerate}
+	\item \texttt{pair\_points(verify=True)} - does the pairing. The results are stored in the attribute \texttt{point\_pairs} as rows of \texttt{[x\_image, y\_image, x\_lab, y\_lab, z\_lab]}. If \texttt{verify} is \texttt{True} the marked points are also checked against each other; those that disagree are stored in the attribute \texttt{conflicts}, and those that could not be checked are stored in \texttt{unverified}. The attributes \texttt{unmatched\_blobs} and \texttt{unmatched\_targets} hold what was left unpaired, and \texttt{messages} holds the text that was printed.
+	
+	\item \texttt{save\_results(fname)} - saves the pairs as a calibration points file (Section~\ref{sec:calpointreader}).
+\end{enumerate}
+
+For example:
+\begin{verbatim}
+from myptv.cal_point_matching_mod import grow_calibration_matches
+
+gcm = grow_calibration_matches('./Calibration/cam1_CalBlobs',
+                               './Calibration/target_file',
+                               './Calibration/cam1_manualPoints')
+gcm.pair_points()
+if len(gcm.conflicts) == 0:
+    gcm.save_results('./Calibration/cam1_cal_points')
+\end{verbatim}
 
 
 
